@@ -1,0 +1,11 @@
+import { AppShell } from "@/components/layout/app-shell";
+import { EmptyState } from "@/components/feedback/states";
+import { ArrowUpRight, Clock3, ConciergeBell, CreditCard, Utensils } from "lucide-react";
+
+export default function Home() {
+  return <AppShell><section className="page-heading"><div><div className="eyebrow">Friday, 02 October 2026</div><h1>Good morning, operator.</h1><p>Here is the shape of service at your selected branch.</p></div><div className="heading-actions"><button className="secondary-button"><Clock3 size={16} /> View today</button></div></section><section className="metric-grid"><Metric icon={CreditCard} label="Revenue today" value="—" detail="Connect a report endpoint to populate" /><Metric icon={ConciergeBell} label="Orders today" value="—" detail="Live order totals arrive in Phase 2" /><Metric icon={Utensils} label="Kitchen flow" value="—" detail="KDS workspace arrives in Phase 4" /></section><section className="dashboard-grid"><div className="surface feature-surface"><div className="surface-heading"><div><div className="eyebrow">Next on the desk</div><h2>Choose your operating view</h2></div><ArrowUpRight size={20} className="muted-icon" /></div><div className="view-tiles"><div className="view-tile"><span className="tile-number">01</span><strong>POS</strong><span>Build orders, tables, and service flow.</span></div><div className="view-tile"><span className="tile-number">02</span><strong>Kitchen display</strong><span>Route tickets and follow the pass.</span></div><div className="view-tile"><span className="tile-number">03</span><strong>Payments</strong><span>Track settlement and refunds.</span></div></div></div><div className="surface status-surface"><div className="surface-heading"><div><div className="eyebrow">System status</div><h2>Everything is quiet</h2></div><span className="status-pill"><span /> Connected</span></div><EmptyState title="No live signals yet" detail="Operational data will appear here once you open the POS and KDS modules." /></div></section></AppShell>;
+}
+
+function Metric({ icon: Icon, label, value, detail }: { icon: typeof CreditCard; label: string; value: string; detail: string }) {
+  return <div className="metric-card"><div className="metric-icon"><Icon size={18} /></div><span className="metric-label">{label}</span><strong>{value}</strong><small>{detail}</small></div>;
+}
