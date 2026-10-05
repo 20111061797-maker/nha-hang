@@ -70,19 +70,22 @@ public static class DependencyInjection
 
         if (string.IsNullOrWhiteSpace(raw))
         {
-            var host = Environment.GetEnvironmentVariable("PGHOST");
-            if (!string.IsNullOrWhiteSpace(host))
+            var envHost = Environment.GetEnvironmentVariable("PGHOST");
+            if (!string.IsNullOrWhiteSpace(envHost))
             {
-                var port = Environment.GetEnvironmentVariable("PGPORT") ?? "5432";
-                var user = Environment.GetEnvironmentVariable("PGUSER") ?? "postgres";
-                var pass = Environment.GetEnvironmentVariable("PGPASSWORD") ?? "";
-                var db = Environment.GetEnvironmentVariable("PGDATABASE") ?? "railway";
-                return $"Host={host};Port={port};Username={user};Password={pass};Database={db};Include Error Detail=true;SSL Mode=Prefer;Trust Server Certificate=true;";
+                var envPort = Environment.GetEnvironmentVariable("PGPORT") ?? "5432";
+                var envUser = Environment.GetEnvironmentVariable("PGUSER") ?? "postgres";
+                var envPass = Environment.GetEnvironmentVariable("PGPASSWORD") ?? "";
+                var envDb = Environment.GetEnvironmentVariable("PGDATABASE") ?? "railway";
+                return $"Host={envHost};Port={envPort};Username={envUser};Password={envPass};Database={envDb};Include Error Detail=true;SSL Mode=Prefer;Trust Server Certificate=true;";
             }
 
             return "Host=localhost;Port=5432;Database=restaurant_dev;Username=restaurant_user;Password=restaurant_password;Include Error Detail=true;";
         }
 
+        raw = raw.Trim().Trim('"', '\'');
+
+        // Case 1: URI format: postgresql://user:pass@host:port/db or postgres://...
         if (raw.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase) ||
             raw.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase))
         {
@@ -101,11 +104,68 @@ public static class DependencyInjection
             }
             catch
             {
-                return raw;
+                // Continue to fallback
             }
         }
 
-        return raw;
+        // Case 2: Standard key-value format (contains '=')
+        if (raw.Contains('='))
+        {
+            if (!raw.Contains("Trust Server Certificate", StringComparison.OrdinalIgnoreCase))
+            {
+                raw += ";Trust Server Certificate=true";
+            }
+            if (!raw.Contains("SSL Mode", StringComparison.OrdinalIgnoreCase))
+            {
+                raw += ";SSL Mode=Prefer";
+            }
+            return raw;
+        }
+
+        // Case 3: Raw is just a hostname or host:port (e.g. "nha-hang.railway.internal" or "postgres.railway.internal")
+        // Check if Railway DATABASE_URL is available first
+        var dbUrl = Environment.GetEnvironmentVariable("DATABASE_URL")
+            ?? Environment.GetEnvironmentVariable("POSTGRES_URL")
+            ?? Environment.GetEnvironmentVariable("DATABASE_PRIVATE_URL");
+
+        if (!string.IsNullOrWhiteSpace(dbUrl) &&
+            (dbUrl.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase) ||
+             dbUrl.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase)))
+        {
+            try
+            {
+                var uri = new Uri(dbUrl.Trim().Trim('"', '\''));
+                var userInfo = uri.UserInfo.Split(':', 2);
+                var user = userInfo.Length > 0 ? Uri.UnescapeDataString(userInfo[0]) : "postgres";
+                var pass = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "";
+                var host = uri.Host;
+                var port = uri.Port > 0 ? uri.Port : 5432;
+                var database = uri.AbsolutePath.TrimStart('/');
+                if (string.IsNullOrWhiteSpace(database)) database = "railway";
+
+                return $"Host={host};Port={port};Username={user};Password={pass};Database={database};Include Error Detail=true;SSL Mode=Prefer;Trust Server Certificate=true;";
+            }
+            catch
+            {
+                // Fallback to parsing raw
+            }
+        }
+
+        // Parse hostname:port from raw
+        var targetHost = raw;
+        var targetPort = "5432";
+        if (targetHost.Contains(':'))
+        {
+            var parts = targetHost.Split(':');
+            targetHost = parts[0];
+            targetPort = parts.Length > 1 ? parts[1] : "5432";
+        }
+
+        var dbUser = Environment.GetEnvironmentVariable("PGUSER") ?? "postgres";
+        var dbPass = Environment.GetEnvironmentVariable("PGPASSWORD") ?? "";
+        var dbName = Environment.GetEnvironmentVariable("PGDATABASE") ?? "railway";
+
+        return $"Host={targetHost};Port={targetPort};Username={dbUser};Password={dbPass};Database={dbName};Include Error Detail=true;SSL Mode=Prefer;Trust Server Certificate=true;";
     }
 
     private static ConfigurationOptions ResolveRedisConfiguration(IConfiguration configuration)

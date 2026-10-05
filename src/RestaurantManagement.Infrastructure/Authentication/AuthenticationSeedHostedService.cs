@@ -18,13 +18,20 @@ public sealed class AuthenticationSeedHostedService(
 {
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        await using var scope = scopeFactory.CreateAsyncScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<RestaurantDbContext>();
-        var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<User>>();
+        try
+        {
+            await using var scope = scopeFactory.CreateAsyncScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<RestaurantDbContext>();
+            var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<User>>();
 
-        await SeedRolesAndPermissionsAsync(dbContext, cancellationToken);
-        await SeedAdminAsync(dbContext, passwordHasher, cancellationToken);
-        await SeedDemoUsersAsync(dbContext, passwordHasher, cancellationToken);
+            await SeedRolesAndPermissionsAsync(dbContext, cancellationToken);
+            await SeedAdminAsync(dbContext, passwordHasher, cancellationToken);
+            await SeedDemoUsersAsync(dbContext, passwordHasher, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "An error occurred during authentication seed. The application will continue running.");
+        }
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;

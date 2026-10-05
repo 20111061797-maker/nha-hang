@@ -22,22 +22,31 @@ builder.Services.AddApiServices(builder.Configuration);
 var app = builder.Build();
 
 // Tự động chạy EF Core migration khi ứng dụng khởi động.
-// Điều này đảm bảo database luôn có schema mới nhất trước khi các Hosted Service
-// (ví dụ AuthenticationSeedHostedService) bắt đầu truy vấn database.
 await using (var scope = app.Services.CreateAsyncScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<RestaurantDbContext>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-    try
+    for (var attempt = 1; attempt <= 3; attempt++)
     {
-        logger.LogInformation("Applying database migrations...");
-        await dbContext.Database.MigrateAsync();
-        logger.LogInformation("Database migrations applied successfully.");
-    }
-    catch (Exception ex)
-    {
-        logger.LogError(ex, "An error occurred while applying database migrations.");
-        throw;
+        try
+        {
+            logger.LogInformation("Applying database migrations (attempt {Attempt}/3)...", attempt);
+            await dbContext.Database.MigrateAsync();
+            logger.LogInformation("Database migrations applied successfully.");
+            break;
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Database migration attempt {Attempt} failed.", attempt);
+            if (attempt == 3)
+            {
+                logger.LogError(ex, "All database migration attempts failed. The application will continue starting so health check endpoints remain available.");
+            }
+            else
+            {
+                await Task.Delay(2000);
+            }
+        }
     }
 }
 
@@ -55,6 +64,13 @@ if (app.Environment.IsDevelopment())
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapHealthChecks("/healthz");
+app.MapGet("/", () => Results.Ok(new
+{
+    status = "healthy",
+    name = "Restaurant Management API",
+    version = "1.0.0",
+    timestamp = DateTime.UtcNow
+}));
 app.MapControllers();
 app.MapHub<RestaurantHub>("/hubs/restaurant");
 app.MapHub<KitchenHub>("/hubs/kitchen");
