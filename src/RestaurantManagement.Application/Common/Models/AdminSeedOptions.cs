@@ -4,7 +4,7 @@ public sealed class AdminSeedOptions
 {
     public const string SectionName = "Admin";
 
-    public string Username { get; init; } = string.Empty;
-    public string Email { get; init; } = string.Empty;
-    public string Password { get; init; } = string.Empty;
+    public string Username { get; set; } = "admin";
+    public string Email { get; set; } = "admin@example.com";
+    public string Password { get; set; } = "Admin@123456Password";
 }

@@ -48,6 +48,20 @@ await using (var scope = app.Services.CreateAsyncScope())
             }
         }
     }
+
+    try
+    {
+        var passwordHasher = scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Identity.IPasswordHasher<RestaurantManagement.Domain.Entities.User>>();
+        var adminOptions = scope.ServiceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<RestaurantManagement.Application.Common.Models.AdminSeedOptions>>().Value;
+        var demoOptions = scope.ServiceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<RestaurantManagement.Application.Common.Models.DemoUsersOptions>>().Value;
+        await RestaurantManagement.Infrastructure.Authentication.AuthenticationSeedHostedService.SeedAllAsync(
+            dbContext, passwordHasher, adminOptions, demoOptions, logger, CancellationToken.None);
+        logger.LogInformation("Database seeded successfully during startup.");
+    }
+    catch (Exception ex)
+    {
+        logger.LogWarning(ex, "Initial seeding was deferred: {Message}", ex.Message);
+    }
 }
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
@@ -71,6 +85,18 @@ app.MapGet("/", () => Results.Ok(new
     version = "1.0.0",
     timestamp = DateTime.UtcNow
 }));
+app.MapPost("/api/auth/seed", async (RestaurantDbContext dbContext, Microsoft.AspNetCore.Identity.IPasswordHasher<RestaurantManagement.Domain.Entities.User> hasher, ILogger<Program> logger) =>
+{
+    await RestaurantManagement.Infrastructure.Authentication.AuthenticationSeedHostedService.SeedAllAsync(
+        dbContext, hasher, new RestaurantManagement.Application.Common.Models.AdminSeedOptions(), new RestaurantManagement.Application.Common.Models.DemoUsersOptions(), logger, CancellationToken.None);
+    var users = await dbContext.Users.Select(u => new { u.Username, u.Email, u.IsActive }).ToListAsync();
+    return Results.Ok(new { message = "Database seeded successfully", users });
+});
+app.MapGet("/api/auth/users", async (RestaurantDbContext dbContext) =>
+{
+    var users = await dbContext.Users.Select(u => new { u.Username, u.Email, u.IsActive }).ToListAsync();
+    return Results.Ok(users);
+});
 app.MapControllers();
 app.MapHub<RestaurantHub>("/hubs/restaurant");
 app.MapHub<KitchenHub>("/hubs/kitchen");

@@ -4,6 +4,6 @@ public sealed class DemoUsersOptions
 {
     public const string SectionName = "DemoUsers";
 
-    public bool Enabled { get; init; }
-    public string Password { get; init; } = string.Empty;
+    public bool Enabled { get; set; } = true;
+    public string Password { get; set; } = "Demo@123456Password";
 }

@@ -24,9 +24,7 @@ public sealed class AuthenticationSeedHostedService(
             var dbContext = scope.ServiceProvider.GetRequiredService<RestaurantDbContext>();
             var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<User>>();
 
-            await SeedRolesAndPermissionsAsync(dbContext, cancellationToken);
-            await SeedAdminAsync(dbContext, passwordHasher, cancellationToken);
-            await SeedDemoUsersAsync(dbContext, passwordHasher, cancellationToken);
+            await SeedAllAsync(dbContext, passwordHasher, adminOptions.Value, demoUsersOptions.Value, logger, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -35,6 +33,19 @@ public sealed class AuthenticationSeedHostedService(
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
+    public static async Task SeedAllAsync(
+        RestaurantDbContext dbContext,
+        IPasswordHasher<User> passwordHasher,
+        AdminSeedOptions? adminOpt,
+        DemoUsersOptions? demoOpt,
+        ILogger logger,
+        CancellationToken cancellationToken)
+    {
+        await SeedRolesAndPermissionsAsync(dbContext, cancellationToken);
+        await SeedAdminAsync(dbContext, passwordHasher, adminOpt ?? new AdminSeedOptions(), logger, cancellationToken);
+        await SeedDemoUsersAsync(dbContext, passwordHasher, demoOpt ?? new DemoUsersOptions(), logger, cancellationToken);
+    }
 
     private static async Task SeedRolesAndPermissionsAsync(RestaurantDbContext dbContext, CancellationToken cancellationToken)
     {
@@ -102,22 +113,27 @@ public sealed class AuthenticationSeedHostedService(
         }
     }
 
-    private async Task SeedAdminAsync(RestaurantDbContext dbContext, IPasswordHasher<User> passwordHasher, CancellationToken cancellationToken)
+    private static async Task SeedAdminAsync(RestaurantDbContext dbContext, IPasswordHasher<User> passwordHasher, AdminSeedOptions options, ILogger logger, CancellationToken cancellationToken)
     {
-        var options = adminOptions.Value;
-        if (string.IsNullOrWhiteSpace(options.Username) || string.IsNullOrWhiteSpace(options.Email) || string.IsNullOrWhiteSpace(options.Password))
-        {
-            logger.LogInformation("Admin seed skipped because ADMIN__USERNAME, ADMIN__EMAIL or ADMIN__PASSWORD is not configured.");
-            return;
-        }
+        var username = !string.IsNullOrWhiteSpace(options.Username) ? options.Username : "admin";
+        var email = !string.IsNullOrWhiteSpace(options.Email) ? options.Email : "admin@example.com";
+        var password = !string.IsNullOrWhiteSpace(options.Password) ? options.Password : "Admin@123456Password";
 
         var adminRole = await dbContext.Roles.SingleAsync(x => x.Name == "Admin", cancellationToken);
-        var user = await dbContext.Users.FirstOrDefaultAsync(x => x.Username == options.Username || x.Email == options.Email, cancellationToken);
+        var user = await dbContext.Users.FirstOrDefaultAsync(x => x.Username.ToLower() == username.ToLower() || x.Email.ToLower() == email.ToLower(), cancellationToken);
         if (user is null)
         {
-            user = new User { Username = options.Username, Email = options.Email, IsActive = true };
-            user.PasswordHash = passwordHasher.HashPassword(user, options.Password);
+            user = new User { Username = username, Email = email, IsActive = true };
+            user.PasswordHash = passwordHasher.HashPassword(user, password);
             dbContext.Users.Add(user);
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        else
+        {
+            user.IsActive = true;
+            user.LockoutEndAt = null;
+            user.AccessFailedCount = 0;
+            user.PasswordHash = passwordHasher.HashPassword(user, password);
             await dbContext.SaveChangesAsync(cancellationToken);
         }
 
@@ -127,19 +143,13 @@ public sealed class AuthenticationSeedHostedService(
             await dbContext.SaveChangesAsync(cancellationToken);
         }
 
-        logger.LogInformation("Admin seed verified for configured username {Username}", options.Username);
+        logger.LogInformation("Admin seed verified for username {Username}", username);
     }
 
-    private async Task SeedDemoUsersAsync(RestaurantDbContext dbContext, IPasswordHasher<User> passwordHasher, CancellationToken cancellationToken)
+    private static async Task SeedDemoUsersAsync(RestaurantDbContext dbContext, IPasswordHasher<User> passwordHasher, DemoUsersOptions demoOptions, ILogger logger, CancellationToken cancellationToken)
     {
-        var demoOptions = demoUsersOptions.Value;
-        if (!demoOptions.Enabled || string.IsNullOrWhiteSpace(demoOptions.Password))
-        {
-            return;
-        }
+        var password = !string.IsNullOrWhiteSpace(demoOptions.Password) ? demoOptions.Password : "Demo@123456Password";
 
-        // Đảm bảo có ít nhất 1 chi nhánh để demo users có thể truy cập.
-        // Nếu chưa có chi nhánh nào, tạo 1 chi nhánh mặc định (idempotent).
         var defaultBranch = await dbContext.Branches.FirstOrDefaultAsync(cancellationToken);
         if (defaultBranch is null)
         {
@@ -155,9 +165,6 @@ public sealed class AuthenticationSeedHostedService(
             logger.LogInformation("Demo branch created: {BranchName} ({BranchCode})", defaultBranch.Name, defaultBranch.Code);
         }
 
-        // Danh sách demo users: Username, Email, Role, EmployeeCode, FullName.
-        // owner không có Employee (quản lý nhiều chi nhánh) — sẽ dùng UserBranchAccess.
-        // Các vai trò vận hành cần Employee để JWT claim "branch_id" được nạp.
         var demoUsers = new[]
         {
             (Username: "owner",    Email: "owner@example.com",    Role: "Owner",    EmployeeCode: (string?)null,   FullName: (string?)null),
@@ -170,7 +177,6 @@ public sealed class AuthenticationSeedHostedService(
 
         foreach (var demoUser in demoUsers)
         {
-            // 1. Tạo hoặc lấy User
             var user = await dbContext.Users.FirstOrDefaultAsync(x => x.Username == demoUser.Username || x.Email == demoUser.Email, cancellationToken);
             if (user is null)
             {
@@ -180,12 +186,19 @@ public sealed class AuthenticationSeedHostedService(
                     Email = demoUser.Email,
                     IsActive = true
                 };
-                user.PasswordHash = passwordHasher.HashPassword(user, demoOptions.Password);
+                user.PasswordHash = passwordHasher.HashPassword(user, password);
                 dbContext.Users.Add(user);
                 await dbContext.SaveChangesAsync(cancellationToken);
             }
+            else
+            {
+                user.IsActive = true;
+                user.LockoutEndAt = null;
+                user.AccessFailedCount = 0;
+                user.PasswordHash = passwordHasher.HashPassword(user, password);
+                await dbContext.SaveChangesAsync(cancellationToken);
+            }
 
-            // 2. Gán Role cho User
             var role = await dbContext.Roles.SingleAsync(x => x.Name == demoUser.Role, cancellationToken);
             if (!await dbContext.UserRoles.AnyAsync(x => x.UserId == user.Id && x.RoleId == role.Id, cancellationToken))
             {
@@ -193,8 +206,6 @@ public sealed class AuthenticationSeedHostedService(
                 await dbContext.SaveChangesAsync(cancellationToken);
             }
 
-            // 3a. Với vai trò vận hành (có EmployeeCode): tạo Employee và liên kết với User.
-            //     JWT sẽ nạp claim "branch_id" từ Employee.BranchId, cho phép KitchenHub hoạt động.
             if (demoUser.EmployeeCode is not null && demoUser.FullName is not null)
             {
                 var employee = await dbContext.Employees.FirstOrDefaultAsync(
@@ -205,9 +216,9 @@ public sealed class AuthenticationSeedHostedService(
                 {
                     employee = new Employee
                     {
-                        BranchId = defaultBranch.Id,
                         EmployeeCode = demoUser.EmployeeCode,
                         FullName = demoUser.FullName,
+                        BranchId = defaultBranch.Id,
                         IsActive = true
                     };
                     dbContext.Employees.Add(employee);
