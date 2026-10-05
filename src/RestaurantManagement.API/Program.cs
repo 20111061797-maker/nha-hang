@@ -8,6 +8,12 @@ using RestaurantManagement.Infrastructure.Persistence.DbContext;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var port = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrWhiteSpace(port))
+{
+    builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+}
+
 builder.Logging.AddJsonConsole();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);

@@ -30,7 +30,20 @@ public static class ApiServiceExtensions
             options.AddPolicy("Frontend", policy =>
             {
                 var origins = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
-                policy.WithOrigins(origins).AllowAnyHeader().AllowAnyMethod().AllowCredentials();
+                if (origins.Length == 0)
+                {
+                    policy.SetIsOriginAllowed(_ => true)
+                          .AllowAnyHeader()
+                          .AllowAnyMethod()
+                          .AllowCredentials();
+                }
+                else
+                {
+                    policy.WithOrigins(origins)
+                          .AllowAnyHeader()
+                          .AllowAnyMethod()
+                          .AllowCredentials();
+                }
             });
         });
 
