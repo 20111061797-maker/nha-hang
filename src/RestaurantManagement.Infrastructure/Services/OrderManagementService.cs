@@ -161,13 +161,35 @@ public sealed class OrderManagementService(
                 dup.Version++;
             }
 
-            var kitchenOrdersToMove = await dbContext.KitchenOrders
+            var primaryKitchenOrders = await dbContext.KitchenOrders
+                .Where(ko => ko.OrderId == primaryOrder.Id)
+                .ToListAsync(cancellationToken);
+
+            var duplicateKitchenOrders = await dbContext.KitchenOrders
                 .Where(ko => duplicateOrderIds.Contains(ko.OrderId))
                 .ToListAsync(cancellationToken);
 
-            foreach (var ko in kitchenOrdersToMove)
+            foreach (var dko in duplicateKitchenOrders)
             {
-                ko.OrderId = primaryOrder.Id;
+                var matchingPrimary = primaryKitchenOrders.FirstOrDefault(p => p.KitchenStationId == dko.KitchenStationId);
+                if (matchingPrimary is not null)
+                {
+                    var koItems = await dbContext.KitchenOrderItems
+                        .Where(koi => koi.KitchenOrderId == dko.Id)
+                        .ToListAsync(cancellationToken);
+
+                    foreach (var koi in koItems)
+                    {
+                        koi.KitchenOrderId = matchingPrimary.Id;
+                    }
+
+                    dbContext.KitchenOrders.Remove(dko);
+                }
+                else
+                {
+                    dko.OrderId = primaryOrder.Id;
+                    primaryKitchenOrders.Add(dko);
+                }
             }
 
             var totalItems = await dbContext.OrderItems

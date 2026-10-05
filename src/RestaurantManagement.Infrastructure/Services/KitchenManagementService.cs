@@ -185,7 +185,7 @@ public sealed class KitchenManagementService(
             var stationId = group.Key;
             var stationItems = group.ToList();
 
-            var kitchenOrder = existing.FirstOrDefault(x => x.KitchenStationId == stationId && x.Status != KitchenOrderStatus.Ready && x.Status != KitchenOrderStatus.Completed && x.Status != KitchenOrderStatus.Cancelled);
+            var kitchenOrder = existing.FirstOrDefault(x => x.KitchenStationId == stationId);
             if (kitchenOrder is null)
             {
                 kitchenOrder = new KitchenOrder { OrderId = order.Id, BranchId = order.BranchId, KitchenStationId = stationId, OrderNumberSnapshot = order.OrderNumber, OrderTypeSnapshot = order.OrderType, TableNumberSnapshot = tableNumber, Status = KitchenOrderStatus.New, Note = order.Notes };
@@ -194,10 +194,27 @@ public sealed class KitchenManagementService(
             }
 
             var existingItemIds = await dbContext.KitchenOrderItems.Where(x => x.KitchenOrderId == kitchenOrder.Id).Select(x => x.OrderItemId).ToListAsync(cancellationToken);
-            foreach (var item in stationItems.Where(x => !existingItemIds.Contains(x.Id)))
+            var newItems = stationItems.Where(x => !existingItemIds.Contains(x.Id)).ToList();
+            if (newItems.Count > 0)
             {
-                var modifiers = await dbContext.OrderItemModifiers.AsNoTracking().Where(x => x.OrderItemId == item.Id).Select(x => x.ModifierNameSnapshot).ToListAsync(cancellationToken);
-                dbContext.KitchenOrderItems.Add(new KitchenOrderItem { KitchenOrderId = kitchenOrder.Id, OrderItemId = item.Id, ProductId = item.ProductId, ProductVariantId = item.ProductVariantId, ProductNameSnapshot = item.ComboNameSnapshot ?? item.ProductNameSnapshot, VariantNameSnapshot = item.VariantNameSnapshot, Quantity = item.Quantity, NotesSnapshot = item.Notes, ModifierNamesSnapshot = JsonSerializer.Serialize(modifiers) });
+                foreach (var item in newItems)
+                {
+                    var modifiers = await dbContext.OrderItemModifiers.AsNoTracking().Where(x => x.OrderItemId == item.Id).Select(x => x.ModifierNameSnapshot).ToListAsync(cancellationToken);
+                    dbContext.KitchenOrderItems.Add(new KitchenOrderItem { KitchenOrderId = kitchenOrder.Id, OrderItemId = item.Id, ProductId = item.ProductId, ProductVariantId = item.ProductVariantId, ProductNameSnapshot = item.ComboNameSnapshot ?? item.ProductNameSnapshot, VariantNameSnapshot = item.VariantNameSnapshot, Quantity = item.Quantity, NotesSnapshot = item.Notes, ModifierNamesSnapshot = JsonSerializer.Serialize(modifiers) });
+                }
+
+                // If previous ticket was already cooked/served (Ready or Completed), bring it back to New in KDS!
+                if (kitchenOrder.Status == KitchenOrderStatus.Ready || kitchenOrder.Status == KitchenOrderStatus.Completed)
+                {
+                    kitchenOrder.Status = KitchenOrderStatus.New;
+                }
+                kitchenOrder.UpdatedAt = DateTimeOffset.UtcNow;
+                kitchenOrder.Version++;
+
+                if (!created.Contains(kitchenOrder))
+                {
+                    created.Add(kitchenOrder);
+                }
             }
         }
         if (created.Count == 0) return await BuildResponsesAsync(existing, cancellationToken);
