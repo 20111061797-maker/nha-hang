@@ -45,4 +45,8 @@ public sealed class TablesController(IBranchManagementService service, IValidato
     [HttpPatch("api/tables/{id:guid}/active-status")]
     [RequirePermission("table.manage")]
     public async Task<IActionResult> SetActiveStatus(Guid id, SetStatusRequest request, CancellationToken cancellationToken) => await service.SetTableStatusAsync(id, request.IsActive, cancellationToken) ? NoContent() : NotFound();
+
+    [HttpDelete("api/tables/{id:guid}")]
+    [RequirePermission("table.manage")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken) => await service.DeleteTableAsync(id, cancellationToken) ? NoContent() : NotFound();
 }

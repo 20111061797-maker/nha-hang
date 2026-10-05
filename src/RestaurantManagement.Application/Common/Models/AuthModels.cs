@@ -46,7 +46,7 @@ public static class PermissionCodes
         "kitchen.station.read", "kitchen.station.create", "kitchen.station.update", "kitchen.station.manage",
         "kitchen.order.read", "kitchen.order.update", "kitchen.order.change_status", "kitchen.order.manage",
         "inventory.read", "inventory.adjust",
-        "customer.read", "customer.update",
+        "customer.read", "customer.create", "customer.update", "customer.manage",
         "employee.read", "employee.create", "employee.update",
         "report.read",
         "user.read", "user.create", "user.update",

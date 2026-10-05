@@ -35,6 +35,10 @@ public sealed class KitchenController(
         return (await service.UpdateStationAsync(id, request, ct)) is { } result ? Ok(result) : NotFound();
     }
 
+    [HttpDelete("kitchen-stations/{id:guid}"), RequirePermission("kitchen.station.manage")]
+    public async Task<IActionResult> DeleteStation(Guid id, CancellationToken ct) =>
+        await service.DeleteStationAsync(id, ct) ? NoContent() : NotFound();
+
     [HttpGet("kitchen-stations/{id:guid}/products"), RequirePermission("kitchen.station.read")]
     public async Task<IActionResult> GetProducts(Guid id, CancellationToken ct) => Ok(await service.GetStationProductsAsync(id, ct));
 

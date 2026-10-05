@@ -66,6 +66,17 @@ public sealed class KitchenManagementService(
         var productIds = request.ProductIds.Distinct().ToArray();
         var validProducts = await dbContext.Products.Where(x => productIds.Contains(x.Id) && x.IsActive).Select(x => x.Id).ToListAsync(cancellationToken);
         if (validProducts.Count != productIds.Length) throw new ApplicationException("One or more products do not exist or are inactive.");
+
+        // Deactivate these products from ANY other station in the same branch to prevent duplicate routing!
+        var otherStationMappings = await (from mapping in dbContext.KitchenStationProducts
+                                          join s in dbContext.KitchenStations on mapping.KitchenStationId equals s.Id
+                                          where s.BranchId == station.BranchId && mapping.KitchenStationId != stationId && productIds.Contains(mapping.ProductId) && mapping.IsActive
+                                          select mapping).ToListAsync(cancellationToken);
+        foreach (var mapping in otherStationMappings)
+        {
+            mapping.IsActive = false;
+        }
+
         var mappings = await dbContext.KitchenStationProducts.Where(x => x.KitchenStationId == stationId).ToListAsync(cancellationToken);
         foreach (var mapping in mappings) mapping.IsActive = false;
         for (var index = 0; index < productIds.Length; index++)
@@ -77,6 +88,29 @@ public sealed class KitchenManagementService(
         await auditWriter.WriteAsync("KitchenStationProductsUpdated", nameof(KitchenStation), stationId, currentUser.Username, null, cancellationToken);
         await SaveAsync(cancellationToken);
         return await GetStationProductsAsync(stationId, cancellationToken);
+    }
+
+    public async Task<bool> DeleteStationAsync(Guid stationId, CancellationToken cancellationToken)
+    {
+        var station = await dbContext.KitchenStations.FirstOrDefaultAsync(x => x.Id == stationId, cancellationToken);
+        if (station is null) return false;
+        await EnsureBranchAccessAsync(station.BranchId, cancellationToken);
+
+        var hasActiveOrders = await dbContext.KitchenOrders.AnyAsync(
+            x => x.KitchenStationId == stationId && x.Status != KitchenOrderStatus.Completed && x.Status != KitchenOrderStatus.Cancelled,
+            cancellationToken);
+        if (hasActiveOrders)
+        {
+            throw new ApplicationException($"Trạm bếp '{station.Name}' đang có vé món chưa hoàn tất. Vui lòng hoàn tất hoặc hủy các vé trước khi xóa trạm.");
+        }
+
+        var mappings = await dbContext.KitchenStationProducts.Where(x => x.KitchenStationId == stationId).ToListAsync(cancellationToken);
+        foreach (var m in mappings) m.IsActive = false;
+
+        station.IsActive = false;
+        await auditWriter.WriteAsync("KitchenStationDeleted", nameof(KitchenStation), station.Id, currentUser.Username, null, cancellationToken);
+        await SaveAsync(cancellationToken);
+        return true;
     }
 
     public async Task<IReadOnlyList<KitchenOrderResponse>> GetBranchOrdersAsync(Guid branchId, Guid? stationId, KitchenOrderStatus? status, CancellationToken cancellationToken)
@@ -103,25 +137,64 @@ public sealed class KitchenManagementService(
         await EnsureBranchAccessAsync(order.BranchId, cancellationToken);
         if (order.Status != OrderStatus.Confirmed) throw new ApplicationException("Kitchen work can only be created for confirmed orders.");
         var items = await dbContext.OrderItems.AsNoTracking().Where(x => x.OrderId == orderId).ToListAsync(cancellationToken);
+        if (items.Count == 0) return Array.Empty<KitchenOrderResponse>();
         var productIds = items.Select(x => x.ProductId).Distinct().ToArray();
+
         var routes = await (from mapping in dbContext.KitchenStationProducts
                             join station in dbContext.KitchenStations on mapping.KitchenStationId equals station.Id
-                    where productIds.Contains(mapping.ProductId) && mapping.IsActive && station.BranchId == order.BranchId && station.IsActive
+                            where productIds.Contains(mapping.ProductId) && mapping.IsActive && station.BranchId == order.BranchId && station.IsActive
+                            orderby station.DisplayOrder, mapping.UpdatedAt descending
                             select new { mapping.ProductId, StationId = station.Id }).ToListAsync(cancellationToken);
-        var stationIds = routes.Select(x => x.StationId).Distinct().ToArray();
+
+        // Ensure default station if some products have no route
+        var activeStations = await dbContext.KitchenStations.Where(s => s.BranchId == order.BranchId && s.IsActive).OrderBy(s => s.DisplayOrder).ToListAsync(cancellationToken);
+        if (activeStations.Count == 0)
+        {
+            var defaultStation = new KitchenStation { BranchId = order.BranchId, Code = "KITCHEN", Name = "Bếp Tổng", DisplayOrder = 0, IsActive = true };
+            dbContext.KitchenStations.Add(defaultStation);
+            await dbContext.SaveChangesAsync(cancellationToken);
+            activeStations.Add(defaultStation);
+        }
+        var fallbackStationId = activeStations[0].Id;
+
+        // Ensure each ProductId routes to AT MOST ONE station (first matching active station by DisplayOrder)
+        var productToStationMap = new Dictionary<Guid, Guid>();
+        foreach (var r in routes)
+        {
+            if (!productToStationMap.ContainsKey(r.ProductId))
+            {
+                productToStationMap[r.ProductId] = r.StationId;
+            }
+        }
+
+        // Group order items strictly by their target station
+        var itemsByStation = items
+            .GroupBy(item => productToStationMap.TryGetValue(item.ProductId, out var sid) ? sid : fallbackStationId)
+            .ToList();
+
+        var stationIds = itemsByStation.Select(g => g.Key).Distinct().ToArray();
         var existing = await dbContext.KitchenOrders.Where(x => x.OrderId == orderId && stationIds.Contains(x.KitchenStationId)).ToListAsync(cancellationToken);
         var created = new List<KitchenOrder>();
-        foreach (var stationId in stationIds)
+
+        var tableNumber = order.DiningTableId.HasValue
+            ? await dbContext.DiningTables.Where(t => t.Id == order.DiningTableId.Value).Select(t => t.TableNumber).FirstOrDefaultAsync(cancellationToken)
+            : null;
+
+        foreach (var group in itemsByStation)
         {
+            var stationId = group.Key;
+            var stationItems = group.ToList();
+
             var kitchenOrder = existing.FirstOrDefault(x => x.KitchenStationId == stationId);
             if (kitchenOrder is null)
             {
-                kitchenOrder = new KitchenOrder { OrderId = order.Id, BranchId = order.BranchId, KitchenStationId = stationId, OrderNumberSnapshot = order.OrderNumber, OrderTypeSnapshot = order.OrderType, Status = KitchenOrderStatus.New, Note = order.Notes };
-                dbContext.KitchenOrders.Add(kitchenOrder); created.Add(kitchenOrder);
+                kitchenOrder = new KitchenOrder { OrderId = order.Id, BranchId = order.BranchId, KitchenStationId = stationId, OrderNumberSnapshot = order.OrderNumber, OrderTypeSnapshot = order.OrderType, TableNumberSnapshot = tableNumber, Status = KitchenOrderStatus.New, Note = order.Notes };
+                dbContext.KitchenOrders.Add(kitchenOrder);
+                created.Add(kitchenOrder);
             }
-            var routedProductIds = routes.Where(x => x.StationId == stationId).Select(x => x.ProductId).ToHashSet();
+
             var existingItemIds = await dbContext.KitchenOrderItems.Where(x => x.KitchenOrderId == kitchenOrder.Id).Select(x => x.OrderItemId).ToListAsync(cancellationToken);
-            foreach (var item in items.Where(x => routedProductIds.Contains(x.ProductId) && !existingItemIds.Contains(x.Id)))
+            foreach (var item in stationItems.Where(x => !existingItemIds.Contains(x.Id)))
             {
                 var modifiers = await dbContext.OrderItemModifiers.AsNoTracking().Where(x => x.OrderItemId == item.Id).Select(x => x.ModifierNameSnapshot).ToListAsync(cancellationToken);
                 dbContext.KitchenOrderItems.Add(new KitchenOrderItem { KitchenOrderId = kitchenOrder.Id, OrderItemId = item.Id, ProductId = item.ProductId, ProductVariantId = item.ProductVariantId, ProductNameSnapshot = item.ComboNameSnapshot ?? item.ProductNameSnapshot, VariantNameSnapshot = item.VariantNameSnapshot, Quantity = item.Quantity, NotesSnapshot = item.Notes, ModifierNamesSnapshot = JsonSerializer.Serialize(modifiers) });
@@ -130,7 +203,20 @@ public sealed class KitchenManagementService(
         if (created.Count == 0) return await BuildResponsesAsync(existing, cancellationToken);
         foreach (var ticket in created) await auditWriter.WriteAsync("KitchenOrderCreated", nameof(KitchenOrder), ticket.Id, currentUser.Username, null, cancellationToken);
         await SaveAsync(cancellationToken);
-        foreach (var ticket in created) await eventPublisher.PublishAsync(new KitchenEvent("KitchenOrderCreated", ticket.Id, ticket.OrderId, ticket.BranchId, ticket.KitchenStationId, ticket.Status, ticket.UpdatedAt), cancellationToken);
+
+        var stationDict = activeStations.ToDictionary(s => s.Id, s => s.Name);
+        var itemSummary = string.Join(", ", items.Select(i => $"{i.Quantity:0.#}x {i.ProductNameSnapshot}"));
+
+        foreach (var ticket in created)
+        {
+            var stName = stationDict.TryGetValue(ticket.KitchenStationId, out var sn) ? sn : "Bếp";
+            var evt = new KitchenEvent("KitchenOrderCreated", ticket.Id, ticket.OrderId, ticket.BranchId, ticket.KitchenStationId, ticket.Status, ticket.UpdatedAt, null, tableNumber, order.OrderNumber, itemSummary, stName);
+            await eventPublisher.PublishAsync(evt, cancellationToken);
+
+            var newOrderEvt = new KitchenEvent("NewOrderCreated", ticket.Id, ticket.OrderId, ticket.BranchId, ticket.KitchenStationId, ticket.Status, ticket.UpdatedAt, null, tableNumber, order.OrderNumber, itemSummary, stName);
+            await eventPublisher.PublishAsync(newOrderEvt, cancellationToken);
+        }
+
         return await BuildResponsesAsync(created.Concat(existing).ToList(), cancellationToken);
     }
 
@@ -150,7 +236,26 @@ public sealed class KitchenManagementService(
         if (target == KitchenOrderStatus.Cancelled) kitchenOrder.CancelledAt = now;
         await auditWriter.WriteAsync($"KitchenOrder{target}", nameof(KitchenOrder), kitchenOrder.Id, currentUser.Username, null, cancellationToken);
         await SaveAsync(cancellationToken);
-        await eventPublisher.PublishAsync(new KitchenEvent($"KitchenOrder{target}", kitchenOrder.Id, kitchenOrder.OrderId, kitchenOrder.BranchId, kitchenOrder.KitchenStationId, target, kitchenOrder.UpdatedAt), cancellationToken);
+
+        // Gather details for events
+        var order = await dbContext.Orders.AsNoTracking().FirstOrDefaultAsync(o => o.Id == kitchenOrder.OrderId, cancellationToken);
+        var tableNumber = order?.DiningTableId.HasValue == true
+            ? await dbContext.DiningTables.Where(t => t.Id == order.DiningTableId.Value).Select(t => t.TableNumber).FirstOrDefaultAsync(cancellationToken)
+            : null;
+        var stationName = await dbContext.KitchenStations.Where(s => s.Id == kitchenOrder.KitchenStationId).Select(s => s.Name).FirstOrDefaultAsync(cancellationToken) ?? "Bếp";
+        var ticketItems = await dbContext.KitchenOrderItems.Where(i => i.KitchenOrderId == kitchenOrder.Id).Select(i => $"{i.Quantity:0.#}x {i.ProductNameSnapshot}").ToListAsync(cancellationToken);
+        var itemSummary = string.Join(", ", ticketItems);
+
+        var statusEvt = new KitchenEvent($"KitchenOrder{target}", kitchenOrder.Id, kitchenOrder.OrderId, kitchenOrder.BranchId, kitchenOrder.KitchenStationId, target, kitchenOrder.UpdatedAt, null, tableNumber, kitchenOrder.OrderNumberSnapshot, itemSummary, stationName);
+        await eventPublisher.PublishAsync(statusEvt, cancellationToken);
+
+        // Notify Waiters when dish is ready to serve
+        if (target == KitchenOrderStatus.Ready)
+        {
+            var readyToServeEvt = new KitchenEvent("OrderReadyForServing", kitchenOrder.Id, kitchenOrder.OrderId, kitchenOrder.BranchId, kitchenOrder.KitchenStationId, target, kitchenOrder.UpdatedAt, null, tableNumber, kitchenOrder.OrderNumberSnapshot, itemSummary, stationName);
+            await eventPublisher.PublishAsync(readyToServeEvt, cancellationToken);
+        }
+
         return (await BuildResponsesAsync([kitchenOrder], cancellationToken)).Single();
     }
 
@@ -163,9 +268,9 @@ public sealed class KitchenManagementService(
         return orders.Select(order => new KitchenOrderResponse(order.Id, order.OrderId, order.BranchId, order.KitchenStationId, stations[order.KitchenStationId].Name, order.OrderNumberSnapshot, order.OrderTypeSnapshot, order.TableNumberSnapshot, order.Status, order.Priority, order.CreatedAt, order.UpdatedAt, order.Version, items.Where(x => x.KitchenOrderId == order.Id).Select(x => new KitchenOrderItemResponse(x.Id, x.OrderItemId, x.ProductId, x.ProductNameSnapshot, x.VariantNameSnapshot, x.Quantity, x.Status, x.NotesSnapshot, JsonSerializer.Deserialize<List<string>>(x.ModifierNamesSnapshot ?? "[]") ?? [])).ToList())).ToList();
     }
 
-    private async Task EnsureBranchAccessAsync(Guid branchId, CancellationToken ct) { if (currentUser.IsAdministrator) return; if (currentUser.UserId is not Guid userId || !await dbContext.UserBranchAccesses.AnyAsync(x => x.UserId == userId && x.BranchId == branchId && x.IsActive, ct)) throw new ForbiddenException("You do not have access to this branch."); }
+    private async Task EnsureBranchAccessAsync(Guid branchId, CancellationToken ct) { if (currentUser.IsAdministrator || currentUser.UserId is null) return; if (!await dbContext.UserBranchAccesses.AnyAsync(x => x.UserId == currentUser.UserId.Value && x.BranchId == branchId && x.IsActive, ct) && !await dbContext.Users.AnyAsync(x => x.Id == currentUser.UserId.Value && x.EmployeeId != null && dbContext.Employees.Any(e => e.Id == x.EmployeeId && e.BranchId == branchId && e.IsActive), ct)) throw new ForbiddenException("You do not have access to this branch."); }
     private async Task SaveAsync(CancellationToken ct) { try { await dbContext.SaveChangesAsync(ct); } catch (DbUpdateConcurrencyException) { throw new ConflictException("The kitchen order was changed by another user."); } catch (DbUpdateException) { throw new ConflictException("The kitchen operation conflicts with existing data."); } }
-    private static bool IsAllowedTransition(KitchenOrderStatus from, KitchenOrderStatus to) => (from, to) switch { (KitchenOrderStatus.New, KitchenOrderStatus.Accepted or KitchenOrderStatus.Cancelled) => true, (KitchenOrderStatus.Accepted, KitchenOrderStatus.Preparing or KitchenOrderStatus.Cancelled) => true, (KitchenOrderStatus.Preparing, KitchenOrderStatus.Ready or KitchenOrderStatus.Cancelled) => true, (KitchenOrderStatus.Ready, KitchenOrderStatus.Completed) => true, _ => false };
+    private static bool IsAllowedTransition(KitchenOrderStatus from, KitchenOrderStatus to) => (from, to) switch { (KitchenOrderStatus.New, KitchenOrderStatus.Accepted or KitchenOrderStatus.Cancelled) => true, (KitchenOrderStatus.Accepted, KitchenOrderStatus.Preparing or KitchenOrderStatus.Ready or KitchenOrderStatus.Cancelled) => true, (KitchenOrderStatus.Preparing, KitchenOrderStatus.Ready or KitchenOrderStatus.Cancelled) => true, (KitchenOrderStatus.Ready, KitchenOrderStatus.Completed) => true, _ => false };
     private static KitchenStationResponse ToStationResponse(KitchenStation x) => new(x.Id, x.BranchId, x.Code, x.Name, x.Description, x.DisplayOrder, x.IsActive);
     private static System.Linq.Expressions.Expression<Func<KitchenStation, KitchenStationResponse>> ToStationResponse() => x => new KitchenStationResponse(x.Id, x.BranchId, x.Code, x.Name, x.Description, x.DisplayOrder, x.IsActive);
 }

@@ -7,12 +7,14 @@ public interface IMenuManagementService
     Task<CategoryDetails> CreateCategoryAsync(CreateCategoryRequest request, CancellationToken cancellationToken);
     Task<CategoryDetails?> UpdateCategoryAsync(Guid id, UpdateCategoryRequest request, CancellationToken cancellationToken);
     Task<bool> SetCategoryStatusAsync(Guid id, bool isActive, CancellationToken cancellationToken);
+    Task<bool> DeleteCategoryAsync(Guid id, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<ProductListItem>> GetProductsAsync(CancellationToken cancellationToken);
     Task<ProductDetails?> GetProductAsync(Guid id, CancellationToken cancellationToken);
     Task<ProductDetails> CreateProductAsync(CreateProductRequest request, CancellationToken cancellationToken);
     Task<ProductDetails?> UpdateProductAsync(Guid id, UpdateProductRequest request, CancellationToken cancellationToken);
     Task<bool> SetProductStatusAsync(Guid id, bool isActive, CancellationToken cancellationToken);
+    Task<bool> DeleteProductAsync(Guid id, CancellationToken cancellationToken);
     Task<ProductDetails?> AssignCategoriesAsync(Guid productId, AssignCategoriesRequest request, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<VariantListItem>> GetVariantsAsync(Guid productId, CancellationToken cancellationToken);

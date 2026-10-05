@@ -42,6 +42,9 @@ public sealed class ProductsController(
     [HttpPatch("{id:guid}/status"), RequirePermission("product.manage")]
     public async Task<IActionResult> SetStatus(Guid id, SetStatusRequest request, CancellationToken cancellationToken) => await service.SetProductStatusAsync(id, request.IsActive, cancellationToken) ? NoContent() : NotFound();
 
+    [HttpDelete("{id:guid}"), RequirePermission("product.delete")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken) => await service.DeleteProductAsync(id, cancellationToken) ? NoContent() : NotFound();
+
     [HttpPut("{id:guid}/categories"), RequirePermission("product.update")]
     public async Task<IActionResult> AssignCategories(Guid id, AssignCategoriesRequest request, CancellationToken cancellationToken) => (await service.AssignCategoriesAsync(id, request, cancellationToken)) is { } result ? Ok(result) : NotFound();
 

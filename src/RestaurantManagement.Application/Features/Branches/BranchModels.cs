@@ -18,4 +18,4 @@ public sealed record TableDetails(Guid Id, Guid BranchId, Guid AreaId, string Ta
 public sealed record CreateTableRequest(Guid AreaId, string TableNumber, string? Name, int Capacity, string? QrCodeIdentifier, int DisplayOrder);
 public sealed record UpdateTableRequest(Guid AreaId, string TableNumber, string? Name, int Capacity, string? QrCodeIdentifier, int DisplayOrder);
 public sealed record ChangeTableStatusRequest(TableStatus Status, string? Reason);
-public sealed record PublicTableInfo(string BranchName, string AreaName, string TableNumber, string? TableName);
+public sealed record PublicTableInfo(Guid BranchId, Guid TableId, string BranchName, string AreaName, string TableNumber, string? TableName);

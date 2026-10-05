@@ -33,7 +33,8 @@ public sealed class CategoriesController(IMenuManagementService service, IValida
     }
 
     [HttpPatch("{id:guid}/status"), RequirePermission("category.manage")]
-
     public async Task<IActionResult> SetStatus(Guid id, SetStatusRequest request, CancellationToken cancellationToken) => await service.SetCategoryStatusAsync(id, request.IsActive, cancellationToken) ? NoContent() : NotFound();
-    
+
+    [HttpDelete("{id:guid}"), RequirePermission("category.manage")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken) => await service.DeleteCategoryAsync(id, cancellationToken) ? NoContent() : NotFound();
 }

@@ -112,6 +112,62 @@ public sealed class BranchManagementService(
         await auditWriter.WriteAsync(isActive ? "AreaActivated" : "AreaDeactivated", nameof(Area), id, currentUser.Username, null, cancellationToken); await dbContext.SaveChangesAsync(cancellationToken); return true;
     }
 
+    public async Task<bool> DeleteAreaAsync(Guid id, bool cascade = false, Guid? moveToAreaId = null, CancellationToken cancellationToken = default)
+    {
+        var area = await dbContext.Areas.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+        if (area is null) return false;
+        await EnsureActiveBranchAccessAsync(area.BranchId, cancellationToken);
+
+        var activeTables = await dbContext.DiningTables
+            .Where(x => x.AreaId == id && x.IsActive)
+            .ToListAsync(cancellationToken);
+
+        if (activeTables.Count > 0)
+        {
+            if (moveToAreaId.HasValue)
+            {
+                if (moveToAreaId.Value == id)
+                    throw new ApplicationException("Không thể chuyển bàn về chính khu vực đang xóa.");
+
+                var targetArea = await dbContext.Areas.FirstOrDefaultAsync(
+                    x => x.Id == moveToAreaId.Value && x.BranchId == area.BranchId && x.IsActive,
+                    cancellationToken)
+                    ?? throw new ApplicationException("Khu vực chuyển đến không tồn tại hoặc đã bị vô hiệu hóa.");
+
+                foreach (var table in activeTables)
+                {
+                    table.AreaId = targetArea.Id;
+                }
+            }
+            else if (cascade)
+            {
+                foreach (var table in activeTables)
+                {
+                    if (table.Status == TableStatus.Occupied)
+                        throw new ApplicationException($"Không thể xóa khu vực: Bàn {table.TableNumber} đang có khách ngồi.");
+
+                    var hasActiveOrders = await dbContext.Orders.AnyAsync(
+                        x => x.DiningTableId == table.Id && x.Status != OrderStatus.Completed && x.Status != OrderStatus.Cancelled,
+                        cancellationToken);
+                    if (hasActiveOrders)
+                        throw new ApplicationException($"Không thể xóa khu vực: Bàn {table.TableNumber} đang có đơn hàng chưa hoàn tất.");
+
+                    table.IsActive = false;
+                    await auditWriter.WriteAsync("TableDeleted", nameof(DiningTable), table.Id, currentUser.Username, null, cancellationToken);
+                }
+            }
+            else
+            {
+                throw new ApplicationException($"Không thể xóa khu vực khi còn {activeTables.Count} bàn ăn đang hoạt động. Vui lòng chuyển hoặc xóa bàn trước.");
+            }
+        }
+
+        area.IsActive = false;
+        await auditWriter.WriteAsync("AreaDeleted", nameof(Area), id, currentUser.Username, null, cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
     public async Task<IReadOnlyList<TableListItem>> GetTablesAsync(Guid branchId, CancellationToken cancellationToken)
     {
         await EnsureBranchAccessAsync(branchId, cancellationToken);
@@ -128,8 +184,8 @@ public sealed class BranchManagementService(
     {
         await EnsureActiveBranchAccessAsync(branchId, cancellationToken); ValidateTable(request.TableNumber, request.Capacity);
         var area = await dbContext.Areas.FirstOrDefaultAsync(x => x.Id == request.AreaId && x.BranchId == branchId && x.IsActive, cancellationToken) ?? throw new ApplicationException("Area does not belong to the requested branch or is inactive.");
-        if (await dbContext.DiningTables.AnyAsync(x => x.BranchId == branchId && x.TableNumber == request.TableNumber.Trim(), cancellationToken)) throw new ConflictException("A table with this number already exists in the branch.");
-        if (!string.IsNullOrWhiteSpace(request.QrCodeIdentifier) && await dbContext.DiningTables.AnyAsync(x => x.QrCodeIdentifier == request.QrCodeIdentifier, cancellationToken)) throw new ConflictException("This QR identifier is already in use.");
+        if (await dbContext.DiningTables.AnyAsync(x => x.BranchId == branchId && x.TableNumber == request.TableNumber.Trim() && x.IsActive, cancellationToken)) throw new ConflictException("A table with this number already exists in the branch.");
+        if (!string.IsNullOrWhiteSpace(request.QrCodeIdentifier) && await dbContext.DiningTables.AnyAsync(x => x.QrCodeIdentifier == request.QrCodeIdentifier && x.IsActive, cancellationToken)) throw new ConflictException("This QR identifier is already in use.");
         var table = new DiningTable { BranchId = branchId, AreaId = request.AreaId, TableNumber = request.TableNumber.Trim(), Name = request.Name, Capacity = request.Capacity, QrCodeIdentifier = request.QrCodeIdentifier, DisplayOrder = request.DisplayOrder };
         dbContext.DiningTables.Add(table); dbContext.TableStatusHistories.Add(new TableStatusHistory { TableId = table.Id, OldStatus = table.Status, NewStatus = table.Status, Reason = "Created", ChangedBy = currentUser.UserId });
         await auditWriter.WriteAsync("TableCreated", nameof(DiningTable), table.Id, currentUser.Username, null, cancellationToken); await dbContext.SaveChangesAsync(cancellationToken); return ToTableDetails(table);
@@ -140,8 +196,8 @@ public sealed class BranchManagementService(
         var table = await dbContext.DiningTables.FirstOrDefaultAsync(x => x.Id == id, cancellationToken); if (table is null) return null;
         await EnsureActiveBranchAccessAsync(table.BranchId, cancellationToken); ValidateTable(request.TableNumber, request.Capacity);
         if (!await dbContext.Areas.AnyAsync(x => x.Id == request.AreaId && x.BranchId == table.BranchId && x.IsActive, cancellationToken)) throw new ApplicationException("Area does not belong to the table branch or is inactive.");
-        if (await dbContext.DiningTables.AnyAsync(x => x.Id != id && x.BranchId == table.BranchId && x.TableNumber == request.TableNumber.Trim(), cancellationToken)) throw new ConflictException("A table with this number already exists in the branch.");
-        if (!string.IsNullOrWhiteSpace(request.QrCodeIdentifier) && await dbContext.DiningTables.AnyAsync(x => x.Id != id && x.QrCodeIdentifier == request.QrCodeIdentifier, cancellationToken)) throw new ConflictException("This QR identifier is already in use.");
+        if (await dbContext.DiningTables.AnyAsync(x => x.Id != id && x.BranchId == table.BranchId && x.TableNumber == request.TableNumber.Trim() && x.IsActive, cancellationToken)) throw new ConflictException("A table with this number already exists in the branch.");
+        if (!string.IsNullOrWhiteSpace(request.QrCodeIdentifier) && await dbContext.DiningTables.AnyAsync(x => x.Id != id && x.QrCodeIdentifier == request.QrCodeIdentifier && x.IsActive, cancellationToken)) throw new ConflictException("This QR identifier is already in use.");
         table.AreaId = request.AreaId; table.TableNumber = request.TableNumber.Trim(); table.Name = request.Name; table.Capacity = request.Capacity; table.QrCodeIdentifier = request.QrCodeIdentifier; table.DisplayOrder = request.DisplayOrder;
         await auditWriter.WriteAsync("TableUpdated", nameof(DiningTable), id, currentUser.Username, null, cancellationToken); await dbContext.SaveChangesAsync(cancellationToken); return ToTableDetails(table);
     }
@@ -153,22 +209,85 @@ public sealed class BranchManagementService(
         await auditWriter.WriteAsync(isActive ? "TableActivated" : "TableDeactivated", nameof(DiningTable), id, currentUser.Username, null, cancellationToken); await dbContext.SaveChangesAsync(cancellationToken); return true;
     }
 
-    public async Task<TableDetails?> ChangeTableStatusAsync(Guid id, ChangeTableStatusRequest request, CancellationToken cancellationToken)
+    public async Task<bool> DeleteTableAsync(Guid id, CancellationToken cancellationToken)
     {
-        var table = await dbContext.DiningTables.FirstOrDefaultAsync(x => x.Id == id && x.IsActive, cancellationToken); if (table is null) return null;
+        var table = await dbContext.DiningTables.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+        if (table is null) return false;
         await EnsureActiveBranchAccessAsync(table.BranchId, cancellationToken);
-        if (!IsAllowedTransition(table.Status, request.Status)) throw new ApplicationException($"Cannot change table status from {table.Status} to {request.Status}.");
-        var oldStatus = table.Status; table.Status = request.Status;
-        dbContext.TableStatusHistories.Add(new TableStatusHistory { TableId = id, OldStatus = oldStatus, NewStatus = request.Status, Reason = request.Reason, ChangedBy = currentUser.UserId });
-        await auditWriter.WriteAsync("TableStatusChanged", nameof(DiningTable), id, currentUser.Username, null, cancellationToken); await dbContext.SaveChangesAsync(cancellationToken); return ToTableDetails(table);
+
+        if (table.Status == TableStatus.Occupied)
+            throw new ApplicationException("Không thể xóa bàn đang có khách ngồi.");
+
+        var hasActiveAllocations = await dbContext.OrderTableAllocations.AnyAsync(x => x.TableId == id && x.ReleasedAt == null, cancellationToken);
+        if (hasActiveAllocations)
+            throw new ApplicationException("Bàn đang có đơn hàng chưa hoàn tất.");
+
+        var hasHistoricalAllocations = await dbContext.OrderTableAllocations.AnyAsync(x => x.TableId == id, cancellationToken);
+        var hasHistoricalOrders = await dbContext.Orders.AnyAsync(x => x.DiningTableId == id, cancellationToken);
+
+        if (hasHistoricalAllocations || hasHistoricalOrders)
+        {
+            table.IsActive = false;
+        }
+        else
+        {
+            var histories = await dbContext.TableStatusHistories.Where(x => x.TableId == id).ToListAsync(cancellationToken);
+            dbContext.TableStatusHistories.RemoveRange(histories);
+            dbContext.DiningTables.Remove(table);
+        }
+
+        await auditWriter.WriteAsync("TableDeleted", nameof(DiningTable), id, currentUser.Username, null, cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return true;
     }
 
-    public Task<PublicTableInfo?> GetPublicTableAsync(string qrCodeIdentifier, CancellationToken cancellationToken) =>
-        (from table in dbContext.DiningTables.AsNoTracking()
-         join branch in dbContext.Branches on table.BranchId equals branch.Id
-         join area in dbContext.Areas on table.AreaId equals area.Id
-         where table.QrCodeIdentifier == qrCodeIdentifier && table.IsActive && branch.IsActive && area.IsActive
-         select new PublicTableInfo(branch.Name, area.Name, table.TableNumber, table.Name)).FirstOrDefaultAsync(cancellationToken);
+    public async Task<TableDetails?> ChangeTableStatusAsync(Guid id, ChangeTableStatusRequest request, CancellationToken cancellationToken)
+    {
+        var table = await dbContext.DiningTables.FirstOrDefaultAsync(x => x.Id == id && x.IsActive, cancellationToken);
+        if (table is null) return null;
+        await EnsureActiveBranchAccessAsync(table.BranchId, cancellationToken);
+        if (!IsAllowedTransition(table.Status, request.Status))
+            throw new ApplicationException($"Không thể chuyển trạng thái bàn từ {GetStatusName(table.Status)} sang {GetStatusName(request.Status)}.");
+
+        // Nếu bàn đang Có khách hoặc chuyển về Trống/Đã đặt/Tạm ngưng, kiểm tra xem có đơn hàng chưa hoàn tất/thanh toán không
+        if (table.Status == TableStatus.Occupied && request.Status != TableStatus.Occupied)
+        {
+            var hasActiveOrders = await dbContext.Orders.AnyAsync(
+                x => x.DiningTableId == id && x.Status != OrderStatus.Completed && x.Status != OrderStatus.Cancelled,
+                cancellationToken);
+            if (hasActiveOrders)
+            {
+                throw new ApplicationException($"Bàn {table.TableNumber} đang có khách và đơn hàng chưa hoàn tất thanh toán. Vui lòng thanh toán tại POS hoặc hủy đơn trước khi đổi sang trạng thái {GetStatusName(request.Status)}.");
+            }
+        }
+        else if (request.Status == TableStatus.Available)
+        {
+            var hasActiveOrders = await dbContext.Orders.AnyAsync(
+                x => x.DiningTableId == id && x.Status != OrderStatus.Completed && x.Status != OrderStatus.Cancelled,
+                cancellationToken);
+            if (hasActiveOrders)
+            {
+                throw new ApplicationException($"Bàn {table.TableNumber} đang có đơn hàng chưa hoàn tất. Không thể chuyển sang trạng thái Trống.");
+            }
+        }
+
+        var oldStatus = table.Status;
+        table.Status = request.Status;
+        dbContext.TableStatusHistories.Add(new TableStatusHistory { TableId = id, OldStatus = oldStatus, NewStatus = request.Status, Reason = request.Reason, ChangedBy = currentUser.UserId });
+        await auditWriter.WriteAsync("TableStatusChanged", nameof(DiningTable), id, currentUser.Username, null, cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return ToTableDetails(table);
+    }
+
+    public Task<PublicTableInfo?> GetPublicTableAsync(string qrCodeIdentifier, CancellationToken cancellationToken)
+    {
+        var isGuid = Guid.TryParse(qrCodeIdentifier, out var parsedId);
+        return (from table in dbContext.DiningTables.AsNoTracking()
+                join branch in dbContext.Branches on table.BranchId equals branch.Id
+                join area in dbContext.Areas on table.AreaId equals area.Id
+                where (table.QrCodeIdentifier == qrCodeIdentifier || (isGuid && table.Id == parsedId)) && table.IsActive && branch.IsActive && area.IsActive
+                select new PublicTableInfo(branch.Id, table.Id, branch.Name, area.Name, table.TableNumber, table.Name)).FirstOrDefaultAsync(cancellationToken);
+    }
 
     private async Task EnsureBranchAccessAsync(Guid branchId, CancellationToken cancellationToken)
     {
@@ -195,4 +314,14 @@ public sealed class BranchManagementService(
     private static AreaDetails ToAreaDetails(Area x) => new(x.Id, x.BranchId, x.Name, x.Description, x.DisplayOrder, x.IsActive, x.CreatedAt, x.UpdatedAt);
     private static TableDetails ToTableDetails(DiningTable x) => new(x.Id, x.BranchId, x.AreaId, x.TableNumber, x.Name, x.Capacity, x.Status, x.QrCodeIdentifier, x.DisplayOrder, x.IsActive, x.CreatedAt, x.UpdatedAt);
     private static System.Linq.Expressions.Expression<Func<Branch, BranchDetails>> ToBranchDetails() => x => new BranchDetails(x.Id, x.Code, x.Name, x.Description, x.Phone, x.Email, x.Address, x.IsActive, x.CreatedAt, x.UpdatedAt);
+
+    private static string GetStatusName(TableStatus status) => status switch
+    {
+        TableStatus.Available => "Trống",
+        TableStatus.Occupied => "Có khách",
+        TableStatus.Reserved => "Đã đặt",
+        TableStatus.Cleaning => "Đang dọn",
+        TableStatus.OutOfService => "Tạm ngưng",
+        _ => status.ToString()
+    };
 }

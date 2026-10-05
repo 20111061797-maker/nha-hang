@@ -40,14 +40,33 @@ public sealed class MenuManagementService(
         category.IsActive = isActive; await auditWriter.WriteAsync(isActive ? "CategoryActivated" : "CategoryDeactivated", nameof(Category), id, currentUser.Username, null, cancellationToken); await dbContext.SaveChangesAsync(cancellationToken); return true;
     }
 
-    public async Task<IReadOnlyList<ProductListItem>> GetProductsAsync(CancellationToken cancellationToken) =>
-        await dbContext.Products.AsNoTracking().Where(x => x.IsActive).OrderBy(x => x.DisplayOrder).ThenBy(x => x.Name).Select(x => new ProductListItem(x.Id, x.Sku, x.Name, x.Description, x.ShortDescription, x.DisplayOrder, x.IsActive)).ToListAsync(cancellationToken);
+    public async Task<bool> DeleteCategoryAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var category = await dbContext.Categories.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+        if (category is null) return false;
+        category.IsActive = false;
+        var subcategories = await dbContext.Categories.Where(x => x.ParentId == id).ToListAsync(cancellationToken);
+        foreach (var sub in subcategories) sub.ParentId = null;
+        await auditWriter.WriteAsync("CategoryDeleted", nameof(Category), id, currentUser.Username, null, cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
+    public async Task<IReadOnlyList<ProductListItem>> GetProductsAsync(CancellationToken cancellationToken)
+    {
+        var products = await dbContext.Products.AsNoTracking().Where(x => x.IsActive).OrderBy(x => x.DisplayOrder).ThenBy(x => x.Name).ToListAsync(cancellationToken);
+        var productIds = products.Select(x => x.Id).ToList();
+        var images = await dbContext.ProductImages.AsNoTracking().Where(x => productIds.Contains(x.ProductId) && x.IsActive).OrderByDescending(x => x.IsPrimary).ThenBy(x => x.DisplayOrder).ToListAsync(cancellationToken);
+        var imageMap = images.GroupBy(x => x.ProductId).ToDictionary(g => g.Key, g => g.First().Url);
+        return products.Select(x => new ProductListItem(x.Id, x.Sku, x.Name, x.Description, x.ShortDescription, x.DisplayOrder, x.IsActive, imageMap.TryGetValue(x.Id, out var img) ? img : null)).ToList();
+    }
 
     public async Task<ProductDetails?> GetProductAsync(Guid id, CancellationToken cancellationToken)
     {
         var product = await dbContext.Products.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, cancellationToken); if (product is null) return null;
         var categoryIds = await dbContext.ProductCategories.Where(x => x.ProductId == id).Select(x => x.CategoryId).ToListAsync(cancellationToken);
-        return ToProductDetails(product, categoryIds);
+        var primaryImage = await dbContext.ProductImages.AsNoTracking().Where(x => x.ProductId == id && x.IsActive).OrderByDescending(x => x.IsPrimary).ThenBy(x => x.DisplayOrder).Select(x => x.Url).FirstOrDefaultAsync(cancellationToken);
+        return ToProductDetails(product, categoryIds, primaryImage);
     }
 
     public async Task<ProductDetails> CreateProductAsync(CreateProductRequest request, CancellationToken cancellationToken)
@@ -55,7 +74,13 @@ public sealed class MenuManagementService(
         await ValidateCategoriesAsync(request.CategoryIds, cancellationToken);
         if (await dbContext.Products.AnyAsync(x => x.Sku == request.Sku.Trim(), cancellationToken)) throw new ConflictException("A product with this SKU already exists.");
         var product = new Product { Sku = request.Sku.Trim(), Name = request.Name.Trim(), Description = request.Description, ShortDescription = request.ShortDescription, DisplayOrder = request.DisplayOrder };
-        dbContext.Products.Add(product); AddCategoryLinks(product.Id, request.CategoryIds); await auditWriter.WriteAsync("ProductCreated", nameof(Product), product.Id, currentUser.Username, null, cancellationToken); await dbContext.SaveChangesAsync(cancellationToken); return ToProductDetails(product, request.CategoryIds);
+        dbContext.Products.Add(product); AddCategoryLinks(product.Id, request.CategoryIds);
+        if (!string.IsNullOrWhiteSpace(request.ImageUrl))
+        {
+            dbContext.ProductImages.Add(new ProductImage { ProductId = product.Id, Url = request.ImageUrl.Trim(), IsPrimary = true, DisplayOrder = 0, IsActive = true });
+        }
+        await auditWriter.WriteAsync("ProductCreated", nameof(Product), product.Id, currentUser.Username, null, cancellationToken); await dbContext.SaveChangesAsync(cancellationToken);
+        return ToProductDetails(product, request.CategoryIds, request.ImageUrl?.Trim());
     }
 
     public async Task<ProductDetails?> UpdateProductAsync(Guid id, UpdateProductRequest request, CancellationToken cancellationToken)
@@ -64,7 +89,33 @@ public sealed class MenuManagementService(
         await ValidateCategoriesAsync(request.CategoryIds, cancellationToken);
         if (await dbContext.Products.AnyAsync(x => x.Id != id && x.Sku == request.Sku.Trim(), cancellationToken)) throw new ConflictException("A product with this SKU already exists.");
         product.Sku = request.Sku.Trim(); product.Name = request.Name.Trim(); product.Description = request.Description; product.ShortDescription = request.ShortDescription; product.DisplayOrder = request.DisplayOrder;
-        await ReplaceCategoriesAsync(id, request.CategoryIds, cancellationToken); await auditWriter.WriteAsync("ProductUpdated", nameof(Product), id, currentUser.Username, null, cancellationToken); await dbContext.SaveChangesAsync(cancellationToken); return ToProductDetails(product, request.CategoryIds);
+        await ReplaceCategoriesAsync(id, request.CategoryIds, cancellationToken);
+
+        if (request.ImageUrl is not null)
+        {
+            var existingImages = await dbContext.ProductImages.Where(x => x.ProductId == id && x.IsActive).ToListAsync(cancellationToken);
+            if (!string.IsNullOrWhiteSpace(request.ImageUrl))
+            {
+                var primary = existingImages.FirstOrDefault(x => x.IsPrimary) ?? existingImages.FirstOrDefault();
+                if (primary != null)
+                {
+                    primary.Url = request.ImageUrl.Trim();
+                    primary.IsPrimary = true;
+                }
+                else
+                {
+                    dbContext.ProductImages.Add(new ProductImage { ProductId = id, Url = request.ImageUrl.Trim(), IsPrimary = true, DisplayOrder = 0, IsActive = true });
+                }
+            }
+            else
+            {
+                foreach (var img in existingImages) { img.IsActive = false; img.IsPrimary = false; }
+            }
+        }
+
+        await auditWriter.WriteAsync("ProductUpdated", nameof(Product), id, currentUser.Username, null, cancellationToken); await dbContext.SaveChangesAsync(cancellationToken);
+        var currentImg = await dbContext.ProductImages.AsNoTracking().Where(x => x.ProductId == id && x.IsActive).OrderByDescending(x => x.IsPrimary).ThenBy(x => x.DisplayOrder).Select(x => x.Url).FirstOrDefaultAsync(cancellationToken);
+        return ToProductDetails(product, request.CategoryIds, currentImg);
     }
 
     public async Task<bool> SetProductStatusAsync(Guid id, bool isActive, CancellationToken cancellationToken)
@@ -73,10 +124,24 @@ public sealed class MenuManagementService(
         product.IsActive = isActive; await auditWriter.WriteAsync(isActive ? "ProductActivated" : "ProductDeactivated", nameof(Product), id, currentUser.Username, null, cancellationToken); await dbContext.SaveChangesAsync(cancellationToken); return true;
     }
 
+    public async Task<bool> DeleteProductAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var product = await dbContext.Products.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+        if (product is null) return false;
+        product.IsActive = false;
+        var branchProducts = await dbContext.BranchProducts.Where(x => x.ProductId == id).ToListAsync(cancellationToken);
+        foreach (var bp in branchProducts) bp.IsActive = false;
+        await auditWriter.WriteAsync("ProductDeleted", nameof(Product), id, currentUser.Username, null, cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
     public async Task<ProductDetails?> AssignCategoriesAsync(Guid productId, AssignCategoriesRequest request, CancellationToken cancellationToken)
     {
         var product = await dbContext.Products.FirstOrDefaultAsync(x => x.Id == productId, cancellationToken); if (product is null) return null;
-        await ValidateCategoriesAsync(request.CategoryIds, cancellationToken); await ReplaceCategoriesAsync(productId, request.CategoryIds, cancellationToken); await auditWriter.WriteAsync("ProductCategoriesChanged", nameof(Product), productId, currentUser.Username, null, cancellationToken); await dbContext.SaveChangesAsync(cancellationToken); return ToProductDetails(product, request.CategoryIds);
+        await ValidateCategoriesAsync(request.CategoryIds, cancellationToken); await ReplaceCategoriesAsync(productId, request.CategoryIds, cancellationToken); await auditWriter.WriteAsync("ProductCategoriesChanged", nameof(Product), productId, currentUser.Username, null, cancellationToken); await dbContext.SaveChangesAsync(cancellationToken);
+        var primaryImage = await dbContext.ProductImages.AsNoTracking().Where(x => x.ProductId == productId && x.IsActive).OrderByDescending(x => x.IsPrimary).ThenBy(x => x.DisplayOrder).Select(x => x.Url).FirstOrDefaultAsync(cancellationToken);
+        return ToProductDetails(product, request.CategoryIds, primaryImage);
     }
 
     public async Task<IReadOnlyList<VariantListItem>> GetVariantsAsync(Guid productId, CancellationToken cancellationToken) =>
@@ -129,7 +194,17 @@ public sealed class MenuManagementService(
     public async Task<IReadOnlyList<BranchProductItem>> GetBranchProductsAsync(Guid branchId, CancellationToken cancellationToken)
     {
         await EnsureBranchAccessAsync(branchId, cancellationToken);
-        return await (from branchProduct in dbContext.BranchProducts.AsNoTracking() join product in dbContext.Products on branchProduct.ProductId equals product.Id where branchProduct.BranchId == branchId && branchProduct.IsActive && product.IsActive orderby product.DisplayOrder, product.Name select new BranchProductItem(branchProduct.Id, branchId, product.Id, product.Name, product.Sku, branchProduct.PriceOverride ?? 0, branchProduct.IsAvailable, branchProduct.IsActive)).ToListAsync(cancellationToken);
+        var branchProducts = await (from branchProduct in dbContext.BranchProducts.AsNoTracking()
+                                    join product in dbContext.Products on branchProduct.ProductId equals product.Id
+                                    where branchProduct.BranchId == branchId && branchProduct.IsActive && product.IsActive
+                                    orderby product.DisplayOrder, product.Name
+                                    select new { branchProduct, product }).ToListAsync(cancellationToken);
+
+        var productIds = branchProducts.Select(x => x.product.Id).Distinct().ToList();
+        var images = await dbContext.ProductImages.AsNoTracking().Where(x => productIds.Contains(x.ProductId) && x.IsActive).OrderByDescending(x => x.IsPrimary).ThenBy(x => x.DisplayOrder).ToListAsync(cancellationToken);
+        var imageMap = images.GroupBy(x => x.ProductId).ToDictionary(g => g.Key, g => g.First().Url);
+
+        return branchProducts.Select(x => new BranchProductItem(x.branchProduct.Id, branchId, x.product.Id, x.product.Name, x.product.Sku, x.branchProduct.PriceOverride ?? 0, x.branchProduct.IsAvailable, x.branchProduct.IsActive, imageMap.TryGetValue(x.product.Id, out var img) ? img : null)).ToList();
     }
 
     public async Task<BranchProductItem> CreateBranchProductAsync(Guid branchId, CreateBranchProductRequest request, CancellationToken cancellationToken)
@@ -142,7 +217,9 @@ public sealed class MenuManagementService(
 
     public async Task<BranchProductItem?> GetBranchProductAsync(Guid id, CancellationToken cancellationToken)
     {
-        var row = await (from branchProduct in dbContext.BranchProducts.AsNoTracking() join product in dbContext.Products on branchProduct.ProductId equals product.Id where branchProduct.Id == id select new { branchProduct, product }).FirstOrDefaultAsync(cancellationToken); if (row is null) return null; await EnsureBranchAccessAsync(row.branchProduct.BranchId, cancellationToken); return new BranchProductItem(row.branchProduct.Id, row.branchProduct.BranchId, row.product.Id, row.product.Name, row.product.Sku, row.branchProduct.PriceOverride ?? 0, row.branchProduct.IsAvailable, row.branchProduct.IsActive);
+        var row = await (from branchProduct in dbContext.BranchProducts.AsNoTracking() join product in dbContext.Products on branchProduct.ProductId equals product.Id where branchProduct.Id == id select new { branchProduct, product }).FirstOrDefaultAsync(cancellationToken); if (row is null) return null; await EnsureBranchAccessAsync(row.branchProduct.BranchId, cancellationToken);
+        var primaryImage = await dbContext.ProductImages.AsNoTracking().Where(x => x.ProductId == row.product.Id && x.IsActive).OrderByDescending(x => x.IsPrimary).ThenBy(x => x.DisplayOrder).Select(x => x.Url).FirstOrDefaultAsync(cancellationToken);
+        return new BranchProductItem(row.branchProduct.Id, row.branchProduct.BranchId, row.product.Id, row.product.Name, row.product.Sku, row.branchProduct.PriceOverride ?? 0, row.branchProduct.IsAvailable, row.branchProduct.IsActive, primaryImage);
     }
 
     public async Task<BranchProductItem?> UpdateBranchProductAsync(Guid id, UpdateBranchProductRequest request, CancellationToken cancellationToken)
@@ -165,6 +242,8 @@ public sealed class MenuManagementService(
         await EnsureBranchAccessAsync(branchId, cancellationToken);
         var rows = await (from bp in dbContext.BranchProducts.AsNoTracking() join p in dbContext.Products on bp.ProductId equals p.Id join pc in dbContext.ProductCategories on p.Id equals pc.ProductId join c in dbContext.Categories on pc.CategoryId equals c.Id where bp.BranchId == branchId && bp.IsActive && bp.IsAvailable && p.IsActive && c.IsActive orderby c.DisplayOrder, c.Name, p.DisplayOrder, p.Name select new { CategoryId = c.Id, CategoryName = c.Name, CategoryOrder = c.DisplayOrder, ProductId = p.Id, ProductSku = p.Sku, ProductName = p.Name, ProductDescription = p.Description, ProductShortDescription = p.ShortDescription, ProductOrder = p.DisplayOrder, Price = bp.PriceOverride ?? 0 }).ToListAsync(cancellationToken);
         var productIds = rows.Select(x => x.ProductId).Distinct().ToArray();
+        var images = await dbContext.ProductImages.AsNoTracking().Where(x => productIds.Contains(x.ProductId) && x.IsActive).OrderByDescending(x => x.IsPrimary).ThenBy(x => x.DisplayOrder).ToListAsync(cancellationToken);
+        var imageMap = images.GroupBy(x => x.ProductId).ToDictionary(g => g.Key, g => g.First().Url);
         var variants = await dbContext.ProductVariants.AsNoTracking().Where(x => productIds.Contains(x.ProductId) && x.IsActive).OrderBy(x => x.DisplayOrder).Select(x => new { x.ProductId, x.Id, x.Name, Price = x.DefaultPrice ?? 0, x.DisplayOrder }).ToListAsync(cancellationToken);
         var modifierRows = await (from assignment in dbContext.ProductModifierGroups.AsNoTracking()
                                   join modifierGroup in dbContext.ModifierGroups.AsNoTracking() on assignment.ModifierGroupId equals modifierGroup.Id
@@ -174,7 +253,7 @@ public sealed class MenuManagementService(
                                   where productIds.Contains(assignment.ProductId) && modifierGroup.IsActive && modifier.IsActive
                                   select new ModifierMenuRow(assignment.ProductId, modifierGroup.Id, modifierGroup.Name, modifierGroup.MinimumSelections, modifierGroup.MaximumSelections, modifierGroup.IsRequired, modifier.Id, modifier.Name, option == null ? modifier.DefaultPrice : option.PriceOverride ?? modifier.DefaultPrice, modifier.DisplayOrder)).ToListAsync(cancellationToken);
         var modifierGroups = modifierRows.GroupBy(x => x.ProductId).ToDictionary(x => x.Key, x => x.GroupBy(y => new { y.GroupId, y.GroupName, y.MinSelections, y.MaxSelections, y.IsRequired }).ToDictionary(y => y.Key.GroupId, y => new MenuModifierGroup(y.Key.GroupId, y.Key.GroupName, y.Key.MinSelections, y.Key.MaxSelections, y.Key.IsRequired, y.OrderBy(z => z.ModifierDisplayOrder).Select(z => new MenuModifier(z.ModifierId, z.ModifierName, z.Price, z.ModifierDisplayOrder)).ToList())));
-        var categories = rows.GroupBy(x => new { x.CategoryId, x.CategoryName, x.CategoryOrder }).OrderBy(x => x.Key.CategoryOrder).ThenBy(x => x.Key.CategoryName).Select(category => new MenuCategory(category.Key.CategoryId, category.Key.CategoryName, category.Key.CategoryOrder, category.GroupBy(x => new { x.ProductId, x.ProductSku, x.ProductName, x.ProductDescription, x.ProductShortDescription, x.ProductOrder, x.Price }).OrderBy(x => x.Key.ProductOrder).ThenBy(x => x.Key.ProductName).Select(product => new MenuProduct(product.Key.ProductId, product.Key.ProductSku, product.Key.ProductName, product.Key.ProductDescription, product.Key.ProductShortDescription, product.Key.Price, variants.Where(v => v.ProductId == product.Key.ProductId).Select(v => new MenuVariant(v.Id, v.Name, v.Price, v.DisplayOrder)).ToList(), modifierGroups.TryGetValue(product.Key.ProductId, out var groups) ? groups.Values.OrderBy(x => x.Name).ToList() : [])).ToList())).ToList();
+        var categories = rows.GroupBy(x => new { x.CategoryId, x.CategoryName, x.CategoryOrder }).OrderBy(x => x.Key.CategoryOrder).ThenBy(x => x.Key.CategoryName).Select(category => new MenuCategory(category.Key.CategoryId, category.Key.CategoryName, category.Key.CategoryOrder, category.GroupBy(x => new { x.ProductId, x.ProductSku, x.ProductName, x.ProductDescription, x.ProductShortDescription, x.ProductOrder, x.Price }).OrderBy(x => x.Key.ProductOrder).ThenBy(x => x.Key.ProductName).Select(product => new MenuProduct(product.Key.ProductId, product.Key.ProductSku, product.Key.ProductName, product.Key.ProductDescription, product.Key.ProductShortDescription, product.Key.Price, variants.Where(v => v.ProductId == product.Key.ProductId).Select(v => new MenuVariant(v.Id, v.Name, v.Price, v.DisplayOrder)).ToList(), modifierGroups.TryGetValue(product.Key.ProductId, out var groups) ? groups.Values.OrderBy(x => x.Name).ToList() : [], imageMap.TryGetValue(product.Key.ProductId, out var img) ? img : null)).ToList())).ToList();
         var combos = await GetActiveMenuCombosAsync(branchId, cancellationToken);
         return new MenuResponse(branchId, categories, combos);
     }
@@ -196,10 +275,10 @@ public sealed class MenuManagementService(
     private async Task ReplaceCategoriesAsync(Guid productId, IEnumerable<Guid> categoryIds, CancellationToken cancellationToken) { dbContext.ProductCategories.RemoveRange(await dbContext.ProductCategories.Where(x => x.ProductId == productId).ToListAsync(cancellationToken)); AddCategoryLinks(productId, categoryIds); }
     private async Task EnsureProductAsync(Guid productId, CancellationToken cancellationToken) { if (!await dbContext.Products.AnyAsync(x => x.Id == productId && x.IsActive, cancellationToken)) throw new RestaurantManagement.Application.Common.Exceptions.ApplicationException("Product does not exist or is inactive."); }
     private async Task ClearPrimaryImageAsync(Guid productId, Guid? exceptId, CancellationToken cancellationToken) { var images = await dbContext.ProductImages.Where(x => x.ProductId == productId && x.IsPrimary && x.Id != exceptId).ToListAsync(cancellationToken); foreach (var image in images) image.IsPrimary = false; }
-    private async Task EnsureBranchAccessAsync(Guid branchId, CancellationToken cancellationToken) { if (currentUser.IsAdministrator) return; if (currentUser.UserId is not Guid userId || (!await dbContext.UserBranchAccesses.AnyAsync(x => x.UserId == userId && x.BranchId == branchId && x.IsActive, cancellationToken) && !await dbContext.Users.AnyAsync(x => x.Id == userId && x.EmployeeId != null && dbContext.Employees.Any(e => e.Id == x.EmployeeId && e.BranchId == branchId && e.IsActive), cancellationToken))) throw new ForbiddenException("You do not have access to this branch."); }
+    private async Task EnsureBranchAccessAsync(Guid branchId, CancellationToken cancellationToken) { if (currentUser.IsAdministrator || currentUser.UserId is null) return; if (!await dbContext.UserBranchAccesses.AnyAsync(x => x.UserId == currentUser.UserId.Value && x.BranchId == branchId && x.IsActive, cancellationToken) && !await dbContext.Users.AnyAsync(x => x.Id == currentUser.UserId.Value && x.EmployeeId != null && dbContext.Employees.Any(e => e.Id == x.EmployeeId && e.BranchId == branchId && e.IsActive), cancellationToken)) throw new ForbiddenException("You do not have access to this branch."); }
     private async Task EnsureActiveBranchAccessAsync(Guid branchId, CancellationToken cancellationToken) { await EnsureBranchAccessAsync(branchId, cancellationToken); if (!await dbContext.Branches.AnyAsync(x => x.Id == branchId && x.IsActive, cancellationToken)) throw new RestaurantManagement.Application.Common.Exceptions.ApplicationException("Branch does not exist or is inactive."); }
     private static CategoryDetails ToCategoryDetails(Category x) => new(x.Id, x.Name, x.Description, x.ParentId, x.DisplayOrder, x.IsActive, x.CreatedAt, x.UpdatedAt);
-    private static ProductDetails ToProductDetails(Product x, IEnumerable<Guid> categoryIds) => new(x.Id, x.Sku, x.Name, x.Description, x.ShortDescription, x.DisplayOrder, x.IsActive, categoryIds.Distinct().ToArray(), x.CreatedAt, x.UpdatedAt);
+    private static ProductDetails ToProductDetails(Product x, IEnumerable<Guid> categoryIds, string? imageUrl = null) => new(x.Id, x.Sku, x.Name, x.Description, x.ShortDescription, x.DisplayOrder, x.IsActive, categoryIds.Distinct().ToArray(), x.CreatedAt, x.UpdatedAt, imageUrl);
     private static VariantDetails ToVariantDetails(ProductVariant x) => new(x.Id, x.ProductId, x.Name, x.Sku, x.DefaultPrice, x.DisplayOrder, x.IsActive, x.CreatedAt, x.UpdatedAt);
     private static ProductImageItem ToImage(ProductImage x) => new(x.Id, x.ProductId, x.Url, x.AltText, x.DisplayOrder, x.IsPrimary, x.IsActive);
     private static System.Linq.Expressions.Expression<Func<ProductVariant, VariantListItem>> ToVariantList() => x => new VariantListItem(x.Id, x.ProductId, x.Name, x.Sku, x.DefaultPrice, x.DisplayOrder, x.IsActive);

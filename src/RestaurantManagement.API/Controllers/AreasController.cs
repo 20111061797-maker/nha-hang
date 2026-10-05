@@ -37,4 +37,13 @@ public sealed class AreasController(IBranchManagementService service, IValidator
     [HttpPatch("api/areas/{id:guid}/status")]
     [RequirePermission("area.manage")]
     public async Task<IActionResult> SetStatus(Guid id, SetStatusRequest request, CancellationToken cancellationToken) => await service.SetAreaStatusAsync(id, request.IsActive, cancellationToken) ? NoContent() : NotFound();
+
+    [HttpDelete("api/areas/{id:guid}")]
+    [RequirePermission("area.manage")]
+    public async Task<IActionResult> Delete(
+        Guid id,
+        [FromQuery] bool cascade = false,
+        [FromQuery] Guid? moveToAreaId = null,
+        CancellationToken cancellationToken = default) =>
+        await service.DeleteAreaAsync(id, cascade, moveToAreaId, cancellationToken) ? NoContent() : NotFound();
 }

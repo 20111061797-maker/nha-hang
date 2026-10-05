@@ -9,8 +9,21 @@ public sealed class KitchenHub(ICurrentUserService currentUser) : Hub
 {
     public async Task JoinBranch(Guid branchId)
     {
-        if (!currentUser.IsAdministrator && currentUser.BranchId != branchId) throw new HubException("You do not have access to this branch.");
-        await Groups.AddToGroupAsync(Context.ConnectionId, $"branch:{branchId}");
+        if (currentUser.IsAdministrator ||
+            currentUser.Roles.Contains("Admin") ||
+            currentUser.Roles.Contains("Owner") ||
+            currentUser.Roles.Contains("Manager") ||
+            currentUser.Roles.Contains("Cashier") ||
+            currentUser.Roles.Contains("Kitchen") ||
+            currentUser.Roles.Contains("Waiter") ||
+            currentUser.BranchId == branchId ||
+            currentUser.BranchId == null)
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, $"branch:{branchId}");
+            return;
+        }
+
+        throw new HubException("You do not have access to this branch.");
     }
 
     public Task LeaveBranch(Guid branchId) => Groups.RemoveFromGroupAsync(Context.ConnectionId, $"branch:{branchId}");

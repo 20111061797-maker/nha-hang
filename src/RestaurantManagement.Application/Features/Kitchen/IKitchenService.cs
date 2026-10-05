@@ -14,6 +14,7 @@ public interface IKitchenService
     Task<KitchenOrderResponse?> GetOrderAsync(Guid kitchenOrderId, CancellationToken cancellationToken);
     Task<IReadOnlyList<KitchenOrderResponse>> CreateForConfirmedOrderAsync(Guid orderId, CancellationToken cancellationToken);
     Task<KitchenOrderResponse?> ChangeStatusAsync(Guid kitchenOrderId, KitchenOrderStatus target, KitchenOrderStatusRequest request, CancellationToken cancellationToken);
+    Task<bool> DeleteStationAsync(Guid stationId, CancellationToken cancellationToken);
 }
 
 public interface IKitchenEventPublisher

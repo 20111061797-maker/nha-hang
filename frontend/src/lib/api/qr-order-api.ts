@@ -1,0 +1,24 @@
+import { apiRequest } from "./client";
+import type {
+  PublicTableInfo,
+  PublicCreateOrderPayload,
+  PublicOrderResponse,
+} from "@/types/qr-order";
+import type { MenuResponse } from "@/types/pos";
+
+export const qrOrderApi = {
+  getTableInfo(identifierOrId: string): Promise<PublicTableInfo> {
+    return apiRequest<PublicTableInfo>(`/api/public/tables/${encodeURIComponent(identifierOrId)}`);
+  },
+
+  getPublicMenu(branchId: string): Promise<MenuResponse> {
+    return apiRequest<MenuResponse>(`/api/public/branches/${branchId}/menu`);
+  },
+
+  placeOrder(payload: PublicCreateOrderPayload): Promise<PublicOrderResponse> {
+    return apiRequest<PublicOrderResponse>("/api/public/orders", {
+      method: "POST",
+      body: payload,
+    });
+  },
+};

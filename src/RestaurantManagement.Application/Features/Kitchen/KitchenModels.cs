@@ -11,7 +11,19 @@ public sealed record KitchenStationProductResponse(Guid ProductId, int DisplayOr
 public sealed record KitchenOrderStatusRequest(long? ExpectedVersion);
 public sealed record KitchenOrderItemResponse(Guid Id, Guid OrderItemId, Guid ProductId, string ProductName, string? VariantName, decimal Quantity, KitchenOrderStatus Status, string? Notes, IReadOnlyList<string> Modifiers);
 public sealed record KitchenOrderResponse(Guid Id, Guid OrderId, Guid BranchId, Guid StationId, string StationName, string OrderNumber, OrderType OrderType, string? TableNumber, KitchenOrderStatus Status, KitchenPriority Priority, DateTimeOffset CreatedAt, DateTimeOffset UpdatedAt, long Version, IReadOnlyList<KitchenOrderItemResponse> Items);
-public sealed record KitchenEvent(string EventName, Guid KitchenOrderId, Guid OrderId, Guid BranchId, Guid StationId, KitchenOrderStatus Status, DateTimeOffset UpdatedAt, Guid? ItemId = null);
+public sealed record KitchenEvent(
+    string EventName,
+    Guid KitchenOrderId,
+    Guid OrderId,
+    Guid BranchId,
+    Guid StationId,
+    KitchenOrderStatus Status,
+    DateTimeOffset UpdatedAt,
+    Guid? ItemId = null,
+    string? TableNumber = null,
+    string? OrderNumber = null,
+    string? ItemSummary = null,
+    string? StationName = null);
 
 public sealed class CreateKitchenStationValidator : AbstractValidator<CreateKitchenStationRequest>
 {
