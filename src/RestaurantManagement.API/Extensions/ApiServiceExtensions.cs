@@ -30,7 +30,14 @@ public static class ApiServiceExtensions
             options.AddPolicy("Frontend", policy =>
             {
                 var origins = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
-                if (origins.Length == 0)
+                var hasWildcard = origins.Any(o => string.IsNullOrWhiteSpace(o) || o.Trim() == "*");
+                var validOrigins = origins
+                    .Where(o => !string.IsNullOrWhiteSpace(o) && o.Trim() != "*")
+                    .Select(o => o.Trim().TrimEnd('/'))
+                    .Distinct()
+                    .ToArray();
+
+                if (hasWildcard || validOrigins.Length == 0)
                 {
                     policy.SetIsOriginAllowed(_ => true)
                           .AllowAnyHeader()
@@ -39,7 +46,7 @@ public static class ApiServiceExtensions
                 }
                 else
                 {
-                    policy.WithOrigins(origins)
+                    policy.WithOrigins(validOrigins)
                           .AllowAnyHeader()
                           .AllowAnyMethod()
                           .AllowCredentials();
