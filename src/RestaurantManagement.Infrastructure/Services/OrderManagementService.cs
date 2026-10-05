@@ -161,35 +161,16 @@ public sealed class OrderManagementService(
                 dup.Version++;
             }
 
-            var primaryKitchenOrders = await dbContext.KitchenOrders
-                .Where(ko => ko.OrderId == primaryOrder.Id)
-                .ToListAsync(cancellationToken);
-
+            // Cancel any kitchen orders of duplicate orders (do NOT change OrderId to avoid unique index violation)
             var duplicateKitchenOrders = await dbContext.KitchenOrders
-                .Where(ko => duplicateOrderIds.Contains(ko.OrderId))
+                .Where(ko => duplicateOrderIds.Contains(ko.OrderId) && ko.Status != KitchenOrderStatus.Cancelled)
                 .ToListAsync(cancellationToken);
 
             foreach (var dko in duplicateKitchenOrders)
             {
-                var matchingPrimary = primaryKitchenOrders.FirstOrDefault(p => p.KitchenStationId == dko.KitchenStationId);
-                if (matchingPrimary is not null)
-                {
-                    var koItems = await dbContext.KitchenOrderItems
-                        .Where(koi => koi.KitchenOrderId == dko.Id)
-                        .ToListAsync(cancellationToken);
-
-                    foreach (var koi in koItems)
-                    {
-                        koi.KitchenOrderId = matchingPrimary.Id;
-                    }
-
-                    dbContext.KitchenOrders.Remove(dko);
-                }
-                else
-                {
-                    dko.OrderId = primaryOrder.Id;
-                    primaryKitchenOrders.Add(dko);
-                }
+                dko.Status = KitchenOrderStatus.Cancelled;
+                dko.UpdatedAt = now;
+                dko.Version++;
             }
 
             var totalItems = await dbContext.OrderItems
