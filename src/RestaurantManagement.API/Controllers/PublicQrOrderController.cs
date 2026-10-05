@@ -33,7 +33,11 @@ public sealed record PublicOrderResponse(
     decimal TotalAmount,
     OrderStatus Status,
     string TableNumber,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    int? PointsEarned = null,
+    int? TotalPoints = null,
+    string? CustomerName = null,
+    string? MembershipLevelName = null);
 
 [ApiController]
 [AllowAnonymous]
@@ -82,6 +86,16 @@ public sealed class PublicQrOrderController(
             })
             .ToListAsync(ct);
 
+        var customer = activeOrder.CustomerId.HasValue
+            ? await dbContext.Customers.AsNoTracking().FirstOrDefaultAsync(c => c.Id == activeOrder.CustomerId.Value, ct)
+            : null;
+        var loyalty = customer != null
+            ? await dbContext.CustomerLoyaltyAccounts.AsNoTracking().FirstOrDefaultAsync(a => a.CustomerId == customer.Id, ct)
+            : null;
+        var membershipLevel = loyalty != null
+            ? await dbContext.CustomerMembershipLevels.AsNoTracking().FirstOrDefaultAsync(m => m.Id == loyalty.MembershipLevelId, ct)
+            : null;
+
         return Ok(new
         {
             hasActiveOrder = true,
@@ -91,6 +105,11 @@ public sealed class PublicQrOrderController(
             totalAmount = activeOrder.TotalAmount,
             subtotal = activeOrder.Subtotal,
             createdAt = activeOrder.CreatedAt,
+            customerId = customer?.Id,
+            customerName = customer?.FullName ?? activeOrder.CustomerNameSnapshot,
+            customerPhone = customer?.Phone ?? activeOrder.CustomerPhoneSnapshot,
+            loyaltyPoints = loyalty?.Balance ?? 0,
+            membershipLevelName = membershipLevel?.Name,
             items
         });
     }
@@ -117,6 +136,74 @@ public sealed class PublicQrOrderController(
         var existingOrder = await dbContext.Orders
             .FirstOrDefaultAsync(o => o.DiningTableId == table.Id && o.Status != OrderStatus.Completed && o.Status != OrderStatus.Cancelled, ct);
 
+        // Process customer identification & loyalty points
+        Customer? customer = null;
+        CustomerLoyaltyAccount? loyaltyAccount = null;
+        CustomerMembershipLevel? membershipLevel = null;
+        int pointsEarned = 0;
+
+        var inputPhone = request.CustomerPhone?.Trim();
+        var inputName = request.CustomerName?.Trim();
+
+        if (!string.IsNullOrWhiteSpace(inputPhone))
+        {
+            // Ensure membership levels exist in the system
+            if (!await dbContext.CustomerMembershipLevels.AnyAsync(ct))
+            {
+                dbContext.CustomerMembershipLevels.AddRange(
+                    new CustomerMembershipLevel { Code = "BRONZE", Name = "Hạng Đồng", MinimumPoints = 0 },
+                    new CustomerMembershipLevel { Code = "SILVER", Name = "Hạng Bạc", MinimumPoints = 100 },
+                    new CustomerMembershipLevel { Code = "GOLD", Name = "Hạng Vàng", MinimumPoints = 300 },
+                    new CustomerMembershipLevel { Code = "DIAMOND", Name = "Hạng Kim Cương", MinimumPoints = 600 }
+                );
+                await dbContext.SaveChangesAsync(ct);
+            }
+
+            customer = await dbContext.Customers.FirstOrDefaultAsync(c => c.Phone == inputPhone, ct);
+            if (customer is null)
+            {
+                var displayName = !string.IsNullOrWhiteSpace(inputName)
+                    ? inputName
+                    : $"Khách hàng {inputPhone}";
+
+                customer = new Customer
+                {
+                    FullName = displayName,
+                    Phone = inputPhone,
+                    IsActive = true
+                };
+                dbContext.Customers.Add(customer);
+
+                var defaultLevel = await dbContext.CustomerMembershipLevels.OrderBy(l => l.MinimumPoints).FirstOrDefaultAsync(ct);
+                loyaltyAccount = new CustomerLoyaltyAccount
+                {
+                    CustomerId = customer.Id,
+                    MembershipLevelId = defaultLevel!.Id,
+                    Balance = 0
+                };
+                dbContext.CustomerLoyaltyAccounts.Add(loyaltyAccount);
+            }
+            else
+            {
+                if (!string.IsNullOrWhiteSpace(inputName) && (string.IsNullOrWhiteSpace(customer.FullName) || customer.FullName.StartsWith("Khách hàng")))
+                {
+                    customer.FullName = inputName;
+                }
+                loyaltyAccount = await dbContext.CustomerLoyaltyAccounts.FirstOrDefaultAsync(a => a.CustomerId == customer.Id, ct);
+                if (loyaltyAccount is null)
+                {
+                    var defaultLevel = await dbContext.CustomerMembershipLevels.OrderBy(l => l.MinimumPoints).FirstOrDefaultAsync(ct);
+                    loyaltyAccount = new CustomerLoyaltyAccount
+                    {
+                        CustomerId = customer.Id,
+                        MembershipLevelId = defaultLevel!.Id,
+                        Balance = 0
+                    };
+                    dbContext.CustomerLoyaltyAccounts.Add(loyaltyAccount);
+                }
+            }
+        }
+
         Order order;
         bool isNewOrder = false;
 
@@ -134,13 +221,15 @@ public sealed class PublicQrOrderController(
                     ? request.Notes.Trim()
                     : $"{order.Notes} | Gọi thêm: {request.Notes.Trim()}";
             }
-            if (!string.IsNullOrWhiteSpace(request.CustomerName) && (string.IsNullOrWhiteSpace(order.CustomerNameSnapshot) || order.CustomerNameSnapshot.StartsWith("Khách Bàn")))
+            if (customer is not null)
             {
-                order.CustomerNameSnapshot = request.CustomerName.Trim();
+                order.CustomerId = customer.Id;
+                order.CustomerNameSnapshot = customer.FullName;
+                order.CustomerPhoneSnapshot = customer.Phone;
             }
-            if (!string.IsNullOrWhiteSpace(request.CustomerPhone) && string.IsNullOrWhiteSpace(order.CustomerPhoneSnapshot))
+            else if (!string.IsNullOrWhiteSpace(inputName) && (string.IsNullOrWhiteSpace(order.CustomerNameSnapshot) || order.CustomerNameSnapshot.StartsWith("Khách Bàn")))
             {
-                order.CustomerPhoneSnapshot = request.CustomerPhone.Trim();
+                order.CustomerNameSnapshot = inputName;
             }
             order.UpdatedAt = DateTimeOffset.UtcNow;
             order.Version++;
@@ -154,15 +243,20 @@ public sealed class PublicQrOrderController(
                 orderNumber = $"QR-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid():N}"[..27].ToUpperInvariant();
             } while (await dbContext.Orders.AnyAsync(x => x.OrderNumber == orderNumber, ct));
 
+            var initialCustomerName = customer?.FullName
+                ?? (!string.IsNullOrWhiteSpace(inputName) ? inputName : $"Khách Bàn {table.TableNumber}");
+            var initialCustomerPhone = customer?.Phone ?? inputPhone;
+
             order = new Order
             {
                 OrderNumber = orderNumber,
                 BranchId = branch.Id,
                 DiningTableId = table.Id,
+                CustomerId = customer?.Id,
                 OrderType = OrderType.DineIn,
                 Status = OrderStatus.Confirmed,
-                CustomerNameSnapshot = string.IsNullOrWhiteSpace(request.CustomerName) ? $"Khách Bàn {table.TableNumber}" : request.CustomerName.Trim(),
-                CustomerPhoneSnapshot = string.IsNullOrWhiteSpace(request.CustomerPhone) ? null : request.CustomerPhone.Trim(),
+                CustomerNameSnapshot = initialCustomerName,
+                CustomerPhoneSnapshot = initialCustomerPhone,
                 Notes = request.Notes?.Trim(),
                 CurrencyCode = "VND",
             };
@@ -244,6 +338,35 @@ public sealed class PublicQrOrderController(
             order.TotalAmount = order.Subtotal + order.TaxAmount - order.DiscountAmount;
         }
 
+        // Award loyalty points for this round
+        if (loyaltyAccount is not null)
+        {
+            pointsEarned = (int)Math.Floor(additionalSubtotal / 10000m);
+            if (pointsEarned == 0 && additionalSubtotal > 0) pointsEarned = 1;
+
+            if (pointsEarned > 0)
+            {
+                loyaltyAccount.Balance += pointsEarned;
+
+                var allLevels = await dbContext.CustomerMembershipLevels.OrderByDescending(x => x.MinimumPoints).ToListAsync(ct);
+                var eligible = allLevels.FirstOrDefault(l => loyaltyAccount.Balance >= l.MinimumPoints) ?? allLevels.Last();
+                loyaltyAccount.MembershipLevelId = eligible.Id;
+                membershipLevel = eligible;
+
+                dbContext.CustomerPointTransactions.Add(new CustomerPointTransaction
+                {
+                    LoyaltyAccountId = loyaltyAccount.Id,
+                    OrderId = order.Id,
+                    PointsDelta = pointsEarned,
+                    Reason = $"Tích điểm gọi món QR tại Bàn {table.TableNumber} (+{pointsEarned} điểm)"
+                });
+            }
+            else
+            {
+                membershipLevel = await dbContext.CustomerMembershipLevels.FirstOrDefaultAsync(l => l.Id == loyaltyAccount.MembershipLevelId, ct);
+            }
+        }
+
         await dbContext.SaveChangesAsync(ct);
 
         // Send newly added items to kitchen (generates tickets and sends NewOrderCreated & KitchenOrderCreated via SignalR)
@@ -255,7 +378,11 @@ public sealed class PublicQrOrderController(
             order.TotalAmount,
             order.Status,
             table.TableNumber,
-            order.CreatedAt
+            order.CreatedAt,
+            pointsEarned > 0 ? pointsEarned : null,
+            loyaltyAccount?.Balance,
+            customer?.FullName ?? order.CustomerNameSnapshot,
+            membershipLevel?.Name
         ));
     }
 }

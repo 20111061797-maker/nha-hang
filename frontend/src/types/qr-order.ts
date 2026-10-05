@@ -29,9 +29,13 @@ export type PublicOrderResponse = {
   orderId: string;
   orderNumber: string;
   totalAmount: number;
-  status: string;
+  status: string | number;
   tableNumber: string;
   createdAt: string;
+  pointsEarned?: number | null;
+  totalPoints?: number | null;
+  customerName?: string | null;
+  membershipLevelName?: string | null;
 };
 
 export type CartItem = {
@@ -62,9 +66,14 @@ export type PublicActiveBillResponse = {
   hasActiveOrder: boolean;
   orderId?: string | null;
   orderNumber?: string | null;
-  status?: string | null;
+  status?: string | number | null;
   totalAmount: number;
   subtotal: number;
   createdAt?: string | null;
+  customerId?: string | null;
+  customerName?: string | null;
+  customerPhone?: string | null;
+  loyaltyPoints?: number;
+  membershipLevelName?: string | null;
   items: PublicActiveBillItem[];
 };

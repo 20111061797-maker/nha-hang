@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { qrOrderApi } from "@/lib/api/qr-order-api";
 import type { CartItem } from "@/types/qr-order";
@@ -63,6 +63,10 @@ export function QrMenuView({ tableIdentifier }: Props) {
     totalAmount: number;
     tableNumber: string;
     createdAt: string;
+    pointsEarned?: number | null;
+    totalPoints?: number | null;
+    customerName?: string | null;
+    membershipLevelName?: string | null;
   } | null>(null);
 
   const [toastError, setToastError] = useState<string | null>(null);
@@ -88,6 +92,16 @@ export function QrMenuView({ tableIdentifier }: Props) {
     refetchInterval: 8000,
   });
 
+  // Pre-fill customer details from active bill if already on table
+  useEffect(() => {
+    if (activeBill?.customerName && !guestName) {
+      setGuestName(activeBill.customerName);
+    }
+    if (activeBill?.customerPhone && !guestPhone) {
+      setGuestPhone(activeBill.customerPhone);
+    }
+  }, [activeBill, guestName, guestPhone]);
+
   // 3. Fetch Public Menu for Branch
   const branchId = tableInfo?.branchId;
   const { data: menu, isLoading: menuLoading } = useQuery({
@@ -107,6 +121,10 @@ export function QrMenuView({ tableIdentifier }: Props) {
         totalAmount: res.totalAmount,
         tableNumber: res.tableNumber,
         createdAt: res.createdAt,
+        pointsEarned: res.pointsEarned,
+        totalPoints: res.totalPoints,
+        customerName: res.customerName,
+        membershipLevelName: res.membershipLevelName,
       });
       if (tableId) {
         queryClient.invalidateQueries({ queryKey: ["public-table-bill", tableId] });
@@ -348,6 +366,31 @@ export function QrMenuView({ tableIdentifier }: Props) {
               {formatCurrency(placedOrder.totalAmount)}
             </span>
           </div>
+
+          {placedOrder.pointsEarned ? (
+            <div className="pt-2.5 border-t border-[#282f3e] flex items-center justify-between bg-amber-500/10 -mx-4.5 -mb-4.5 p-3 rounded-b-2xl border-t border-amber-500/20">
+              <div className="flex items-center gap-2">
+                <Sparkles size={18} className="text-amber-400 shrink-0 animate-pulse" />
+                <div>
+                  <span className="text-xs font-bold text-amber-300">Tích lũy điểm thành công!</span>
+                  <span className="block text-[10px] text-gray-400">
+                    {placedOrder.customerName ? `Khách: ${placedOrder.customerName}` : "Thành viên"}
+                    {placedOrder.membershipLevelName ? ` • ${placedOrder.membershipLevelName}` : ""}
+                  </span>
+                </div>
+              </div>
+              <div className="text-right">
+                <span className="text-sm font-black text-amber-400 font-mono">
+                  +{placedOrder.pointsEarned} điểm
+                </span>
+                {placedOrder.totalPoints !== undefined && placedOrder.totalPoints !== null && (
+                  <span className="block text-[10px] text-amber-300/80 font-mono">
+                    (Tổng: {placedOrder.totalPoints} đ)
+                  </span>
+                )}
+              </div>
+            </div>
+          ) : null}
         </div>
 
         <button
@@ -983,9 +1026,14 @@ export function QrMenuView({ tableIdentifier }: Props) {
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-gray-300 mb-1 flex items-center gap-1">
-                    <Phone size={12} className="text-amber-400" />
-                    <span>SĐT tích điểm (Tùy chọn)</span>
+                  <label className="block text-[11px] font-bold text-gray-300 mb-1 flex items-center justify-between">
+                    <span className="flex items-center gap-1">
+                      <Phone size={12} className="text-amber-400" />
+                      <span>SĐT tích điểm (Tùy chọn)</span>
+                    </span>
+                    <span className="text-[10px] text-amber-400 font-normal flex items-center gap-0.5">
+                      <Sparkles size={10} /> +10k = 1đ
+                    </span>
                   </label>
                   <input
                     type="tel"
@@ -994,6 +1042,9 @@ export function QrMenuView({ tableIdentifier }: Props) {
                     placeholder="09xx..."
                     className="w-full bg-[#12151d] border border-[#262c3b] rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 font-mono"
                   />
+                  <p className="text-[9.5px] text-gray-400 mt-1">
+                    Nhập SĐT để tự động lưu khách hàng &amp; tích điểm nâng hạng thành viên.
+                  </p>
                 </div>
               </div>
 
