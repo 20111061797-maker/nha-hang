@@ -185,7 +185,7 @@ public sealed class KitchenManagementService(
             var stationId = group.Key;
             var stationItems = group.ToList();
 
-            var kitchenOrder = existing.FirstOrDefault(x => x.KitchenStationId == stationId);
+            var kitchenOrder = existing.FirstOrDefault(x => x.KitchenStationId == stationId && x.Status != KitchenOrderStatus.Ready && x.Status != KitchenOrderStatus.Completed && x.Status != KitchenOrderStatus.Cancelled);
             if (kitchenOrder is null)
             {
                 kitchenOrder = new KitchenOrder { OrderId = order.Id, BranchId = order.BranchId, KitchenStationId = stationId, OrderNumberSnapshot = order.OrderNumber, OrderTypeSnapshot = order.OrderType, TableNumberSnapshot = tableNumber, Status = KitchenOrderStatus.New, Note = order.Notes };

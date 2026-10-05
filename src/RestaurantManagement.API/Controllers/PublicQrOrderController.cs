@@ -53,6 +53,48 @@ public sealed class PublicQrOrderController(
     public async Task<IActionResult> GetPublicMenu(Guid branchId, CancellationToken ct) =>
         Ok(await menuService.GetMenuAsync(branchId, ct));
 
+    [HttpGet("tables/{tableId:guid}/active-bill")]
+    public async Task<IActionResult> GetTableActiveBill(Guid tableId, CancellationToken ct)
+    {
+        var table = await dbContext.DiningTables.AsNoTracking().FirstOrDefaultAsync(t => t.Id == tableId && t.IsActive, ct);
+        if (table is null) return NotFound(new { message = "Bàn ăn không tồn tại." });
+
+        var activeOrder = await dbContext.Orders.AsNoTracking()
+            .Where(o => o.DiningTableId == tableId && o.Status != OrderStatus.Completed && o.Status != OrderStatus.Cancelled)
+            .OrderBy(o => o.CreatedAt)
+            .FirstOrDefaultAsync(ct);
+
+        if (activeOrder is null)
+            return Ok(new { hasActiveOrder = false, totalAmount = 0m, items = Array.Empty<object>() });
+
+        var items = await dbContext.OrderItems.AsNoTracking()
+            .Where(i => i.OrderId == activeOrder.Id)
+            .OrderBy(i => i.CreatedAt)
+            .Select(i => new
+            {
+                i.Id,
+                i.ProductNameSnapshot,
+                i.VariantNameSnapshot,
+                i.Quantity,
+                i.UnitPrice,
+                i.LineTotal,
+                i.Notes
+            })
+            .ToListAsync(ct);
+
+        return Ok(new
+        {
+            hasActiveOrder = true,
+            orderId = activeOrder.Id,
+            orderNumber = activeOrder.OrderNumber,
+            status = activeOrder.Status,
+            totalAmount = activeOrder.TotalAmount,
+            subtotal = activeOrder.Subtotal,
+            createdAt = activeOrder.CreatedAt,
+            items
+        });
+    }
+
     [HttpPost("orders")]
     public async Task<IActionResult> PlaceOrder(PublicCreateOrderRequest request, CancellationToken ct)
     {
@@ -71,39 +113,75 @@ public sealed class PublicQrOrderController(
         // Update table to Occupied
         table.Status = TableStatus.Occupied;
 
-        // Generate Order number
-        string orderNumber;
-        do
+        // Check if table already has an active, unpaid order to accumulate into
+        var existingOrder = await dbContext.Orders
+            .FirstOrDefaultAsync(o => o.DiningTableId == table.Id && o.Status != OrderStatus.Completed && o.Status != OrderStatus.Cancelled, ct);
+
+        Order order;
+        bool isNewOrder = false;
+
+        if (existingOrder is not null)
         {
-            orderNumber = $"QR-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid():N}"[..27].ToUpperInvariant();
-        } while (await dbContext.Orders.AnyAsync(x => x.OrderNumber == orderNumber, ct));
-
-        var order = new Order
+            // Accumulate onto current active order for this table
+            order = existingOrder;
+            if (order.Status == OrderStatus.Ready)
+            {
+                order.Status = OrderStatus.Confirmed;
+            }
+            if (!string.IsNullOrWhiteSpace(request.Notes))
+            {
+                order.Notes = string.IsNullOrWhiteSpace(order.Notes)
+                    ? request.Notes.Trim()
+                    : $"{order.Notes} | Gọi thêm: {request.Notes.Trim()}";
+            }
+            if (!string.IsNullOrWhiteSpace(request.CustomerName) && (string.IsNullOrWhiteSpace(order.CustomerNameSnapshot) || order.CustomerNameSnapshot.StartsWith("Khách Bàn")))
+            {
+                order.CustomerNameSnapshot = request.CustomerName.Trim();
+            }
+            if (!string.IsNullOrWhiteSpace(request.CustomerPhone) && string.IsNullOrWhiteSpace(order.CustomerPhoneSnapshot))
+            {
+                order.CustomerPhoneSnapshot = request.CustomerPhone.Trim();
+            }
+            order.UpdatedAt = DateTimeOffset.UtcNow;
+            order.Version++;
+        }
+        else
         {
-            OrderNumber = orderNumber,
-            BranchId = branch.Id,
-            DiningTableId = table.Id,
-            OrderType = OrderType.DineIn,
-            Status = OrderStatus.Confirmed,
-            CustomerNameSnapshot = string.IsNullOrWhiteSpace(request.CustomerName) ? $"Khách Bàn {table.TableNumber}" : request.CustomerName.Trim(),
-            CustomerPhoneSnapshot = string.IsNullOrWhiteSpace(request.CustomerPhone) ? null : request.CustomerPhone.Trim(),
-            Notes = request.Notes?.Trim(),
-            CurrencyCode = "VND",
-        };
+            // Generate new Order
+            string orderNumber;
+            do
+            {
+                orderNumber = $"QR-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid():N}"[..27].ToUpperInvariant();
+            } while (await dbContext.Orders.AnyAsync(x => x.OrderNumber == orderNumber, ct));
 
-        dbContext.Orders.Add(order);
+            order = new Order
+            {
+                OrderNumber = orderNumber,
+                BranchId = branch.Id,
+                DiningTableId = table.Id,
+                OrderType = OrderType.DineIn,
+                Status = OrderStatus.Confirmed,
+                CustomerNameSnapshot = string.IsNullOrWhiteSpace(request.CustomerName) ? $"Khách Bàn {table.TableNumber}" : request.CustomerName.Trim(),
+                CustomerPhoneSnapshot = string.IsNullOrWhiteSpace(request.CustomerPhone) ? null : request.CustomerPhone.Trim(),
+                Notes = request.Notes?.Trim(),
+                CurrencyCode = "VND",
+            };
 
-        // Table allocation
-        dbContext.OrderTableAllocations.Add(new OrderTableAllocation
-        {
-            OrderId = order.Id,
-            TableId = table.Id,
-            AllocationType = TableAllocationType.Primary,
-            AllocatedAt = DateTimeOffset.UtcNow
-        });
+            dbContext.Orders.Add(order);
+            isNewOrder = true;
 
-        // Add items
-        decimal subtotal = 0;
+            // Table allocation
+            dbContext.OrderTableAllocations.Add(new OrderTableAllocation
+            {
+                OrderId = order.Id,
+                TableId = table.Id,
+                AllocationType = TableAllocationType.Primary,
+                AllocatedAt = DateTimeOffset.UtcNow
+            });
+        }
+
+        // Add items to this order
+        decimal additionalSubtotal = 0;
         foreach (var itemReq in request.Items)
         {
             var product = await dbContext.Products.AsNoTracking().FirstOrDefaultAsync(p => p.Id == itemReq.ProductId && p.IsActive, ct);
@@ -117,7 +195,7 @@ public sealed class PublicQrOrderController(
             var pricing = await pricingService.CalculateAsync(new ProductPricingRequest(product.Id, itemReq.ProductVariantId, branch.Id, modifierIds), ct);
 
             var lineTotal = pricing.FinalUnitPrice * itemReq.Quantity;
-            subtotal += lineTotal;
+            additionalSubtotal += lineTotal;
 
             var orderItem = new OrderItem
             {
@@ -153,14 +231,22 @@ public sealed class PublicQrOrderController(
             }
         }
 
-        order.Subtotal = subtotal;
-        order.TotalAmount = subtotal;
-        order.TaxAmount = 0;
-        order.DiscountAmount = 0;
+        if (isNewOrder)
+        {
+            order.Subtotal = additionalSubtotal;
+            order.TotalAmount = additionalSubtotal;
+            order.TaxAmount = 0;
+            order.DiscountAmount = 0;
+        }
+        else
+        {
+            order.Subtotal += additionalSubtotal;
+            order.TotalAmount = order.Subtotal + order.TaxAmount - order.DiscountAmount;
+        }
 
         await dbContext.SaveChangesAsync(ct);
 
-        // Send straight to kitchen (generates tickets and sends NewOrderCreated & KitchenOrderCreated via SignalR)
+        // Send newly added items to kitchen (generates tickets and sends NewOrderCreated & KitchenOrderCreated via SignalR)
         await kitchenService.CreateForConfirmedOrderAsync(order.Id, ct);
 
         return Ok(new PublicOrderResponse(

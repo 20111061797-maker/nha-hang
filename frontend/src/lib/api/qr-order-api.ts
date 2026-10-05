@@ -3,6 +3,7 @@ import type {
   PublicTableInfo,
   PublicCreateOrderPayload,
   PublicOrderResponse,
+  PublicActiveBillResponse,
 } from "@/types/qr-order";
 import type { MenuResponse } from "@/types/pos";
 
@@ -13,6 +14,10 @@ export const qrOrderApi = {
 
   getPublicMenu(branchId: string): Promise<MenuResponse> {
     return apiRequest<MenuResponse>(`/api/public/branches/${branchId}/menu`);
+  },
+
+  getActiveBill(tableId: string): Promise<PublicActiveBillResponse> {
+    return apiRequest<PublicActiveBillResponse>(`/api/public/tables/${tableId}/active-bill`);
   },
 
   placeOrder(payload: PublicCreateOrderPayload): Promise<PublicOrderResponse> {

@@ -54,6 +54,7 @@ public sealed class OrderManagementService(
     public async Task<IReadOnlyList<OrderListItem>> GetBranchOrdersAsync(Guid branchId, CancellationToken cancellationToken)
     {
         await EnsureBranchAccessAsync(branchId, cancellationToken);
+        await ConsolidateDuplicateTableOrdersAsync(branchId, cancellationToken);
         return await dbContext.Orders.AsNoTracking().Where(x => x.BranchId == branchId).OrderByDescending(x => x.CreatedAt).Take(200).Select(x => new OrderListItem(x.Id, x.OrderNumber, x.BranchId, x.OrderType, x.Status, x.TotalAmount, x.CreatedAt, x.Version, x.DiningTableId)).ToListAsync(cancellationToken);
     }
 
@@ -115,5 +116,72 @@ public sealed class OrderManagementService(
     private async Task EnsureBranchAccessAsync(Guid branchId, CancellationToken ct) { if (currentUser.IsAdministrator || currentUser.UserId is null) return; if (currentUser.UserId is not Guid userId || (!await dbContext.UserBranchAccesses.AnyAsync(x => x.UserId == userId && x.BranchId == branchId && x.IsActive, ct) && !await dbContext.Users.AnyAsync(x => x.Id == userId && x.EmployeeId != null && dbContext.Employees.Any(e => e.Id == x.EmployeeId && e.BranchId == branchId && e.IsActive), ct))) throw new ForbiddenException("You do not have access to this branch."); }
     private async Task<string> GenerateOrderNumberAsync(CancellationToken ct) { string number; do { number = $"ORD-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid():N}"[..27].ToUpperInvariant(); } while (await dbContext.Orders.AnyAsync(x => x.OrderNumber == number, ct)); return number; }
     private async Task SaveAsync(CancellationToken ct) { try { await dbContext.SaveChangesAsync(ct); } catch (DbUpdateConcurrencyException) { throw new ConflictException("The order was changed by another user."); } }
+    private async Task ConsolidateDuplicateTableOrdersAsync(Guid branchId, CancellationToken cancellationToken)
+    {
+        var activeOrders = await dbContext.Orders
+            .Where(x => x.BranchId == branchId && x.DiningTableId != null && x.Status != OrderStatus.Completed && x.Status != OrderStatus.Cancelled)
+            .OrderBy(x => x.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        var groups = activeOrders.GroupBy(x => x.DiningTableId!.Value).Where(g => g.Count() > 1).ToList();
+        if (groups.Count == 0) return;
+
+        foreach (var group in groups)
+        {
+            var primaryOrder = group.First();
+            var duplicateOrders = group.Skip(1).ToList();
+            var duplicateOrderIds = duplicateOrders.Select(d => d.Id).ToList();
+
+            var itemsToMove = await dbContext.OrderItems
+                .Where(i => duplicateOrderIds.Contains(i.OrderId))
+                .ToListAsync(cancellationToken);
+
+            foreach (var item in itemsToMove)
+            {
+                item.OrderId = primaryOrder.Id;
+            }
+
+            var duplicateAllocations = await dbContext.OrderTableAllocations
+                .Where(a => duplicateOrderIds.Contains(a.OrderId) && a.ReleasedAt == null)
+                .ToListAsync(cancellationToken);
+
+            var now = DateTimeOffset.UtcNow;
+            foreach (var alloc in duplicateAllocations)
+            {
+                alloc.ReleasedAt = now;
+            }
+
+            foreach (var dup in duplicateOrders)
+            {
+                dup.Status = OrderStatus.Cancelled;
+                dup.Notes = string.IsNullOrWhiteSpace(dup.Notes)
+                    ? $"[Đã tự động gộp vào đơn #{primaryOrder.OrderNumber}]"
+                    : $"{dup.Notes} | [Đã gộp vào đơn #{primaryOrder.OrderNumber}]";
+                dup.UpdatedAt = now;
+                dup.Version++;
+            }
+
+            var kitchenOrdersToMove = await dbContext.KitchenOrders
+                .Where(ko => duplicateOrderIds.Contains(ko.OrderId))
+                .ToListAsync(cancellationToken);
+
+            foreach (var ko in kitchenOrdersToMove)
+            {
+                ko.OrderId = primaryOrder.Id;
+            }
+
+            var totalItems = await dbContext.OrderItems
+                .Where(i => i.OrderId == primaryOrder.Id)
+                .ToListAsync(cancellationToken);
+
+            primaryOrder.Subtotal = totalItems.Sum(i => i.LineTotal);
+            primaryOrder.TotalAmount = primaryOrder.Subtotal + primaryOrder.TaxAmount - primaryOrder.DiscountAmount;
+            primaryOrder.UpdatedAt = now;
+            primaryOrder.Version++;
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
     private async Task<OrderDetails> BuildDetailsAsync(Guid id, CancellationToken ct) { var order = await dbContext.Orders.AsNoTracking().FirstAsync(x => x.Id == id, ct); var items = await dbContext.OrderItems.AsNoTracking().Where(x => x.OrderId == id).ToListAsync(ct); var modifiers = await dbContext.OrderItemModifiers.AsNoTracking().Where(x => items.Select(i => i.Id).Contains(x.OrderItemId)).ToListAsync(ct); return new OrderDetails(order.Id, order.OrderNumber, order.BranchId, order.OrderType, order.Status, order.DiningTableId, order.CustomerNameSnapshot, order.CustomerPhoneSnapshot, order.DeliveryAddressSnapshot, order.CurrencyCode, order.Notes, order.Subtotal, order.DiscountAmount, order.TaxAmount, order.TotalAmount, order.Version, order.CreatedAt, items.Select(item => new OrderItemDetails(item.Id, item.ProductId, item.ProductVariantId, item.ComboId, item.ProductNameSnapshot, item.VariantNameSnapshot, item.ComboNameSnapshot, item.Quantity, item.UnitPrice, item.LineTotal, item.Notes, modifiers.Where(m => m.OrderItemId == item.Id).Select(m => new OrderItemModifierDetails(m.Id, m.ModifierId, m.ModifierNameSnapshot, m.Quantity, m.UnitPrice, m.TotalPrice)).ToList())).ToList()); }
 }

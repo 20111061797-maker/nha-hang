@@ -47,3 +47,24 @@ export type CartItem = {
   lineTotal: number;
   imageUrl?: string | null;
 };
+
+export type PublicActiveBillItem = {
+  id: string;
+  productNameSnapshot: string;
+  variantNameSnapshot?: string | null;
+  quantity: number;
+  unitPrice: number;
+  lineTotal: number;
+  notes?: string | null;
+};
+
+export type PublicActiveBillResponse = {
+  hasActiveOrder: boolean;
+  orderId?: string | null;
+  orderNumber?: string | null;
+  status?: string | null;
+  totalAmount: number;
+  subtotal: number;
+  createdAt?: string | null;
+  items: PublicActiveBillItem[];
+};

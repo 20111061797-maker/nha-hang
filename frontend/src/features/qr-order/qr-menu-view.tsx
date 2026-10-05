@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { qrOrderApi } from "@/lib/api/qr-order-api";
 import type { CartItem } from "@/types/qr-order";
 import type { MenuProduct, MenuModifier } from "@/types/pos";
@@ -24,6 +24,7 @@ import {
   Phone,
   User,
   MessageSquare,
+  Receipt,
 } from "lucide-react";
 
 function formatCurrency(amount: number) {
@@ -40,10 +41,12 @@ type Props = {
 };
 
 export function QrMenuView({ tableIdentifier }: Props) {
+  const queryClient = useQueryClient();
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
+  const [billDrawerOpen, setBillDrawerOpen] = useState(false);
   const [productModal, setProductModal] = useState<MenuProduct | null>(null);
 
   // Product selection modal state
@@ -76,7 +79,16 @@ export function QrMenuView({ tableIdentifier }: Props) {
     retry: 1,
   });
 
-  // 2. Fetch Public Menu for Branch
+  // 2. Fetch Active Bill for Table (running total of all rounds)
+  const tableId = tableInfo?.tableId;
+  const { data: activeBill, refetch: refetchBill } = useQuery({
+    queryKey: ["public-table-bill", tableId],
+    queryFn: () => (tableId ? qrOrderApi.getActiveBill(tableId) : Promise.resolve(null)),
+    enabled: Boolean(tableId),
+    refetchInterval: 8000,
+  });
+
+  // 3. Fetch Public Menu for Branch
   const branchId = tableInfo?.branchId;
   const { data: menu, isLoading: menuLoading } = useQuery({
     queryKey: ["public-menu", branchId],
@@ -84,7 +96,7 @@ export function QrMenuView({ tableIdentifier }: Props) {
     enabled: Boolean(branchId),
   });
 
-  // 3. Submit Order Mutation
+  // 4. Submit Order Mutation
   const placeOrderMutation = useMutation({
     mutationFn: qrOrderApi.placeOrder,
     onSuccess: (res) => {
@@ -96,6 +108,9 @@ export function QrMenuView({ tableIdentifier }: Props) {
         tableNumber: res.tableNumber,
         createdAt: res.createdAt,
       });
+      if (tableId) {
+        queryClient.invalidateQueries({ queryKey: ["public-table-bill", tableId] });
+      }
     },
     onError: (err: unknown) => {
       const msg = err instanceof Error ? err.message : "Không thể đặt món. Vui lòng thử lại.";
@@ -325,8 +340,11 @@ export function QrMenuView({ tableIdentifier }: Props) {
             </span>
           </div>
           <div className="flex justify-between items-center text-sm font-extrabold text-white pt-2.5 border-t border-[#282f3e]">
-            <span>Tổng cộng:</span>
-            <span className="text-base font-black text-amber-400 font-mono">
+            <div>
+              <span>Tổng hóa đơn bàn hiện tại:</span>
+              <span className="block text-[10px] text-emerald-400 font-normal">Đã tự động cộng dồn tất cả các món</span>
+            </div>
+            <span className="text-lg font-black text-amber-400 font-mono">
               {formatCurrency(placedOrder.totalAmount)}
             </span>
           </div>
@@ -334,7 +352,10 @@ export function QrMenuView({ tableIdentifier }: Props) {
 
         <button
           type="button"
-          onClick={() => setPlacedOrder(null)}
+          onClick={() => {
+            setPlacedOrder(null);
+            refetchBill();
+          }}
           className="flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 text-white font-extrabold text-sm shadow-xl shadow-orange-950/50 active:scale-95 transition-all cursor-pointer"
         >
           <span>Xem thực đơn &amp; Gọi thêm món</span>
@@ -391,6 +412,37 @@ export function QrMenuView({ tableIdentifier }: Props) {
       </header>
 
       <main className="max-w-3xl mx-auto px-4 pt-4 space-y-4">
+        {/* Active Running Bill for this table */}
+        {activeBill?.hasActiveOrder && (
+          <div className="bg-gradient-to-r from-amber-950/70 via-[#1b202c] to-[#141720] border border-amber-500/40 rounded-2xl p-3.5 flex items-center justify-between gap-3 shadow-xl">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 shrink-0">
+                <Receipt size={20} />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs font-black text-amber-300 uppercase tracking-wider">
+                    Hóa đơn Bàn {tableInfo?.tableNumber}
+                  </span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-500/30 font-bold">
+                    {activeBill.items.reduce((s, i) => s + i.quantity, 0)} món đã gọi
+                  </span>
+                </div>
+                <div className="text-base font-black text-white font-mono mt-0.5">
+                  {formatCurrency(activeBill.totalAmount)}
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setBillDrawerOpen(true)}
+              className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs font-black shadow-md shadow-amber-950/40 transition-all shrink-0 cursor-pointer"
+            >
+              Xem chi tiết
+            </button>
+          </div>
+        )}
+
         {/* Search Input with modern styling */}
         <div className="relative">
           <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -988,6 +1040,102 @@ export function QrMenuView({ tableIdentifier }: Props) {
                   )}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Active Bill Detail Modal */}
+      {billDrawerOpen && activeBill?.hasActiveOrder && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in"
+          onClick={() => setBillDrawerOpen(false)}
+        >
+          <div
+            className="w-full max-w-lg bg-[#151822] border border-[#262c3d] rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden animate-in slide-in-from-bottom-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="p-4 bg-gradient-to-r from-[#1c2230] to-[#151822] border-b border-[#252c3c] flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                  <Receipt size={18} />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-white font-heading">
+                    Hóa đơn Bàn {tableInfo?.tableNumber}
+                  </h3>
+                  <p className="text-[11px] text-gray-400 font-mono">
+                    Mã đơn: #{activeBill.orderNumber ? (activeBill.orderNumber.length > 14 ? activeBill.orderNumber.slice(-8) : activeBill.orderNumber) : ""}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setBillDrawerOpen(false)}
+                className="p-1.5 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Items list */}
+            <div className="p-4 flex-1 overflow-y-auto space-y-2.5 max-h-[420px]">
+              <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                Danh sách món đã gọi ({activeBill.items.reduce((s, i) => s + i.quantity, 0)} phần)
+              </div>
+              {activeBill.items.map((item) => (
+                <div
+                  key={item.id}
+                  className="p-3 rounded-xl bg-[#1b202d] border border-[#272e3f] flex items-start justify-between gap-3"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-baseline gap-2">
+                      <span className="font-bold text-sm text-gray-100">
+                        {item.productNameSnapshot}
+                      </span>
+                      {item.variantNameSnapshot && (
+                        <span className="text-[10px] font-medium text-sky-400 bg-sky-500/10 px-1.5 py-0.5 rounded border border-sky-500/20">
+                          {item.variantNameSnapshot}
+                        </span>
+                      )}
+                    </div>
+                    {item.notes && (
+                      <div className="text-[11px] text-amber-300/80 italic mt-0.5">
+                        Ghi chú: {item.notes}
+                      </div>
+                    )}
+                    <div className="text-[11px] text-gray-400 mt-1">
+                      {formatCurrency(item.unitPrice)} × <strong className="text-white font-mono">{item.quantity}</strong>
+                    </div>
+                  </div>
+                  <span className="font-mono font-bold text-sm text-amber-300 shrink-0">
+                    {formatCurrency(item.lineTotal)}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 bg-[#12151e] border-t border-[#252c3c] flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block">
+                    Tổng hóa đơn hiện tại
+                  </span>
+                  <span className="text-[10px] text-emerald-400">Đã cộng dồn tất cả các đợt gọi món</span>
+                </div>
+                <span className="text-xl font-black font-mono text-amber-400">
+                  {formatCurrency(activeBill.totalAmount)}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setBillDrawerOpen(false)}
+                className="w-full py-3 rounded-xl bg-[#202636] hover:bg-[#2b3346] text-white text-xs font-bold transition-colors cursor-pointer"
+              >
+                Đóng &amp; Tiếp tục gọi món
+              </button>
             </div>
           </div>
         </div>
