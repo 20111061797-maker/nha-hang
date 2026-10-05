@@ -32,8 +32,20 @@ import {
   UtensilsCrossed,
 } from "lucide-react";
 
-// Web Audio API synthesized kitchen bell chime
-function playKitchenChime() {
+// Custom high-clarity voice alert / chime from user's audio file
+function playKitchenOrderAlert() {
+  try {
+    const audio = new Audio("/images/tieng_doc_1791207282394.mp3");
+    audio.play().catch(() => {
+      // Fallback if browser autoplay blocks initial playback
+      playSynthesizedChime();
+    });
+  } catch {
+    playSynthesizedChime();
+  }
+}
+
+function playSynthesizedChime() {
   try {
     const AudioContextClass =
       window.AudioContext ||
@@ -44,7 +56,7 @@ function playKitchenChime() {
     const osc1 = ctx.createOscillator();
     const gain1 = ctx.createGain();
     osc1.type = "sine";
-    osc1.frequency.setValueAtTime(880, now); // A5
+    osc1.frequency.setValueAtTime(880, now);
     osc1.frequency.exponentialRampToValueAtTime(1760, now + 0.1);
     gain1.gain.setValueAtTime(0.3, now);
     gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
@@ -56,7 +68,7 @@ function playKitchenChime() {
     const osc2 = ctx.createOscillator();
     const gain2 = ctx.createGain();
     osc2.type = "sine";
-    osc2.frequency.setValueAtTime(1320, now + 0.1); // E6
+    osc2.frequency.setValueAtTime(1320, now + 0.1);
     gain2.gain.setValueAtTime(0.25, now + 0.1);
     gain2.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
     osc2.connect(gain2);
@@ -87,7 +99,7 @@ export function KitchenView() {
         (evt.eventName === "KitchenOrderCreated" || evt.eventName === "NewOrderCreated") &&
         soundEnabled
       ) {
-        playKitchenChime();
+        playKitchenOrderAlert();
       }
     },
     [branchId, queryClient, soundEnabled]
@@ -328,13 +340,19 @@ export function KitchenView() {
           {/* Sound Toggle */}
           <button
             type="button"
-            onClick={() => setSoundEnabled(!soundEnabled)}
+            onClick={() => {
+              const next = !soundEnabled;
+              setSoundEnabled(next);
+              if (next) {
+                playKitchenOrderAlert();
+              }
+            }}
             className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
               soundEnabled
                 ? "bg-amber-500/15 text-amber-300 border-amber-500/30 hover:bg-amber-500/25 shadow-sm"
                 : "bg-[#1c212d] text-gray-400 border-[#2d3547] hover:text-gray-200"
             }`}
-            title={soundEnabled ? "Đang bật âm chuông báo món mới" : "Đã tắt âm chuông"}
+            title={soundEnabled ? "Đang bật âm chuông báo món mới (Bấm để thử âm hoặc tắt)" : "Đã tắt âm chuông (Bấm để bật)"}
           >
             {soundEnabled ? <Volume2 size={16} className="text-amber-400" /> : <VolumeX size={16} />}
             <span>{soundEnabled ? "Âm báo: Bật" : "Âm báo: Tắt"}</span>
@@ -531,9 +549,9 @@ export function KitchenView() {
       ) : viewMode === "kanban" ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-start">
           {/* Column 1: Chờ chế biến */}
-          <div className="flex flex-col rounded-2xl bg-[#131620] border border-[#262c3d] shadow-xl overflow-hidden min-h-[580px]">
+          <div className="flex flex-col rounded-2xl bg-[#131620] border border-[#262c3d] shadow-xl overflow-hidden min-h-[500px]">
             {/* Column Header */}
-            <div className="flex items-center justify-between p-3.5 bg-gradient-to-r from-sky-950/80 via-blue-900/30 to-[#131620] border-b border-sky-500/30">
+            <div className="flex items-center justify-between p-3.5 bg-gradient-to-r from-sky-950/80 via-blue-900/30 to-[#131620] border-b border-sky-500/30 shrink-0">
               <div className="flex items-center gap-2">
                 <div className="p-1.5 rounded-lg bg-sky-500/20 text-sky-400 border border-sky-500/30">
                   <Clock size={15} />
@@ -551,7 +569,7 @@ export function KitchenView() {
             </div>
 
             {/* Column Body */}
-            <div className="p-3 flex-1 flex flex-col gap-3.5 overflow-y-auto max-h-[calc(100vh-280px)]">
+            <div className="p-3 flex-1 flex flex-col gap-3.5 overflow-y-auto max-h-[calc(100vh-280px)] scrollbar-thin">
               {newAndAcceptedTickets.map((t) => (
                 <KitchenTicketCard
                   key={t.id}
@@ -578,9 +596,9 @@ export function KitchenView() {
           </div>
 
           {/* Column 2: Đang nấu */}
-          <div className="flex flex-col rounded-2xl bg-[#131620] border border-[#262c3d] shadow-xl overflow-hidden min-h-[580px]">
+          <div className="flex flex-col rounded-2xl bg-[#131620] border border-[#262c3d] shadow-xl overflow-hidden min-h-[500px]">
             {/* Column Header */}
-            <div className="flex items-center justify-between p-3.5 bg-gradient-to-r from-amber-950/80 via-orange-900/30 to-[#131620] border-b border-amber-500/30">
+            <div className="flex items-center justify-between p-3.5 bg-gradient-to-r from-amber-950/80 via-orange-900/30 to-[#131620] border-b border-amber-500/30 shrink-0">
               <div className="flex items-center gap-2">
                 <div className="p-1.5 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/30">
                   <Flame size={15} />
@@ -598,7 +616,7 @@ export function KitchenView() {
             </div>
 
             {/* Column Body */}
-            <div className="p-3 flex-1 flex flex-col gap-3.5 overflow-y-auto max-h-[calc(100vh-280px)]">
+            <div className="p-3 flex-1 flex flex-col gap-3.5 overflow-y-auto max-h-[calc(100vh-280px)] scrollbar-thin">
               {preparingTickets.map((t) => (
                 <KitchenTicketCard
                   key={t.id}
@@ -625,9 +643,9 @@ export function KitchenView() {
           </div>
 
           {/* Column 3: Sẵn sàng lên món */}
-          <div className="flex flex-col rounded-2xl bg-[#131620] border border-[#262c3d] shadow-xl overflow-hidden min-h-[580px]">
+          <div className="flex flex-col rounded-2xl bg-[#131620] border border-[#262c3d] shadow-xl overflow-hidden min-h-[500px]">
             {/* Column Header */}
-            <div className="flex items-center justify-between p-3.5 bg-gradient-to-r from-emerald-950/80 via-teal-900/30 to-[#131620] border-b border-emerald-500/30">
+            <div className="flex items-center justify-between p-3.5 bg-gradient-to-r from-emerald-950/80 via-teal-900/30 to-[#131620] border-b border-emerald-500/30 shrink-0">
               <div className="flex items-center gap-2">
                 <div className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                   <CheckCircle2 size={15} />
@@ -645,7 +663,7 @@ export function KitchenView() {
             </div>
 
             {/* Column Body */}
-            <div className="p-3 flex-1 flex flex-col gap-3.5 overflow-y-auto max-h-[calc(100vh-280px)]">
+            <div className="p-3 flex-1 flex flex-col gap-3.5 overflow-y-auto max-h-[calc(100vh-280px)] scrollbar-thin">
               {readyTickets.map((t) => (
                 <KitchenTicketCard
                   key={t.id}

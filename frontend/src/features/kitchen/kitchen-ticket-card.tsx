@@ -143,7 +143,7 @@ export function KitchenTicketCard({
 
   return (
     <div
-      className={`group relative flex flex-col rounded-2xl transition-all duration-300 overflow-hidden bg-[#181c26] border ${
+      className={`group relative flex flex-col rounded-2xl shrink-0 w-full transition-all duration-300 overflow-hidden bg-[#181c26] border ${
         isUrgent
           ? "border-rose-500/70 shadow-[0_4px_24px_rgba(244,63,94,0.25)] ring-1 ring-rose-500/50"
           : isReady
@@ -155,7 +155,7 @@ export function KitchenTicketCard({
     >
       {/* Top Accent Strip */}
       <div
-        className={`h-1.5 w-full ${
+        className={`h-1.5 w-full shrink-0 ${
           isUrgent
             ? "bg-gradient-to-r from-rose-500 via-amber-500 to-rose-500 animate-pulse"
             : isReady
@@ -167,7 +167,7 @@ export function KitchenTicketCard({
       />
 
       {/* Ticket Header */}
-      <div className="p-3.5 bg-[#1e2330] border-b border-[#2a3142] flex flex-col gap-2.5">
+      <div className="p-3.5 bg-[#1e2330] border-b border-[#2a3142] flex flex-col gap-2.5 shrink-0">
         {/* Row 1: Table Badge + Order Number + Timer */}
         <div className="flex items-center justify-between gap-2">
           {/* Table / Order Type Badge */}
@@ -244,11 +244,11 @@ export function KitchenTicketCard({
       </div>
 
       {/* Ticket Items (Body) */}
-      <div className="p-3.5 flex-1 flex flex-col gap-2 overflow-y-auto max-h-[360px] bg-[#141720]/80">
+      <div className="p-3.5 flex flex-col gap-2 overflow-y-auto max-h-[320px] min-h-[80px] bg-[#141720]/80">
         {ticket.items.map((item) => (
           <div
             key={item.id}
-            className="flex items-start gap-3 p-2.5 rounded-xl bg-[#1d222e] hover:bg-[#232938] border border-[#2b3244] transition-colors"
+            className="flex items-start gap-3 p-2.5 rounded-xl bg-[#1d222e] hover:bg-[#232938] border border-[#2b3244] transition-colors shrink-0"
           >
             {/* Quantity Badge */}
             <div className="shrink-0 flex items-center justify-center w-8 h-8 rounded-lg bg-amber-500/20 text-amber-300 font-mono font-black text-sm border border-amber-500/35 shadow-inner">
@@ -302,7 +302,7 @@ export function KitchenTicketCard({
       </div>
 
       {/* Ticket Actions (Footer) */}
-      <div className="p-3 bg-[#1a1e29] border-t border-[#2a3040] flex items-center gap-2">
+      <div className="p-3 bg-[#1a1e29] border-t border-[#2a3040] flex items-center gap-2 shrink-0">
         {ticket.status === KitchenOrderStatus.New && (
           <>
             <button
