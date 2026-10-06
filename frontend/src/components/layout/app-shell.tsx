@@ -14,6 +14,7 @@ import {
   Menu,
   Package,
   ShoppingCart,
+  UserCheck,
   Users,
   UtensilsCrossed,
   X,
@@ -32,6 +33,7 @@ const navigation = [
   { label: "Thanh toán", href: "/payments", permission: "payment.read", icon: CreditCard, enabled: true },
   { label: "Thực đơn món", href: "/products", permission: "product.read", icon: UtensilsCrossed, enabled: true },
   { label: "Khách hàng", href: "/customers", permission: "customer.read", icon: Users, enabled: true },
+  { label: "Nhân viên", href: "/employees", permission: "employee.read", icon: UserCheck, enabled: true },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
