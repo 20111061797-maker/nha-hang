@@ -55,7 +55,7 @@ public sealed class PublicQrOrderController(
 
     [HttpGet("branches/{branchId:guid}/menu")]
     public async Task<IActionResult> GetPublicMenu(Guid branchId, CancellationToken ct) =>
-        Ok(await menuService.GetMenuAsync(branchId, ct));
+        Ok(await menuService.GetPublicMenuAsync(branchId, ct));
 
     [HttpGet("tables/{tableId:guid}/active-bill")]
     public async Task<IActionResult> GetTableActiveBill(Guid tableId, CancellationToken ct)

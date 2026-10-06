@@ -35,4 +35,5 @@ public interface IMenuManagementService
     Task<bool> SetBranchProductStatusAsync(Guid id, bool isActive, CancellationToken cancellationToken);
     Task<BranchProductItem?> SetBranchProductAvailabilityAsync(Guid id, bool isAvailable, CancellationToken cancellationToken);
     Task<MenuResponse> GetMenuAsync(Guid branchId, CancellationToken cancellationToken);
+    Task<MenuResponse> GetPublicMenuAsync(Guid branchId, CancellationToken cancellationToken);
 }
