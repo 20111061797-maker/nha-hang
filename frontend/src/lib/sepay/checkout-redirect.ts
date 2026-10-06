@@ -4,6 +4,8 @@
  * No intermediate modal popup needed.
  */
 
+import { unlockAudio } from "@/lib/audio/payment-sound";
+
 export interface SepayCheckoutParams {
   orderId: string;
   orderNumber?: string;
@@ -18,6 +20,8 @@ export interface SepayCheckoutParams {
 
 export async function submitSepayCheckout(params: SepayCheckoutParams): Promise<void> {
   if (typeof window === "undefined") return;
+
+  unlockAudio();
 
   const currentOrigin = window.location.origin;
   const currentPath = window.location.pathname;

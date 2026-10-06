@@ -139,14 +139,27 @@ export function QrMenuView({ tableIdentifier }: Props) {
       const amount = Number(amountStr) || 0;
       announcePaymentSuccess(amount);
       showSuccess(`Thanh toán thành công ${formatCurrency(amount)} qua SePay! Cảm ơn quý khách.`);
-      refetchBill();
+
+      if (tableInfo?.tableId) {
+        qrOrderApi
+          .completeTablePayment(tableInfo.tableId)
+          .then(() => {
+            refetchBill();
+            queryClient.invalidateQueries({ queryKey: ["public-table-bill", tableInfo.tableId] });
+          })
+          .catch(() => {
+            refetchBill();
+          });
+      } else {
+        refetchBill();
+      }
 
       url.searchParams.delete("sepay_success");
       url.searchParams.delete("order_id");
       url.searchParams.delete("amount");
       window.history.replaceState({}, "", url.pathname + url.search);
     }
-  }, [refetchBill]);
+  }, [refetchBill, tableInfo?.tableId, queryClient]);
 
   // 3. Fetch Public Menu for Branch
   const branchId = tableInfo?.branchId;

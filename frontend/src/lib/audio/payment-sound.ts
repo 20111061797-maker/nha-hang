@@ -2,18 +2,41 @@
  * Payment Sound and Voice Announcement Utility
  * Plays an audio chime and speaks Vietnamese confirmation:
  * "Thanh toán thành công [X] đồng"
+ * Uses Google Vietnamese TTS audio stream with autoplay fallback and strict Vietnamese-only SpeechSynthesis.
  */
+
+let sharedAudioContext: AudioContext | null = null;
+
+export function unlockAudio() {
+  if (typeof window === "undefined") return;
+  try {
+    const AudioContextClass =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!AudioContextClass) return;
+    if (!sharedAudioContext) {
+      sharedAudioContext = new AudioContextClass();
+    }
+    if (sharedAudioContext.state === "suspended") {
+      sharedAudioContext.resume().catch(() => {});
+    }
+  } catch {}
+}
 
 export function playPaymentChime() {
   if (typeof window === "undefined") return;
 
   try {
     const AudioContextClass =
-      window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     if (!AudioContextClass) return;
 
-    const ctx = new AudioContextClass();
+    if (!sharedAudioContext || sharedAudioContext.state === "closed") {
+      sharedAudioContext = new AudioContextClass();
+    }
 
+    const ctx = sharedAudioContext;
     if (ctx.state === "suspended") {
       ctx.resume().catch(() => {});
     }
@@ -64,13 +87,9 @@ export function playPaymentChime() {
 /**
  * Announces payment success with cash chime + Vietnamese voice speech
  * Example: "Thanh toán thành công 100.000 đồng"
- * Uses native Vietnamese Google TTS audio stream with strict Vietnamese-only fallback.
  */
 export function announcePaymentSuccess(amount: number) {
   if (typeof window === "undefined") return;
-
-  // 1. Always play chime first
-  playPaymentChime();
 
   const rounded = Math.round(amount);
   const formattedAmount = rounded.toLocaleString("vi-VN");
@@ -79,29 +98,84 @@ export function announcePaymentSuccess(amount: number) {
       ? `Thanh toán thành công ${formattedAmount} đồng`
       : "Thanh toán thành công";
 
-  // 2. Play high-quality native Vietnamese TTS audio stream via /api/tts
-  let audioPlayed = false;
+  const executeSound = () => {
+    // 1. Play synthesized cash chime
+    playPaymentChime();
 
-  try {
-    const audioUrl = `/api/tts?text=${encodeURIComponent(speechText)}`;
-    const audio = new Audio(audioUrl);
-    audio.volume = 1.0;
+    // 2. Play Vietnamese TTS audio stream via /api/tts
+    try {
+      const audioUrl = `/api/tts?text=${encodeURIComponent(speechText)}`;
+      const audio = new Audio(audioUrl);
+      audio.volume = 1.0;
 
-    // Small delay to allow the cash register chime to start first
-    setTimeout(() => {
-      audio
-        .play()
-        .then(() => {
-          audioPlayed = true;
-        })
-        .catch(() => {
-          // If HTML5 audio autoplay was prevented or failed, attempt Vietnamese-only Web Speech API fallback
-          fallbackVietnameseSpeech(speechText);
-        });
-    }, 200);
-  } catch {
-    fallbackVietnameseSpeech(speechText);
-  }
+      setTimeout(() => {
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          playPromise.catch((err) => {
+            if (err?.name === "NotAllowedError") {
+              // Browser blocked autoplay due to cross-origin redirect
+              registerAutoplayFallback(executeSound, speechText);
+            } else {
+              fallbackVietnameseSpeech(speechText);
+            }
+          });
+        }
+      }, 150);
+    } catch {
+      fallbackVietnameseSpeech(speechText);
+    }
+  };
+
+  executeSound();
+}
+
+/**
+ * Handles browser Autoplay Policy when returning from cross-origin payment redirect:
+ * Shows a friendly floating prompt and triggers sound on the very first user interaction.
+ */
+function registerAutoplayFallback(executeSound: () => void, text: string) {
+  if (typeof document === "undefined") return;
+
+  const existing = document.getElementById("sepay-sound-autoplay-banner");
+  if (existing) return;
+
+  const banner = document.createElement("div");
+  banner.id = "sepay-sound-autoplay-banner";
+  banner.className =
+    "fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] flex items-center gap-3 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white font-extrabold px-6 py-3.5 rounded-2xl shadow-2xl shadow-emerald-950/80 border border-emerald-400/40 cursor-pointer animate-bounce select-none";
+  banner.innerHTML = `
+    <span class="text-xl">🔊</span>
+    <span class="text-xs sm:text-sm font-black tracking-wide">${text} (Chạm để nghe)</span>
+  `;
+
+  let executed = false;
+  const onUserInteraction = () => {
+    if (executed) return;
+    executed = true;
+    unlockAudio();
+    executeSound();
+    banner.remove();
+    window.removeEventListener("click", onUserInteraction, true);
+    window.removeEventListener("touchstart", onUserInteraction, true);
+    window.removeEventListener("pointerdown", onUserInteraction, true);
+  };
+
+  banner.onclick = (e) => {
+    e.stopPropagation();
+    onUserInteraction();
+  };
+
+  document.body.appendChild(banner);
+  window.addEventListener("click", onUserInteraction, { once: true, capture: true });
+  window.addEventListener("touchstart", onUserInteraction, { once: true, capture: true });
+  window.addEventListener("pointerdown", onUserInteraction, { once: true, capture: true });
+
+  setTimeout(() => {
+    banner.remove();
+    window.removeEventListener("click", onUserInteraction, true);
+    window.removeEventListener("touchstart", onUserInteraction, true);
+    window.removeEventListener("pointerdown", onUserInteraction, true);
+  }, 15000);
 }
 
 /**
@@ -112,33 +186,40 @@ function fallbackVietnameseSpeech(text: string) {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
 
   try {
-    window.speechSynthesis.cancel();
+    const speakIfVi = () => {
+      const voices = window.speechSynthesis.getVoices();
+      const viVoice = voices.find((v) => {
+        const lang = (v.lang || "").toLowerCase();
+        const name = (v.name || "").toLowerCase();
+        return (
+          lang.startsWith("vi") ||
+          lang.includes("viet") ||
+          name.includes("viet") ||
+          name.includes("tiếng việt")
+        );
+      });
 
-    const voices = window.speechSynthesis.getVoices();
-    const viVoice = voices.find((v) => {
-      const lang = (v.lang || "").toLowerCase();
-      const name = (v.name || "").toLowerCase();
-      return (
-        lang.startsWith("vi") ||
-        lang.includes("viet") ||
-        name.includes("viet") ||
-        name.includes("tiếng việt")
-      );
-    });
+      if (!viVoice) {
+        return;
+      }
 
-    // STRICT CHECK: Only speak if a genuine Vietnamese voice is present!
-    // NEVER fall back to default English voice.
-    if (!viVoice) {
-      return;
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.voice = viVoice;
+      utterance.lang = "vi-VN";
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utterance);
+    };
+
+    if (window.speechSynthesis.getVoices().length === 0) {
+      window.speechSynthesis.onvoiceschanged = () => {
+        speakIfVi();
+      };
+    } else {
+      speakIfVi();
     }
-
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.voice = viVoice;
-    utterance.lang = "vi-VN";
-    utterance.rate = 1.0;
-    utterance.pitch = 1.0;
-
-    window.speechSynthesis.speak(utterance);
   } catch (e) {
     console.warn("TTS fallback failed:", e);
   }

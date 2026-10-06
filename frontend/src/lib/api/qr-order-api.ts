@@ -26,4 +26,10 @@ export const qrOrderApi = {
       body: payload,
     });
   },
+
+  completeTablePayment(tableId: string): Promise<{ success: boolean; orderId?: string; orderNumber?: string; totalAmount?: number }> {
+    return apiRequest(`/api/public/tables/${tableId}/complete-payment`, {
+      method: "POST",
+    });
+  },
 };

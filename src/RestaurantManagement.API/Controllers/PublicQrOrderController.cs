@@ -385,4 +385,39 @@ public sealed class PublicQrOrderController(
             membershipLevel?.Name
         ));
     }
+
+    [HttpPost("tables/{tableId:guid}/complete-payment")]
+    public async Task<IActionResult> CompletePayment(Guid tableId, CancellationToken ct)
+    {
+        var activeOrder = await dbContext.Orders
+            .FirstOrDefaultAsync(o => o.DiningTableId == tableId && o.Status != OrderStatus.Completed && o.Status != OrderStatus.Cancelled, ct);
+        if (activeOrder is null) return Ok(new { success = true });
+
+        activeOrder.Status = OrderStatus.Completed;
+
+        var allocations = await dbContext.OrderTableAllocations
+            .Where(x => x.OrderId == activeOrder.Id && x.ReleasedAt == null)
+            .ToListAsync(ct);
+        foreach (var allocation in allocations)
+        {
+            allocation.ReleasedAt = DateTimeOffset.UtcNow;
+            var allocTable = await dbContext.DiningTables.FirstOrDefaultAsync(x => x.Id == allocation.TableId, ct);
+            if (allocTable is not null) allocTable.Status = TableStatus.Available;
+        }
+
+        var table = await dbContext.DiningTables.FirstOrDefaultAsync(t => t.Id == tableId, ct);
+        if (table is not null)
+        {
+            table.Status = TableStatus.Available;
+        }
+
+        await dbContext.SaveChangesAsync(ct);
+        return Ok(new
+        {
+            success = true,
+            orderId = activeOrder.Id,
+            orderNumber = activeOrder.OrderNumber,
+            totalAmount = activeOrder.TotalAmount
+        });
+    }
 }
