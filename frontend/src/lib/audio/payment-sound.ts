@@ -64,45 +64,82 @@ export function playPaymentChime() {
 /**
  * Announces payment success with cash chime + Vietnamese voice speech
  * Example: "Thanh toán thành công 100.000 đồng"
+ * Uses native Vietnamese Google TTS audio stream with strict Vietnamese-only fallback.
  */
 export function announcePaymentSuccess(amount: number) {
   if (typeof window === "undefined") return;
 
-  // 1. Play chime immediately
+  // 1. Always play chime first
   playPaymentChime();
 
-  // 2. Speak Vietnamese voice announcement
-  if ("speechSynthesis" in window) {
-    try {
-      window.speechSynthesis.cancel();
+  const rounded = Math.round(amount);
+  const formattedAmount = rounded.toLocaleString("vi-VN");
+  const speechText =
+    rounded > 0
+      ? `Thanh toán thành công ${formattedAmount} đồng`
+      : "Thanh toán thành công";
 
-      const rounded = Math.round(amount);
-      const formattedAmount = rounded.toLocaleString("vi-VN");
-      const speechText = `Thanh toán thành công ${formattedAmount} đồng`;
+  // 2. Play high-quality native Vietnamese TTS audio stream via /api/tts
+  let audioPlayed = false;
 
-      const utterance = new SpeechSynthesisUtterance(speechText);
-      utterance.lang = "vi-VN";
-      utterance.rate = 1.0;
-      utterance.pitch = 1.05;
+  try {
+    const audioUrl = `/api/tts?text=${encodeURIComponent(speechText)}`;
+    const audio = new Audio(audioUrl);
+    audio.volume = 1.0;
 
-      const voices = window.speechSynthesis.getVoices();
-      const viVoice = voices.find(
-        (v) => v.lang.toLowerCase().includes("vi") || v.lang.toLowerCase().includes("vn")
+    // Small delay to allow the cash register chime to start first
+    setTimeout(() => {
+      audio
+        .play()
+        .then(() => {
+          audioPlayed = true;
+        })
+        .catch(() => {
+          // If HTML5 audio autoplay was prevented or failed, attempt Vietnamese-only Web Speech API fallback
+          fallbackVietnameseSpeech(speechText);
+        });
+    }, 200);
+  } catch {
+    fallbackVietnameseSpeech(speechText);
+  }
+}
+
+/**
+ * Strict Vietnamese-only fallback:
+ * NEVER speaks if only English or non-Vietnamese voices are available.
+ */
+function fallbackVietnameseSpeech(text: string) {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+
+  try {
+    window.speechSynthesis.cancel();
+
+    const voices = window.speechSynthesis.getVoices();
+    const viVoice = voices.find((v) => {
+      const lang = (v.lang || "").toLowerCase();
+      const name = (v.name || "").toLowerCase();
+      return (
+        lang.startsWith("vi") ||
+        lang.includes("viet") ||
+        name.includes("viet") ||
+        name.includes("tiếng việt")
       );
-      if (viVoice) {
-        utterance.voice = viVoice;
-      }
+    });
 
-      // Small delay to let the initial chime sound crisp
-      setTimeout(() => {
-        try {
-          window.speechSynthesis.speak(utterance);
-        } catch (e) {
-          console.warn("TTS speak failed:", e);
-        }
-      }, 250);
-    } catch (e) {
-      console.warn("TTS initialization failed:", e);
+    // STRICT CHECK: Only speak if a genuine Vietnamese voice is present!
+    // NEVER fall back to default English voice.
+    if (!viVoice) {
+      return;
     }
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.voice = viVoice;
+    utterance.lang = "vi-VN";
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+
+    window.speechSynthesis.speak(utterance);
+  } catch (e) {
+    console.warn("TTS fallback failed:", e);
   }
 }
