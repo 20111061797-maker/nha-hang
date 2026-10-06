@@ -75,7 +75,34 @@ public sealed class OrderManagementService(
 
     public async Task<OrderDetails?> ChangeStatusAsync(Guid orderId, ChangeOrderStatusRequest request, CancellationToken cancellationToken)
     {
-        var order = await dbContext.Orders.FirstOrDefaultAsync(x => x.Id == orderId, cancellationToken); if (order is null) return null; await EnsureBranchAccessAsync(order.BranchId, cancellationToken); EnsureVersion(order, request.ExpectedVersion); if (!AllowedTransition(order.Status, request.Status)) throw new ApplicationException($"Cannot change order status from {order.Status} to {request.Status}."); var old = order.Status; order.Status = request.Status; order.Version++; dbContext.OrderStatusHistories.Add(new OrderStatusHistory { OrderId = orderId, OldStatus = old, NewStatus = request.Status, ChangedBy = currentUser.UserId, Note = request.Reason }); if (request.Status is OrderStatus.Completed or OrderStatus.Cancelled) await ReleaseTableAsync(order, cancellationToken); await auditWriter.WriteAsync("OrderStatusChanged", nameof(Order), orderId, currentUser.Username, null, cancellationToken); await SaveAsync(cancellationToken); if (request.Status == OrderStatus.Confirmed && kitchenService is not null) await kitchenService.CreateForConfirmedOrderAsync(orderId, cancellationToken); return await BuildDetailsAsync(orderId, cancellationToken);
+        var order = await dbContext.Orders.FirstOrDefaultAsync(x => x.Id == orderId, cancellationToken); 
+        if (order is null) return null; 
+        await EnsureBranchAccessAsync(order.BranchId, cancellationToken); 
+        EnsureVersion(order, request.ExpectedVersion); 
+        if (!AllowedTransition(order.Status, request.Status)) 
+            throw new ApplicationException($"Cannot change order status from {order.Status} to {request.Status}."); 
+        var old = order.Status; 
+        order.Status = request.Status; 
+        order.Version++; 
+        dbContext.OrderStatusHistories.Add(new OrderStatusHistory { OrderId = orderId, OldStatus = old, NewStatus = request.Status, ChangedBy = currentUser.UserId, Note = request.Reason }); 
+        if (request.Status is OrderStatus.Completed or OrderStatus.Cancelled) 
+        {
+            await ReleaseTableAsync(order, cancellationToken);
+            var activeKitchenOrders = await dbContext.KitchenOrders
+                .Where(ko => ko.OrderId == orderId && ko.Status != KitchenOrderStatus.Completed && ko.Status != KitchenOrderStatus.Cancelled)
+                .ToListAsync(cancellationToken);
+            foreach (var ko in activeKitchenOrders)
+            {
+                ko.Status = request.Status == OrderStatus.Completed ? KitchenOrderStatus.Completed : KitchenOrderStatus.Cancelled;
+                ko.UpdatedAt = DateTimeOffset.UtcNow;
+                ko.Version++;
+            }
+        }
+        await auditWriter.WriteAsync("OrderStatusChanged", nameof(Order), orderId, currentUser.Username, null, cancellationToken); 
+        await SaveAsync(cancellationToken); 
+        if (request.Status == OrderStatus.Confirmed && kitchenService is not null) 
+            await kitchenService.CreateForConfirmedOrderAsync(orderId, cancellationToken); 
+        return await BuildDetailsAsync(orderId, cancellationToken);
     }
 
     public Task<OrderDetails?> CancelAsync(Guid orderId, CancelOrderRequest request, CancellationToken cancellationToken) => ChangeStatusAsync(orderId, new ChangeOrderStatusRequest(OrderStatus.Cancelled, request.Reason, request.ExpectedVersion), cancellationToken);
@@ -110,10 +137,33 @@ public sealed class OrderManagementService(
     private async Task<Order> LoadEditableOrderAsync(Guid id, long? expectedVersion, CancellationToken ct) { var order = await dbContext.Orders.FirstOrDefaultAsync(x => x.Id == id, ct) ?? throw new ApplicationException("Order does not exist."); await EnsureBranchAccessAsync(order.BranchId, ct); EnsureVersion(order, expectedVersion); if (order.Status is not (OrderStatus.Draft or OrderStatus.Open)) throw new ApplicationException("Order items can only be changed while the order is open."); return order; }
     private static void EnsureVersion(Order order, long? expected) { if (expected.HasValue && order.Version != expected.Value) throw new ConflictException("The order was changed by another user."); }
     private async Task RecalculateAsync(Order order, CancellationToken ct) { order.Subtotal = await dbContext.OrderItems.Where(x => x.OrderId == order.Id).SumAsync(x => x.LineTotal, ct); order.DiscountAmount = 0; order.TaxAmount = 0; order.TotalAmount = order.Subtotal; }
-    private async Task ReleaseTableAsync(Order order, CancellationToken ct) { var allocations = await dbContext.OrderTableAllocations.Where(x => x.OrderId == order.Id && x.ReleasedAt == null).ToListAsync(ct); foreach (var allocation in allocations) { allocation.ReleasedAt = DateTimeOffset.UtcNow; var table = await dbContext.DiningTables.FirstOrDefaultAsync(x => x.Id == allocation.TableId, ct); if (table is not null) table.Status = TableStatus.Available; } }
-    private static bool AllowedTransition(OrderStatus from, OrderStatus to) => from == to || (from, to) switch { (OrderStatus.Draft, OrderStatus.Open or OrderStatus.Cancelled) => true, (OrderStatus.Open, OrderStatus.Confirmed or OrderStatus.Cancelled) => true, (OrderStatus.Confirmed, OrderStatus.Preparing or OrderStatus.Cancelled) => true, (OrderStatus.Preparing, OrderStatus.Ready or OrderStatus.Cancelled) => true, (OrderStatus.Ready, OrderStatus.Completed) => true, _ => false };
+    private async Task ReleaseTableAsync(Order order, CancellationToken ct) 
+    { 
+        var allocations = await dbContext.OrderTableAllocations.Where(x => x.OrderId == order.Id && x.ReleasedAt == null).ToListAsync(ct); 
+        foreach (var allocation in allocations) 
+        { 
+            allocation.ReleasedAt = DateTimeOffset.UtcNow; 
+            var table = await dbContext.DiningTables.FirstOrDefaultAsync(x => x.Id == allocation.TableId, ct); 
+            if (table is not null) table.Status = TableStatus.Available; 
+        } 
+        if (order.DiningTableId.HasValue)
+        {
+            var directTable = await dbContext.DiningTables.FirstOrDefaultAsync(x => x.Id == order.DiningTableId.Value, ct);
+            if (directTable is not null) directTable.Status = TableStatus.Available;
+        }
+    }
+    private static bool AllowedTransition(OrderStatus from, OrderStatus to) => 
+        from == to || (from, to) switch 
+        { 
+            (OrderStatus.Draft, OrderStatus.Open or OrderStatus.Cancelled) => true, 
+            (OrderStatus.Open, OrderStatus.Confirmed or OrderStatus.Cancelled) => true, 
+            (OrderStatus.Confirmed, OrderStatus.Preparing or OrderStatus.Ready or OrderStatus.Completed or OrderStatus.Cancelled) => true, 
+            (OrderStatus.Preparing, OrderStatus.Ready or OrderStatus.Completed or OrderStatus.Cancelled) => true, 
+            (OrderStatus.Ready, OrderStatus.Completed or OrderStatus.Cancelled) => true, 
+            _ => false 
+        };
     private async Task<DiningTable> EnsureTableAsync(Guid branchId, Guid tableId, CancellationToken ct) { var table = await dbContext.DiningTables.FirstOrDefaultAsync(x => x.Id == tableId && x.BranchId == branchId && x.IsActive, ct) ?? throw new ApplicationException("Table does not exist in this branch."); if (table.Status == TableStatus.OutOfService) throw new ApplicationException("Table is out of service."); return table; }
-    private async Task EnsureBranchAccessAsync(Guid branchId, CancellationToken ct) { if (currentUser.IsAdministrator || currentUser.UserId is null) return; if (currentUser.UserId is not Guid userId || (!await dbContext.UserBranchAccesses.AnyAsync(x => x.UserId == userId && x.BranchId == branchId && x.IsActive, ct) && !await dbContext.Users.AnyAsync(x => x.Id == userId && x.EmployeeId != null && dbContext.Employees.Any(e => e.Id == x.EmployeeId && e.BranchId == branchId && e.IsActive), ct))) throw new ForbiddenException("You do not have access to this branch."); }
+    private async Task EnsureBranchAccessAsync(Guid branchId, CancellationToken ct) { if (currentUser.IsAdministrator) return; if (currentUser.UserId is not Guid userId || (!await dbContext.UserBranchAccesses.AnyAsync(x => x.UserId == userId && x.BranchId == branchId && x.IsActive, ct) && !await dbContext.Users.AnyAsync(x => x.Id == userId && x.EmployeeId != null && dbContext.Employees.Any(e => e.Id == x.EmployeeId && e.BranchId == branchId && e.IsActive), ct))) throw new ForbiddenException("You do not have access to this branch."); }
     private async Task<string> GenerateOrderNumberAsync(CancellationToken ct) { string number; do { number = $"ORD-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid():N}"[..27].ToUpperInvariant(); } while (await dbContext.Orders.AnyAsync(x => x.OrderNumber == number, ct)); return number; }
     private async Task SaveAsync(CancellationToken ct) { try { await dbContext.SaveChangesAsync(ct); } catch (DbUpdateConcurrencyException) { throw new ConflictException("The order was changed by another user."); } }
     private async Task ConsolidateDuplicateTableOrdersAsync(Guid branchId, CancellationToken cancellationToken)
