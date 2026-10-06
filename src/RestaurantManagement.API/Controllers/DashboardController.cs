@@ -34,7 +34,8 @@ public sealed class DashboardController(RestaurantDbContext dbContext) : Control
         };
 
         // Only fetch the window we need: from the earliest boundary used below.
-        var earliest = lastMonthStart < weekStart ? lastMonthStart : weekStart;
+        // Npgsql only accepts DateTimeOffset values with offset 0 (UTC) as query parameters.
+        var earliest = (lastMonthStart < weekStart ? lastMonthStart : weekStart).ToUniversalTime();
         var orders = await dbContext.Orders.AsNoTracking()
             .Where(o => o.BranchId == branchId && o.CreatedAt >= earliest && o.Status != OrderStatus.Cancelled)
             .Select(o => new { o.Id, o.OrderNumber, o.Status, o.TotalAmount, o.CreatedAt, o.DiningTableId })
