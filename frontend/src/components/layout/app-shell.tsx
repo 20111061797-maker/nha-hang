@@ -7,6 +7,7 @@ import { PermissionGate } from "@/components/auth/permission-gate";
 import { LoadingState } from "@/components/feedback/states";
 import {
   ChefHat,
+  Boxes,
   CreditCard,
   Grid3X3,
   LayoutDashboard,
@@ -32,6 +33,7 @@ const navigation = [
   { label: "Đơn hàng", href: "/orders", permission: "order.read", icon: Package, enabled: true },
   { label: "Thanh toán", href: "/payments", permission: "payment.read", icon: CreditCard, enabled: true },
   { label: "Thực đơn món", href: "/products", permission: "product.read", icon: UtensilsCrossed, enabled: true },
+  { label: "Tồn kho", href: "/inventory", permission: "inventory.read", icon: Boxes, enabled: true },
   { label: "Khách hàng", href: "/customers", permission: "customer.read", icon: Users, enabled: true },
   { label: "Nhân viên", href: "/employees", permission: "employee.read", icon: UserCheck, enabled: true },
 ];
