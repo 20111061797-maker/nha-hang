@@ -21,7 +21,7 @@ import {
   QrCode,
 } from "lucide-react";
 import { announcePaymentSuccess } from "@/lib/audio/payment-sound";
-import { submitSepayCheckout } from "@/lib/sepay/checkout-redirect";
+import { handleSepayPopupReturn, submitSepayCheckout } from "@/lib/sepay/checkout-redirect";
 import { useEffect } from "react";
 
 export function OrdersView() {
@@ -44,8 +44,27 @@ export function OrdersView() {
     setTimeout(() => setToastMessage(null), 4000);
   };
 
+  const finalizeSepayPayment = (orderId: string, amount: number) => {
+    paymentApi
+      .createPayment(orderId, {
+        paymentMethod: PaymentMethod.QrPayment,
+        amount: amount,
+      })
+      .then(() => posApi.completeOrder(orderId))
+      .then(() => {
+        queryClient.invalidateQueries({ queryKey: ["branch-orders", branchId] });
+        queryClient.invalidateQueries({ queryKey: ["pos-tables", branchId] });
+        showToast(`Thanh toán ${amount.toLocaleString("vi-VN")} ₫ thành công! Bàn đã dọn trống.`);
+      })
+      .catch((err) => {
+        console.error("Lỗi hoàn tất đơn SePay:", err);
+      });
+  };
+
+  // Dự phòng: SePay quay lại cùng tab (khi trình duyệt chặn mở tab mới)
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (handleSepayPopupReturn()) return;
     const url = new URL(window.location.href);
     const sepaySuccess = url.searchParams.get("sepay_success");
     const orderId = url.searchParams.get("order_id");
@@ -54,27 +73,14 @@ export function OrdersView() {
     if (sepaySuccess === "true" && orderId) {
       const amount = Number(amountStr) || 0;
       announcePaymentSuccess(amount);
-
-      paymentApi
-        .createPayment(orderId, {
-          paymentMethod: PaymentMethod.QrPayment,
-          amount: amount,
-        })
-        .then(() => posApi.completeOrder(orderId))
-        .then(() => {
-          queryClient.invalidateQueries({ queryKey: ["branch-orders", branchId] });
-          queryClient.invalidateQueries({ queryKey: ["pos-tables", branchId] });
-          showToast(`Thanh toán ${amount.toLocaleString("vi-VN")} ₫ thành công! Bàn đã dọn trống.`);
-        })
-        .catch((err) => {
-          console.error("Lỗi hoàn tất đơn SePay:", err);
-        });
+      finalizeSepayPayment(orderId, amount);
 
       url.searchParams.delete("sepay_success");
       url.searchParams.delete("order_id");
       url.searchParams.delete("amount");
       window.history.replaceState({}, "", url.pathname);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [branchId, queryClient]);
 
   const { data: tables = [] } = useQuery({
@@ -598,6 +604,7 @@ export function OrdersView() {
                         amount: activeOrder.totalAmount,
                         orderDescription: `Thanh toan don #${activeOrder.orderNumber}`,
                         returnUrl: `${window.location.origin}/orders?sepay_success=true&order_id=${activeOrder.id}&amount=${Math.round(activeOrder.totalAmount)}`,
+                        onPaid: ({ orderId, amount }) => finalizeSepayPayment(orderId, amount),
                       });
                     } catch (err: unknown) {
                       showToast(err instanceof Error ? err.message : "Lỗi mở cổng SePay");

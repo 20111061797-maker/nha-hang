@@ -98,85 +98,26 @@ export function announcePaymentSuccess(amount: number) {
       ? `Thanh toán thành công ${formattedAmount} đồng`
       : "Thanh toán thành công";
 
-  const executeSound = () => {
-    // 1. Play synthesized cash chime
-    playPaymentChime();
+  // 1. Play synthesized cash chime
+  playPaymentChime();
 
-    // 2. Play Vietnamese TTS audio stream via /api/tts
-    try {
-      const audioUrl = `/api/tts?text=${encodeURIComponent(speechText)}`;
-      const audio = new Audio(audioUrl);
-      audio.volume = 1.0;
+  // 2. Play Vietnamese TTS audio stream via /api/tts (falls back to a Vietnamese-only system voice)
+  try {
+    const audioUrl = `/api/tts?text=${encodeURIComponent(speechText)}`;
+    const audio = new Audio(audioUrl);
+    audio.volume = 1.0;
 
-      setTimeout(() => {
-        const playPromise = audio.play();
-        if (playPromise !== undefined) {
-          playPromise.catch((err) => {
-            if (err?.name === "NotAllowedError") {
-              // Browser blocked autoplay due to cross-origin redirect
-              registerAutoplayFallback(executeSound, speechText);
-            } else {
-              fallbackVietnameseSpeech(speechText);
-            }
-          });
-        }
-      }, 150);
-    } catch {
-      fallbackVietnameseSpeech(speechText);
-    }
-  };
-
-  executeSound();
+    setTimeout(() => {
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => fallbackVietnameseSpeech(speechText));
+      }
+    }, 150);
+  } catch {
+    fallbackVietnameseSpeech(speechText);
+  }
 }
 
-/**
- * Handles browser Autoplay Policy when returning from cross-origin payment redirect:
- * Shows a friendly floating prompt and triggers sound on the very first user interaction.
- */
-function registerAutoplayFallback(executeSound: () => void, text: string) {
-  if (typeof document === "undefined") return;
-
-  const existing = document.getElementById("sepay-sound-autoplay-banner");
-  if (existing) return;
-
-  const banner = document.createElement("div");
-  banner.id = "sepay-sound-autoplay-banner";
-  banner.className =
-    "fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] flex items-center gap-3 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white font-extrabold px-6 py-3.5 rounded-2xl shadow-2xl shadow-emerald-950/80 border border-emerald-400/40 cursor-pointer animate-bounce select-none";
-  banner.innerHTML = `
-    <span class="text-xl">🔊</span>
-    <span class="text-xs sm:text-sm font-black tracking-wide">${text} (Chạm để nghe)</span>
-  `;
-
-  let executed = false;
-  const onUserInteraction = () => {
-    if (executed) return;
-    executed = true;
-    unlockAudio();
-    executeSound();
-    banner.remove();
-    window.removeEventListener("click", onUserInteraction, true);
-    window.removeEventListener("touchstart", onUserInteraction, true);
-    window.removeEventListener("pointerdown", onUserInteraction, true);
-  };
-
-  banner.onclick = (e) => {
-    e.stopPropagation();
-    onUserInteraction();
-  };
-
-  document.body.appendChild(banner);
-  window.addEventListener("click", onUserInteraction, { once: true, capture: true });
-  window.addEventListener("touchstart", onUserInteraction, { once: true, capture: true });
-  window.addEventListener("pointerdown", onUserInteraction, { once: true, capture: true });
-
-  setTimeout(() => {
-    banner.remove();
-    window.removeEventListener("click", onUserInteraction, true);
-    window.removeEventListener("touchstart", onUserInteraction, true);
-    window.removeEventListener("pointerdown", onUserInteraction, true);
-  }, 15000);
-}
 
 /**
  * Strict Vietnamese-only fallback:

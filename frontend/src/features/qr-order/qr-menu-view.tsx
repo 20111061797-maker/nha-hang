@@ -28,7 +28,7 @@ import {
   QrCode,
   Loader2,
 } from "lucide-react";
-import { submitSepayCheckout } from "@/lib/sepay/checkout-redirect";
+import { handleSepayPopupReturn, submitSepayCheckout } from "@/lib/sepay/checkout-redirect";
 import { announcePaymentSuccess } from "@/lib/audio/payment-sound";
 
 function formatCurrency(amount: number) {
@@ -90,12 +90,29 @@ export function QrMenuView({ tableIdentifier }: Props) {
   const handlePaySepay = async (amount: number, orderNum: string, desc: string) => {
     try {
       setIsSepayLoading(true);
-      await submitSepayCheckout({
+      const mode = await submitSepayCheckout({
         orderId: `DH-${orderNum}`,
         orderNumber: orderNum,
         amount,
         orderDescription: desc,
+        onPaid: () => {
+          showSuccess(`Thanh toán thành công ${formatCurrency(amount)} qua SePay! Cảm ơn quý khách.`);
+          if (tableInfo?.tableId) {
+            qrOrderApi
+              .completeTablePayment(tableInfo.tableId)
+              .then(() => {
+                refetchBill();
+                queryClient.invalidateQueries({ queryKey: ["public-table-bill", tableInfo.tableId] });
+              })
+              .catch(() => {
+                refetchBill();
+              });
+          } else {
+            refetchBill();
+          }
+        },
       });
+      if (mode === "popup") setIsSepayLoading(false);
     } catch (err: unknown) {
       setIsSepayLoading(false);
       showError(err instanceof Error ? err.message : "Không thể chuyển tới cổng SePay.");
@@ -131,6 +148,7 @@ export function QrMenuView({ tableIdentifier }: Props) {
   // Lắng nghe kết quả thanh toán SePay khi redirect về
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (handleSepayPopupReturn()) return;
     const url = new URL(window.location.href);
     const sepaySuccess = url.searchParams.get("sepay_success");
     const amountStr = url.searchParams.get("amount");

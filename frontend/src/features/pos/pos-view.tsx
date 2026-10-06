@@ -13,7 +13,7 @@ import {
   type OrderListItem,
 } from "@/types/pos";
 import { announcePaymentSuccess } from "@/lib/audio/payment-sound";
-import { submitSepayCheckout } from "@/lib/sepay/checkout-redirect";
+import { handleSepayPopupReturn, submitSepayCheckout } from "@/lib/sepay/checkout-redirect";
 import { TableFloorPlan } from "./table-floor-plan";
 import { MenuSelector } from "./menu-selector";
 import { OrderTicket } from "./order-ticket";
@@ -333,25 +333,53 @@ export function PosView() {
     completeOrderMutation.mutate(activeOrderId);
   };
 
+  const finalizeSepayPayment = (orderId: string, amount: number) => {
+    posApi
+      .completeOrder(orderId)
+      .then((updated) => {
+        const tableId = updated.diningTableId;
+        if (tableId) {
+          queryClient.setQueryData<DiningTable[]>(["pos-tables", branchId], (prev) =>
+            prev
+              ? prev.map((t) => (t.id === tableId ? { ...t, status: TableStatus.Available } : t))
+              : []
+          );
+        }
+        queryClient.invalidateQueries({ queryKey: ["pos-orders", branchId] });
+        queryClient.invalidateQueries({ queryKey: ["pos-tables", branchId] });
+        queryClient.invalidateQueries({ queryKey: ["branch-orders", branchId] });
+        showNotification(
+          "success",
+          `Thanh toán ${amount.toLocaleString("vi-VN")} ₫ thành công! Bàn đã được dọn trống.`
+        );
+      })
+      .catch((err) => {
+        console.error("Lỗi hoàn tất đơn SePay:", err);
+      });
+  };
+
   const handlePayWithSepay = async () => {
     if (!activeOrder) return;
     try {
       setIsSepayLoading(true);
-      await submitSepayCheckout({
+      const mode = await submitSepayCheckout({
         orderId: activeOrder.id,
         orderNumber: activeOrder.orderNumber,
         amount: activeOrder.totalAmount,
         orderDescription: `Thanh toan don #${activeOrder.orderNumber}`,
+        onPaid: ({ orderId, amount }) => finalizeSepayPayment(orderId, amount),
       });
+      if (mode === "popup") setIsSepayLoading(false);
     } catch (err: unknown) {
       setIsSepayLoading(false);
       showNotification("error", getErrorMessage(err, "Không thể chuyển tới cổng SePay."));
     }
   };
 
-  // Tự động xử lý khi SePay thanh toán thành công và quay lại /pos
+  // Dự phòng: SePay quay lại cùng tab (khi trình duyệt chặn mở tab mới)
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (handleSepayPopupReturn()) return;
     const url = new URL(window.location.href);
     const sepaySuccess = url.searchParams.get("sepay_success");
     const orderId = url.searchParams.get("order_id");
@@ -360,35 +388,14 @@ export function PosView() {
     if (sepaySuccess === "true" && orderId) {
       const amount = Number(amountStr) || 0;
       announcePaymentSuccess(amount);
-
-      posApi
-        .completeOrder(orderId)
-        .then((updated) => {
-          const tableId = updated.diningTableId;
-          if (tableId) {
-            queryClient.setQueryData<DiningTable[]>(["pos-tables", branchId], (prev) =>
-              prev
-                ? prev.map((t) => (t.id === tableId ? { ...t, status: TableStatus.Available } : t))
-                : []
-            );
-          }
-          queryClient.invalidateQueries({ queryKey: ["pos-orders", branchId] });
-          queryClient.invalidateQueries({ queryKey: ["pos-tables", branchId] });
-          queryClient.invalidateQueries({ queryKey: ["branch-orders", branchId] });
-          showNotification(
-            "success",
-            `Thanh toán ${amount.toLocaleString("vi-VN")} ₫ thành công! Bàn đã được dọn trống.`
-          );
-        })
-        .catch((err) => {
-          console.error("Lỗi hoàn tất đơn SePay:", err);
-        });
+      finalizeSepayPayment(orderId, amount);
 
       url.searchParams.delete("sepay_success");
       url.searchParams.delete("order_id");
       url.searchParams.delete("amount");
       window.history.replaceState({}, "", url.pathname);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [branchId, queryClient]);
 
   const handleCancelOrder = (reason: string) => {
