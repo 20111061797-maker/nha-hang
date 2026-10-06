@@ -13,6 +13,7 @@ import {
 import { TableFloorPlan } from "./table-floor-plan";
 import { MenuSelector } from "./menu-selector";
 import { OrderTicket } from "./order-ticket";
+import { SePayModal } from "@/features/payments/sepay-modal";
 import { LoadingState, EmptyState } from "@/components/feedback/states";
 import Link from "next/link";
 import {
@@ -36,6 +37,7 @@ export function PosView() {
   const [isTakeawayNewOrder, setIsTakeawayNewOrder] = useState(false);
   const [guestName, setGuestName] = useState("");
   const [orderNotes, setOrderNotes] = useState("");
+  const [sepayModalOpen, setSepayModalOpen] = useState(false);
 
   const [notification, setNotification] = useState<{
     type: "success" | "error";
@@ -442,6 +444,7 @@ export function PosView() {
                 }
                 onSendToKitchen={handleSendToKitchen}
                 onCompleteOrder={handleCompleteOrder}
+                onPayWithSepay={() => setSepayModalOpen(true)}
                 onCancelOrder={handleCancelOrder}
                 onUpdateItemQuantity={handleUpdateItemQuantity}
                 onRemoveItem={handleRemoveItem}
@@ -554,6 +557,21 @@ export function PosView() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* SePay Payment Gateway Modal */}
+      {sepayModalOpen && activeOrder && (
+        <SePayModal
+          isOpen={sepayModalOpen}
+          onClose={() => setSepayModalOpen(false)}
+          orderInvoiceNumber={`DH-${activeOrder.orderNumber || activeOrder.id.slice(0, 8)}`}
+          orderAmount={activeOrder.totalAmount}
+          orderDescription={`Thanh toan don #${activeOrder.orderNumber}`}
+          onPaymentSuccess={() => {
+            setSepayModalOpen(false);
+            completeOrderMutation.mutate(activeOrder.id);
+          }}
+        />
       )}
     </div>
   );

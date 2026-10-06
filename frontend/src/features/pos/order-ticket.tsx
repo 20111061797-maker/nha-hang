@@ -18,6 +18,7 @@ import {
   UtensilsCrossed,
   ShoppingBag,
   Bike,
+  QrCode,
 } from "lucide-react";
 
 type Props = {
@@ -27,6 +28,7 @@ type Props = {
   isProcessing: boolean;
   onSendToKitchen: () => void;
   onCompleteOrder: () => void;
+  onPayWithSepay?: () => void;
   onCancelOrder: (reason: string) => void;
   onUpdateItemQuantity: (itemId: string, currentQty: number, delta: number) => void;
   onRemoveItem: (itemId: string) => void;
@@ -40,6 +42,7 @@ export function OrderTicket({
   isProcessing,
   onSendToKitchen,
   onCompleteOrder,
+  onPayWithSepay,
   onCancelOrder,
   onUpdateItemQuantity,
   onRemoveItem,
@@ -381,15 +384,29 @@ export function OrderTicket({
           )}
 
           {(isConfirmed || isPreparing || isReady) && (
-            <button
-              type="button"
-              disabled={isProcessing}
-              onClick={onCompleteOrder}
-              className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-black text-sm text-white bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 shadow-lg shadow-emerald-500/25 active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer"
-            >
-              <CreditCard size={18} />
-              <span>Thanh toán &amp; Trả bàn</span>
-            </button>
+            <div className="flex flex-col gap-2">
+              {onPayWithSepay && (
+                <button
+                  type="button"
+                  disabled={isProcessing}
+                  onClick={onPayWithSepay}
+                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-xs text-amber-300 bg-[#1e2538] hover:bg-[#28324a] border border-amber-500/40 hover:border-amber-400 transition-all cursor-pointer shadow-md"
+                >
+                  <QrCode size={16} className="text-amber-400" />
+                  <span>Thanh toán SePay (VietQR / Thẻ)</span>
+                </button>
+              )}
+
+              <button
+                type="button"
+                disabled={isProcessing}
+                onClick={onCompleteOrder}
+                className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-black text-sm text-white bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 shadow-lg shadow-emerald-500/25 active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer"
+              >
+                <CreditCard size={18} />
+                <span>Thanh toán Tiền mặt &amp; Trả bàn</span>
+              </button>
+            </div>
           )}
 
           {!isCompleted && !isCancelled && (

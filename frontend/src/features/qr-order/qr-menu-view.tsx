@@ -25,7 +25,9 @@ import {
   User,
   MessageSquare,
   Receipt,
+  QrCode,
 } from "lucide-react";
+import { SePayModal } from "@/features/payments/sepay-modal";
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("vi-VN", {
@@ -67,6 +69,12 @@ export function QrMenuView({ tableIdentifier }: Props) {
     totalPoints?: number | null;
     customerName?: string | null;
     membershipLevelName?: string | null;
+  } | null>(null);
+
+  const [sepayPayment, setSepayPayment] = useState<{
+    invoice: string;
+    amount: number;
+    desc: string;
   } | null>(null);
 
   const [toastError, setToastError] = useState<string | null>(null);
@@ -393,17 +401,36 @@ export function QrMenuView({ tableIdentifier }: Props) {
           ) : null}
         </div>
 
-        <button
-          type="button"
-          onClick={() => {
-            setPlacedOrder(null);
-            refetchBill();
-          }}
-          className="flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 text-white font-extrabold text-sm shadow-xl shadow-orange-950/50 active:scale-95 transition-all cursor-pointer"
-        >
-          <span>Xem thực đơn &amp; Gọi thêm món</span>
-          <ArrowRight size={16} />
-        </button>
+        <div className="flex flex-col gap-2.5 w-full max-w-sm">
+          {placedOrder.totalAmount > 0 && (
+            <button
+              type="button"
+              onClick={() =>
+                setSepayPayment({
+                  invoice: `DH-${placedOrder.orderNumber || "ORDER"}`,
+                  amount: placedOrder.totalAmount,
+                  desc: `Thanh toan don #${placedOrder.orderNumber} - Ban ${placedOrder.tableNumber}`,
+                })
+              }
+              className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-500 text-white font-extrabold text-sm shadow-xl shadow-orange-950/50 active:scale-95 transition-all cursor-pointer"
+            >
+              <QrCode size={18} />
+              <span>Thanh toán ngay qua SePay (VietQR / Thẻ)</span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={() => {
+              setPlacedOrder(null);
+              refetchBill();
+            }}
+            className="flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-[#202636] hover:bg-[#2b3346] text-white font-bold text-xs transition-colors cursor-pointer"
+          >
+            <span>Xem thực đơn &amp; Gọi thêm món</span>
+            <ArrowRight size={16} />
+          </button>
+        </div>
       </div>
     );
   }
@@ -1180,16 +1207,47 @@ export function QrMenuView({ tableIdentifier }: Props) {
                   {formatCurrency(activeBill.totalAmount)}
                 </span>
               </div>
+              {activeBill.totalAmount > 0 && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSepayPayment({
+                      invoice: `DH-${activeBill.orderNumber || "BILL"}`,
+                      amount: activeBill.totalAmount,
+                      desc: `Thanh toan hoa don - Ban ${tableInfo?.tableNumber ?? ""}`,
+                    })
+                  }
+                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-extrabold text-xs text-white bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-500 shadow-lg shadow-orange-950/40 transition-all cursor-pointer"
+                >
+                  <QrCode size={16} />
+                  <span>Thanh toán hóa đơn qua SePay (VietQR / Thẻ)</span>
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => setBillDrawerOpen(false)}
-                className="w-full py-3 rounded-xl bg-[#202636] hover:bg-[#2b3346] text-white text-xs font-bold transition-colors cursor-pointer"
+                className="w-full py-2.5 rounded-xl bg-[#202636] hover:bg-[#2b3346] text-white text-xs font-bold transition-colors cursor-pointer"
               >
                 Đóng &amp; Tiếp tục gọi món
               </button>
             </div>
           </div>
         </div>
+      )}
+
+      {/* SePay Checkout Gateway Modal */}
+      {sepayPayment && (
+        <SePayModal
+          isOpen={!!sepayPayment}
+          onClose={() => setSepayPayment(null)}
+          orderInvoiceNumber={sepayPayment.invoice}
+          orderAmount={sepayPayment.amount}
+          orderDescription={sepayPayment.desc}
+          onPaymentSuccess={() => {
+            setSepayPayment(null);
+            refetchBill();
+          }}
+        />
       )}
     </div>
   );

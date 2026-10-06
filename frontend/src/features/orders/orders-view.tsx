@@ -18,7 +18,9 @@ import {
   X,
   Flame,
   Ban,
+  QrCode,
 } from "lucide-react";
+import { SePayModal } from "@/features/payments/sepay-modal";
 
 export function OrdersView() {
   const { branchId, currentBranch } = useBranch();
@@ -31,6 +33,7 @@ export function OrdersView() {
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
+  const [sepayModalOpen, setSepayModalOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(PaymentMethod.Cash);
   const [tenderedAmount, setTenderedAmount] = useState<number>(0);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -541,6 +544,24 @@ export function OrdersView() {
               </div>
             </div>
 
+            {/* Quick SePay Payment Option */}
+            {paymentMethod !== PaymentMethod.Cash && (
+              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 text-xs text-amber-200 flex flex-col gap-2">
+                <span className="leading-relaxed">Khách có thể quét mã VietQR ngân hàng hoặc thanh toán thẻ tự động qua cổng SePay:</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPaymentModalOpen(false);
+                    setSepayModalOpen(true);
+                  }}
+                  className="w-full py-2.5 px-3 rounded-xl font-bold text-xs text-white bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 flex items-center justify-center gap-2 cursor-pointer shadow-md transition-all"
+                >
+                  <QrCode size={16} />
+                  <span>Mở cổng SePay (Tự động nhận tiền VietQR / Thẻ)</span>
+                </button>
+              </div>
+            )}
+
             {/* Cash Tendered Amount input */}
             {paymentMethod === PaymentMethod.Cash && (
               <div className="flex flex-col gap-1.5">
@@ -619,6 +640,34 @@ export function OrdersView() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* SePay Payment Gateway Modal */}
+      {sepayModalOpen && activeOrder && (
+        <SePayModal
+          isOpen={sepayModalOpen}
+          onClose={() => setSepayModalOpen(false)}
+          orderInvoiceNumber={`DH-${activeOrder.orderNumber || activeOrder.id.slice(0, 8)}`}
+          orderAmount={activeOrder.totalAmount}
+          orderDescription={`Thanh toan don hang #${activeOrder.orderNumber}`}
+          onPaymentSuccess={async () => {
+            setSepayModalOpen(false);
+            try {
+              await paymentApi.createPayment(activeOrder.id, {
+                paymentMethod: PaymentMethod.QrPayment,
+                amount: activeOrder.totalAmount,
+              });
+              await posApi.completeOrder(activeOrder.id, activeOrder.version);
+              queryClient.invalidateQueries({ queryKey: ["branch-orders", branchId] });
+              if (selectedOrderId) {
+                queryClient.invalidateQueries({ queryKey: ["order-detail", selectedOrderId] });
+              }
+              showToast("Đã thanh toán qua SePay thành công!");
+            } catch (err: unknown) {
+              showToast(err instanceof Error ? err.message : "Đã thanh toán SePay thành công nhưng lỗi hoàn tất đơn.");
+            }
+          }}
+        />
       )}
     </div>
   );
