@@ -21,6 +21,7 @@ import {
   QrCode,
 } from "lucide-react";
 import { SePayModal } from "@/features/payments/sepay-modal";
+import { announcePaymentSuccess } from "@/lib/audio/payment-sound";
 
 export function OrdersView() {
   const { branchId, currentBranch } = useBranch();
@@ -101,7 +102,11 @@ export function OrdersView() {
       await posApi.completeOrder(activeOrder.id, activeOrder.version);
     },
     onSuccess: () => {
+      if (activeOrder) {
+        announcePaymentSuccess(activeOrder.totalAmount);
+      }
       queryClient.invalidateQueries({ queryKey: ["branch-orders", branchId] });
+      queryClient.invalidateQueries({ queryKey: ["pos-tables", branchId] });
       if (selectedOrderId) {
         queryClient.invalidateQueries({ queryKey: ["order-detail", selectedOrderId] });
       }
@@ -653,12 +658,14 @@ export function OrdersView() {
           onPaymentSuccess={async () => {
             setSepayModalOpen(false);
             try {
+              announcePaymentSuccess(activeOrder.totalAmount);
               await paymentApi.createPayment(activeOrder.id, {
                 paymentMethod: PaymentMethod.QrPayment,
                 amount: activeOrder.totalAmount,
               });
               await posApi.completeOrder(activeOrder.id, activeOrder.version);
               queryClient.invalidateQueries({ queryKey: ["branch-orders", branchId] });
+              queryClient.invalidateQueries({ queryKey: ["pos-tables", branchId] });
               if (selectedOrderId) {
                 queryClient.invalidateQueries({ queryKey: ["order-detail", selectedOrderId] });
               }

@@ -7,9 +7,12 @@ import { useBranch } from "@/features/branches/branch-provider";
 import {
   OrderType,
   OrderStatus,
+  TableStatus,
   type DiningTable,
   type OrderItemDetails,
+  type OrderListItem,
 } from "@/types/pos";
+import { announcePaymentSuccess } from "@/lib/audio/payment-sound";
 import { TableFloorPlan } from "./table-floor-plan";
 import { MenuSelector } from "./menu-selector";
 import { OrderTicket } from "./order-ticket";
@@ -184,11 +187,30 @@ export function PosView() {
     mutationFn: (orderId: string) =>
       posApi.completeOrder(orderId, activeOrder?.version),
     onSuccess: (updated) => {
+      const amount = activeOrder?.totalAmount || updated.totalAmount || 0;
+      // Phát tiếng chuông và giọng đọc tiếng Việt thông báo số tiền
+      announcePaymentSuccess(amount);
+
+      // Cập nhật ngay trạng thái bàn thành TRỐNG (Available) trên sơ đồ
+      const tableIdToRelease = selectedTable?.id || updated.diningTableId || activeOrder?.diningTableId;
+      if (tableIdToRelease) {
+        queryClient.setQueryData<DiningTable[]>(["pos-tables", branchId], (prev) =>
+          prev ? prev.map((t) => (t.id === tableIdToRelease ? { ...t, status: TableStatus.Available } : t)) : []
+        );
+      }
+
+      // Cập nhật danh sách đơn
+      queryClient.setQueryData<OrderListItem[]>(["pos-orders", branchId], (prev) =>
+        prev ? prev.map((o) => (o.id === updated.id ? { ...o, status: OrderStatus.Completed } : o)) : []
+      );
+
       queryClient.invalidateQueries({ queryKey: ["pos-orders", branchId] });
       queryClient.invalidateQueries({ queryKey: ["pos-tables", branchId] });
+      queryClient.invalidateQueries({ queryKey: ["branch-orders", branchId] });
+
       showNotification(
         "success",
-        `Đã thanh toán đơn #${updated.orderNumber} và hoàn tất dịch vụ bàn.`
+        `Đã thanh toán ${amount.toLocaleString("vi-VN")} ₫ đơn #${updated.orderNumber}. Bàn đã được dọn trống thành công!`
       );
       handleBackToFloor();
     },

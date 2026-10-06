@@ -14,6 +14,8 @@ import {
   Sparkles,
 } from "lucide-react";
 
+import { announcePaymentSuccess } from "@/lib/audio/payment-sound";
+
 interface SePayModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -62,6 +64,7 @@ export function SePayModal({
   const [error, setError] = useState<string | null>(null);
   const [polling, setPolling] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [hasAutoOpened, setHasAutoOpened] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const pollTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -77,6 +80,7 @@ export function SePayModal({
     setLoading(true);
     setError(null);
     setPaymentSuccess(false);
+    setHasAutoOpened(false);
 
     // Clean invoice number for SePay
     const cleanNumber = (orderNumber || orderInvoiceNumber || finalId)
@@ -115,6 +119,14 @@ export function SePayModal({
           setSession(data);
           setLoading(false);
           startPolling(data.invoiceNumber);
+
+          // Tự động mở link cổng SePay ngay khi phiên được khởi tạo!
+          setTimeout(() => {
+            if (formRef.current) {
+              formRef.current.submit();
+              setHasAutoOpened(true);
+            }
+          }, 150);
         }
       })
       .catch((err) => {
@@ -158,6 +170,8 @@ export function SePayModal({
           if (pollTimerRef.current) clearInterval(pollTimerRef.current);
           setPolling(false);
           setPaymentSuccess(true);
+          // Phát tiếng chuông và giọng đọc thông báo số tiền thanh toán thành công
+          announcePaymentSuccess(finalAmount);
           if (onPaymentSuccess) {
             onPaymentSuccess();
           }
@@ -165,12 +179,24 @@ export function SePayModal({
       } catch (e) {
         // Continue polling silently
       }
-    }, 4000);
+    }, 3000);
+  };
+
+  const handleManualConfirm = () => {
+    if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+    setPolling(false);
+    setPaymentSuccess(true);
+    // Phát tiếng chuông và giọng đọc thông báo số tiền thanh toán thành công
+    announcePaymentSuccess(finalAmount);
+    if (onPaymentSuccess) {
+      onPaymentSuccess();
+    }
   };
 
   const handleOpenSePayPortal = () => {
     if (formRef.current) {
       formRef.current.submit();
+      setHasAutoOpened(true);
     }
   };
 
@@ -305,16 +331,25 @@ export function SePayModal({
                   className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-500 text-white font-black text-sm shadow-xl shadow-orange-950/50 active:scale-[0.98] transition-all cursor-pointer"
                 >
                   <CreditCard size={18} />
-                  <span>Mở cổng thanh toán SePay</span>
+                  <span>{hasAutoOpened ? "Mở lại link thanh toán SePay" : "Mở link thanh toán SePay ngay"}</span>
                   <ExternalLink size={15} className="ml-1 opacity-80" />
                 </button>
 
                 {polling && (
-                  <div className="flex items-center justify-center gap-2 text-[11px] text-gray-400 py-1">
-                    <RefreshCw className="animate-spin text-amber-400" size={13} />
-                    <span>Đang chờ khách quét mã hoặc thanh toán...</span>
+                  <div className="flex items-center justify-center gap-2 text-[11px] text-emerald-400/90 py-1 font-medium bg-emerald-500/10 rounded-xl border border-emerald-500/20">
+                    <RefreshCw className="animate-spin text-emerald-400" size={13} />
+                    <span>Hệ thống đang tự động lắng nghe giao dịch SePay...</span>
                   </div>
                 )}
+
+                <button
+                  type="button"
+                  onClick={handleManualConfirm}
+                  className="w-full py-2.5 px-3 rounded-xl bg-[#1c2434] hover:bg-[#253046] text-amber-300 hover:text-amber-200 border border-amber-500/30 text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <CheckCircle2 size={15} className="text-emerald-400" />
+                  <span>Đã nhận tiền thành công &amp; Trả bàn ngay</span>
+                </button>
               </div>
             </div>
           ) : null}
