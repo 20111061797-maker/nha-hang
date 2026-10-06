@@ -19,6 +19,7 @@ import {
   ShoppingBag,
   Bike,
   QrCode,
+  RefreshCw,
 } from "lucide-react";
 
 type Props = {
@@ -26,6 +27,7 @@ type Props = {
   tableName?: string;
   isSendingToKitchen: boolean;
   isProcessing: boolean;
+  isSepayLoading?: boolean;
   onSendToKitchen: () => void;
   onCompleteOrder: () => void;
   onPayWithSepay?: () => void;
@@ -40,6 +42,7 @@ export function OrderTicket({
   tableName,
   isSendingToKitchen,
   isProcessing,
+  isSepayLoading,
   onSendToKitchen,
   onCompleteOrder,
   onPayWithSepay,
@@ -388,12 +391,21 @@ export function OrderTicket({
               {onPayWithSepay && (
                 <button
                   type="button"
-                  disabled={isProcessing}
+                  disabled={isProcessing || isSepayLoading}
                   onClick={onPayWithSepay}
-                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-xs text-amber-300 bg-[#1e2538] hover:bg-[#28324a] border border-amber-500/40 hover:border-amber-400 transition-all cursor-pointer shadow-md"
+                  className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-bold text-xs text-amber-300 bg-[#1e2538] hover:bg-[#28324a] border border-amber-500/40 hover:border-amber-400 transition-all cursor-pointer shadow-md disabled:opacity-60"
                 >
-                  <QrCode size={16} className="text-amber-400" />
-                  <span>Thanh toán SePay (VietQR / Thẻ)</span>
+                  {isSepayLoading ? (
+                    <>
+                      <RefreshCw size={16} className="animate-spin text-amber-400" />
+                      <span>Đang chuyển tới SePay...</span>
+                    </>
+                  ) : (
+                    <>
+                      <QrCode size={16} className="text-amber-400" />
+                      <span>Thanh toán SePay (VietQR / Thẻ)</span>
+                    </>
+                  )}
                 </button>
               )}
 

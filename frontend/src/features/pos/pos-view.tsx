@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { posApi } from "@/lib/api/pos-api";
 import { useBranch } from "@/features/branches/branch-provider";
@@ -13,10 +13,10 @@ import {
   type OrderListItem,
 } from "@/types/pos";
 import { announcePaymentSuccess } from "@/lib/audio/payment-sound";
+import { submitSepayCheckout } from "@/lib/sepay/checkout-redirect";
 import { TableFloorPlan } from "./table-floor-plan";
 import { MenuSelector } from "./menu-selector";
 import { OrderTicket } from "./order-ticket";
-import { SePayModal } from "@/features/payments/sepay-modal";
 import { LoadingState, EmptyState } from "@/components/feedback/states";
 import Link from "next/link";
 import {
@@ -40,7 +40,7 @@ export function PosView() {
   const [isTakeawayNewOrder, setIsTakeawayNewOrder] = useState(false);
   const [guestName, setGuestName] = useState("");
   const [orderNotes, setOrderNotes] = useState("");
-  const [sepayModalOpen, setSepayModalOpen] = useState(false);
+  const [isSepayLoading, setIsSepayLoading] = useState(false);
 
   const [notification, setNotification] = useState<{
     type: "success" | "error";
@@ -333,6 +333,64 @@ export function PosView() {
     completeOrderMutation.mutate(activeOrderId);
   };
 
+  const handlePayWithSepay = async () => {
+    if (!activeOrder) return;
+    try {
+      setIsSepayLoading(true);
+      await submitSepayCheckout({
+        orderId: activeOrder.id,
+        orderNumber: activeOrder.orderNumber,
+        amount: activeOrder.totalAmount,
+        orderDescription: `Thanh toan don #${activeOrder.orderNumber}`,
+      });
+    } catch (err: unknown) {
+      setIsSepayLoading(false);
+      showNotification("error", getErrorMessage(err, "Không thể chuyển tới cổng SePay."));
+    }
+  };
+
+  // Tự động xử lý khi SePay thanh toán thành công và quay lại /pos
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    const sepaySuccess = url.searchParams.get("sepay_success");
+    const orderId = url.searchParams.get("order_id");
+    const amountStr = url.searchParams.get("amount");
+
+    if (sepaySuccess === "true" && orderId) {
+      const amount = Number(amountStr) || 0;
+      announcePaymentSuccess(amount);
+
+      posApi
+        .completeOrder(orderId)
+        .then((updated) => {
+          const tableId = updated.diningTableId;
+          if (tableId) {
+            queryClient.setQueryData<DiningTable[]>(["pos-tables", branchId], (prev) =>
+              prev
+                ? prev.map((t) => (t.id === tableId ? { ...t, status: TableStatus.Available } : t))
+                : []
+            );
+          }
+          queryClient.invalidateQueries({ queryKey: ["pos-orders", branchId] });
+          queryClient.invalidateQueries({ queryKey: ["pos-tables", branchId] });
+          queryClient.invalidateQueries({ queryKey: ["branch-orders", branchId] });
+          showNotification(
+            "success",
+            `Thanh toán ${amount.toLocaleString("vi-VN")} ₫ thành công! Bàn đã được dọn trống.`
+          );
+        })
+        .catch((err) => {
+          console.error("Lỗi hoàn tất đơn SePay:", err);
+        });
+
+      url.searchParams.delete("sepay_success");
+      url.searchParams.delete("order_id");
+      url.searchParams.delete("amount");
+      window.history.replaceState({}, "", url.pathname);
+    }
+  }, [branchId, queryClient]);
+
   const handleCancelOrder = (reason: string) => {
     if (!activeOrderId) return;
     cancelOrderMutation.mutate({ orderId: activeOrderId, reason });
@@ -466,7 +524,8 @@ export function PosView() {
                 }
                 onSendToKitchen={handleSendToKitchen}
                 onCompleteOrder={handleCompleteOrder}
-                onPayWithSepay={() => setSepayModalOpen(true)}
+                isSepayLoading={isSepayLoading}
+                onPayWithSepay={handlePayWithSepay}
                 onCancelOrder={handleCancelOrder}
                 onUpdateItemQuantity={handleUpdateItemQuantity}
                 onRemoveItem={handleRemoveItem}
@@ -579,21 +638,6 @@ export function PosView() {
             </div>
           </div>
         </div>
-      )}
-
-      {/* SePay Payment Gateway Modal */}
-      {sepayModalOpen && activeOrder && (
-        <SePayModal
-          isOpen={sepayModalOpen}
-          onClose={() => setSepayModalOpen(false)}
-          orderInvoiceNumber={`DH-${activeOrder.orderNumber || activeOrder.id.slice(0, 8)}`}
-          orderAmount={activeOrder.totalAmount}
-          orderDescription={`Thanh toan don #${activeOrder.orderNumber}`}
-          onPaymentSuccess={() => {
-            setSepayModalOpen(false);
-            completeOrderMutation.mutate(activeOrder.id);
-          }}
-        />
       )}
     </div>
   );

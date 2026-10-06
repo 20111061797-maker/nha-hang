@@ -20,8 +20,9 @@ import {
   Ban,
   QrCode,
 } from "lucide-react";
-import { SePayModal } from "@/features/payments/sepay-modal";
 import { announcePaymentSuccess } from "@/lib/audio/payment-sound";
+import { submitSepayCheckout } from "@/lib/sepay/checkout-redirect";
+import { useEffect } from "react";
 
 export function OrdersView() {
   const { branchId, currentBranch } = useBranch();
@@ -34,7 +35,6 @@ export function OrdersView() {
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
-  const [sepayModalOpen, setSepayModalOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(PaymentMethod.Cash);
   const [tenderedAmount, setTenderedAmount] = useState<number>(0);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -43,6 +43,39 @@ export function OrdersView() {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 4000);
   };
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    const sepaySuccess = url.searchParams.get("sepay_success");
+    const orderId = url.searchParams.get("order_id");
+    const amountStr = url.searchParams.get("amount");
+
+    if (sepaySuccess === "true" && orderId) {
+      const amount = Number(amountStr) || 0;
+      announcePaymentSuccess(amount);
+
+      paymentApi
+        .createPayment(orderId, {
+          paymentMethod: PaymentMethod.QrPayment,
+          amount: amount,
+        })
+        .then(() => posApi.completeOrder(orderId))
+        .then(() => {
+          queryClient.invalidateQueries({ queryKey: ["branch-orders", branchId] });
+          queryClient.invalidateQueries({ queryKey: ["pos-tables", branchId] });
+          showToast(`Thanh toán ${amount.toLocaleString("vi-VN")} ₫ thành công! Bàn đã dọn trống.`);
+        })
+        .catch((err) => {
+          console.error("Lỗi hoàn tất đơn SePay:", err);
+        });
+
+      url.searchParams.delete("sepay_success");
+      url.searchParams.delete("order_id");
+      url.searchParams.delete("amount");
+      window.history.replaceState({}, "", url.pathname);
+    }
+  }, [branchId, queryClient]);
 
   const { data: tables = [] } = useQuery({
     queryKey: ["pos-tables", branchId],
@@ -555,9 +588,20 @@ export function OrdersView() {
                 <span className="leading-relaxed">Khách có thể quét mã VietQR ngân hàng hoặc thanh toán thẻ tự động qua cổng SePay:</span>
                 <button
                   type="button"
-                  onClick={() => {
+                  onClick={async () => {
+                    if (!activeOrder) return;
                     setPaymentModalOpen(false);
-                    setSepayModalOpen(true);
+                    try {
+                      await submitSepayCheckout({
+                        orderId: activeOrder.id,
+                        orderNumber: activeOrder.orderNumber,
+                        amount: activeOrder.totalAmount,
+                        orderDescription: `Thanh toan don #${activeOrder.orderNumber}`,
+                        returnUrl: `${window.location.origin}/orders?sepay_success=true&order_id=${activeOrder.id}&amount=${Math.round(activeOrder.totalAmount)}`,
+                      });
+                    } catch (err: unknown) {
+                      showToast(err instanceof Error ? err.message : "Lỗi mở cổng SePay");
+                    }
                   }}
                   className="w-full py-2.5 px-3 rounded-xl font-bold text-xs text-white bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 flex items-center justify-center gap-2 cursor-pointer shadow-md transition-all"
                 >
@@ -645,36 +689,6 @@ export function OrdersView() {
             </div>
           </div>
         </div>
-      )}
-
-      {/* SePay Payment Gateway Modal */}
-      {sepayModalOpen && activeOrder && (
-        <SePayModal
-          isOpen={sepayModalOpen}
-          onClose={() => setSepayModalOpen(false)}
-          orderInvoiceNumber={`DH-${activeOrder.orderNumber || activeOrder.id.slice(0, 8)}`}
-          orderAmount={activeOrder.totalAmount}
-          orderDescription={`Thanh toan don hang #${activeOrder.orderNumber}`}
-          onPaymentSuccess={async () => {
-            setSepayModalOpen(false);
-            try {
-              announcePaymentSuccess(activeOrder.totalAmount);
-              await paymentApi.createPayment(activeOrder.id, {
-                paymentMethod: PaymentMethod.QrPayment,
-                amount: activeOrder.totalAmount,
-              });
-              await posApi.completeOrder(activeOrder.id, activeOrder.version);
-              queryClient.invalidateQueries({ queryKey: ["branch-orders", branchId] });
-              queryClient.invalidateQueries({ queryKey: ["pos-tables", branchId] });
-              if (selectedOrderId) {
-                queryClient.invalidateQueries({ queryKey: ["order-detail", selectedOrderId] });
-              }
-              showToast("Đã thanh toán qua SePay thành công!");
-            } catch (err: unknown) {
-              showToast(err instanceof Error ? err.message : "Đã thanh toán SePay thành công nhưng lỗi hoàn tất đơn.");
-            }
-          }}
-        />
       )}
     </div>
   );

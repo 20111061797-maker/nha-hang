@@ -26,8 +26,10 @@ import {
   MessageSquare,
   Receipt,
   QrCode,
+  Loader2,
 } from "lucide-react";
-import { SePayModal } from "@/features/payments/sepay-modal";
+import { submitSepayCheckout } from "@/lib/sepay/checkout-redirect";
+import { announcePaymentSuccess } from "@/lib/audio/payment-sound";
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("vi-VN", {
@@ -71,17 +73,33 @@ export function QrMenuView({ tableIdentifier }: Props) {
     membershipLevelName?: string | null;
   } | null>(null);
 
-  const [sepayPayment, setSepayPayment] = useState<{
-    invoice: string;
-    amount: number;
-    desc: string;
-  } | null>(null);
-
+  const [isSepayLoading, setIsSepayLoading] = useState(false);
   const [toastError, setToastError] = useState<string | null>(null);
+  const [toastSuccess, setToastSuccess] = useState<string | null>(null);
 
   const showError = (msg: string) => {
     setToastError(msg);
     setTimeout(() => setToastError(null), 4000);
+  };
+
+  const showSuccess = (msg: string) => {
+    setToastSuccess(msg);
+    setTimeout(() => setToastSuccess(null), 5000);
+  };
+
+  const handlePaySepay = async (amount: number, orderNum: string, desc: string) => {
+    try {
+      setIsSepayLoading(true);
+      await submitSepayCheckout({
+        orderId: `DH-${orderNum}`,
+        orderNumber: orderNum,
+        amount,
+        orderDescription: desc,
+      });
+    } catch (err: unknown) {
+      setIsSepayLoading(false);
+      showError(err instanceof Error ? err.message : "Không thể chuyển tới cổng SePay.");
+    }
   };
 
   // 1. Fetch Table & Branch Info
@@ -109,6 +127,26 @@ export function QrMenuView({ tableIdentifier }: Props) {
       setGuestPhone(activeBill.customerPhone);
     }
   }, [activeBill, guestName, guestPhone]);
+
+  // Lắng nghe kết quả thanh toán SePay khi redirect về
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    const sepaySuccess = url.searchParams.get("sepay_success");
+    const amountStr = url.searchParams.get("amount");
+
+    if (sepaySuccess === "true") {
+      const amount = Number(amountStr) || 0;
+      announcePaymentSuccess(amount);
+      showSuccess(`Thanh toán thành công ${formatCurrency(amount)} qua SePay! Cảm ơn quý khách.`);
+      refetchBill();
+
+      url.searchParams.delete("sepay_success");
+      url.searchParams.delete("order_id");
+      url.searchParams.delete("amount");
+      window.history.replaceState({}, "", url.pathname + url.search);
+    }
+  }, [refetchBill]);
 
   // 3. Fetch Public Menu for Branch
   const branchId = tableInfo?.branchId;
@@ -405,17 +443,26 @@ export function QrMenuView({ tableIdentifier }: Props) {
           {placedOrder.totalAmount > 0 && (
             <button
               type="button"
+              disabled={isSepayLoading}
               onClick={() =>
-                setSepayPayment({
-                  invoice: `DH-${placedOrder.orderNumber || "ORDER"}`,
-                  amount: placedOrder.totalAmount,
-                  desc: `Thanh toan don #${placedOrder.orderNumber} - Ban ${placedOrder.tableNumber}`,
-                })
+                handlePaySepay(
+                  placedOrder.totalAmount,
+                  placedOrder.orderNumber || "ORDER",
+                  `Thanh toan don #${placedOrder.orderNumber} - Ban ${placedOrder.tableNumber}`
+                )
               }
-              className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-500 text-white font-extrabold text-sm shadow-xl shadow-orange-950/50 active:scale-95 transition-all cursor-pointer"
+              className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-500 disabled:opacity-60 text-white font-extrabold text-sm shadow-xl shadow-orange-950/50 active:scale-95 transition-all cursor-pointer"
             >
-              <QrCode size={18} />
-              <span>Thanh toán ngay qua SePay (VietQR / Thẻ)</span>
+              {isSepayLoading ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                <QrCode size={18} />
+              )}
+              <span>
+                {isSepayLoading
+                  ? "Đang chuyển tới SePay..."
+                  : "Thanh toán ngay qua SePay (VietQR / Thẻ)"}
+              </span>
             </button>
           )}
 
@@ -437,11 +484,17 @@ export function QrMenuView({ tableIdentifier }: Props) {
 
   return (
     <div className="min-h-screen bg-[#0f1115] text-gray-100 pb-32">
-      {/* Toast Error */}
+      {/* Toast Messages */}
       {toastError && (
         <div className="fixed top-4 left-4 right-4 z-50 max-w-md mx-auto p-3.5 rounded-2xl bg-rose-950/90 border border-rose-500/50 text-rose-200 text-xs font-bold shadow-2xl flex items-center gap-2.5 backdrop-blur-md animate-in slide-in-from-top-4">
           <AlertCircle size={18} className="shrink-0 text-rose-400" />
           <span>{toastError}</span>
+        </div>
+      )}
+      {toastSuccess && (
+        <div className="fixed top-4 left-4 right-4 z-50 max-w-md mx-auto p-3.5 rounded-2xl bg-emerald-950/90 border border-emerald-500/50 text-emerald-200 text-xs font-bold shadow-2xl flex items-center gap-2.5 backdrop-blur-md animate-in slide-in-from-top-4">
+          <CheckCircle2 size={18} className="shrink-0 text-emerald-400" />
+          <span>{toastSuccess}</span>
         </div>
       )}
 
@@ -1210,17 +1263,26 @@ export function QrMenuView({ tableIdentifier }: Props) {
               {activeBill.totalAmount > 0 && (
                 <button
                   type="button"
+                  disabled={isSepayLoading}
                   onClick={() =>
-                    setSepayPayment({
-                      invoice: `DH-${activeBill.orderNumber || "BILL"}`,
-                      amount: activeBill.totalAmount,
-                      desc: `Thanh toan hoa don - Ban ${tableInfo?.tableNumber ?? ""}`,
-                    })
+                    handlePaySepay(
+                      activeBill.totalAmount,
+                      activeBill.orderNumber || "BILL",
+                      `Thanh toan hoa don - Ban ${tableInfo?.tableNumber ?? ""}`
+                    )
                   }
-                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-extrabold text-xs text-white bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-500 shadow-lg shadow-orange-950/40 transition-all cursor-pointer"
+                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-extrabold text-xs text-white bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-500 disabled:opacity-60 shadow-lg shadow-orange-950/40 transition-all cursor-pointer"
                 >
-                  <QrCode size={16} />
-                  <span>Thanh toán hóa đơn qua SePay (VietQR / Thẻ)</span>
+                  {isSepayLoading ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <QrCode size={16} />
+                  )}
+                  <span>
+                    {isSepayLoading
+                      ? "Đang chuyển tới SePay..."
+                      : "Thanh toán hóa đơn qua SePay (VietQR / Thẻ)"}
+                  </span>
                 </button>
               )}
               <button
@@ -1233,21 +1295,6 @@ export function QrMenuView({ tableIdentifier }: Props) {
             </div>
           </div>
         </div>
-      )}
-
-      {/* SePay Checkout Gateway Modal */}
-      {sepayPayment && (
-        <SePayModal
-          isOpen={!!sepayPayment}
-          onClose={() => setSepayPayment(null)}
-          orderInvoiceNumber={sepayPayment.invoice}
-          orderAmount={sepayPayment.amount}
-          orderDescription={sepayPayment.desc}
-          onPaymentSuccess={() => {
-            setSepayPayment(null);
-            refetchBill();
-          }}
-        />
       )}
     </div>
   );
