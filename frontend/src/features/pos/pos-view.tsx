@@ -233,12 +233,31 @@ export function PosView() {
     },
   });
 
+  const isOrderInactive = (status: any) =>
+    status === OrderStatus.Completed ||
+    status === OrderStatus.Cancelled ||
+    status === 6 ||
+    status === 7 ||
+    status === "6" ||
+    status === "7" ||
+    status === "Completed" ||
+    status === "Cancelled";
+
   const cancelOrderMutation = useMutation({
-    mutationFn: (vars: { orderId: string; reason: string }) =>
-      posApi.cancelOrder(vars.orderId, {
+    mutationFn: (vars: { orderId: string; reason: string }) => {
+      const isCompleted =
+        activeOrder?.status === OrderStatus.Completed ||
+        (activeOrder?.status as any) === 6 ||
+        (activeOrder?.status as any) === "6" ||
+        (activeOrder?.status as any) === "Completed";
+      if (isCompleted) {
+        throw new Error("Đơn hàng này đã thanh toán hoàn tất, không thể hủy.");
+      }
+      return posApi.cancelOrder(vars.orderId, {
         reason: vars.reason,
         expectedVersion: activeOrder?.version,
-      }),
+      });
+    },
     onSuccess: (updated) => {
       queryClient.invalidateQueries({ queryKey: ["pos-orders", branchId] });
       queryClient.invalidateQueries({ queryKey: ["pos-tables", branchId] });
@@ -256,10 +275,7 @@ export function PosView() {
 
     // Check if table has an active open or confirmed order
     const tableActiveOrder = orders.find(
-      (o) =>
-        o.diningTableId === table.id &&
-        o.status !== OrderStatus.Completed &&
-        o.status !== OrderStatus.Cancelled
+      (o) => o.diningTableId === table.id && !isOrderInactive(o.status)
     );
 
     if (tableActiveOrder) {

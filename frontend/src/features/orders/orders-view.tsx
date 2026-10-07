@@ -115,13 +115,23 @@ export function OrdersView() {
     enabled: Boolean(selectedOrderId),
   });
 
+  const isOrderCompleted = (status: any) =>
+    status === OrderStatus.Completed || status === 6 || status === "6" || status === "Completed";
+
+  const isOrderCancelled = (status: any) =>
+    status === OrderStatus.Cancelled || status === 7 || status === "7" || status === "Cancelled";
+
   // Cancel mutation
   const cancelMutation = useMutation({
-    mutationFn: (vars: { orderId: string; reason: string }) =>
-      posApi.cancelOrder(vars.orderId, {
+    mutationFn: (vars: { orderId: string; reason: string }) => {
+      if (isOrderCompleted(activeOrder?.status)) {
+        throw new Error("Đơn hàng này đã thanh toán hoàn tất, không thể hủy.");
+      }
+      return posApi.cancelOrder(vars.orderId, {
         reason: vars.reason,
         expectedVersion: activeOrder?.version,
-      }),
+      });
+    },
     onSuccess: (updated) => {
       queryClient.invalidateQueries({ queryKey: ["branch-orders", branchId] });
       queryClient.setQueryData(["order-detail", updated.id], updated);
@@ -181,36 +191,34 @@ export function OrdersView() {
     const total = orders.length;
     const active = orders.filter(
       (o) =>
-        o.status === OrderStatus.Open ||
-        o.status === OrderStatus.Confirmed ||
-        o.status === OrderStatus.Preparing ||
-        o.status === OrderStatus.Ready
+        !isOrderCompleted(o.status) &&
+        !isOrderCancelled(o.status)
     ).length;
-    const completed = orders.filter((o) => o.status === OrderStatus.Completed).length;
-    const cancelled = orders.filter((o) => o.status === OrderStatus.Cancelled).length;
+    const completed = orders.filter((o) => isOrderCompleted(o.status)).length;
+    const cancelled = orders.filter((o) => isOrderCancelled(o.status)).length;
     const totalRevenue = orders
-      .filter((o) => o.status === OrderStatus.Completed)
+      .filter((o) => isOrderCompleted(o.status))
       .reduce((sum, o) => sum + (o.totalAmount || 0), 0);
     return { total, active, completed, cancelled, totalRevenue };
   }, [orders]);
 
-  const getStatusBadge = (status: OrderStatus) => {
-    switch (status) {
-      case OrderStatus.Open:
-        return <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-950/70 text-amber-300 border border-amber-800/60">Mới tạo</span>;
-      case OrderStatus.Confirmed:
-        return <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-sky-950/70 text-sky-300 border border-sky-800/60">Chờ bếp</span>;
-      case OrderStatus.Preparing:
-        return <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-orange-950/70 text-orange-300 border border-orange-800/60 flex items-center gap-1"><Flame size={11} /> Đang nấu</span>;
-      case OrderStatus.Ready:
-        return <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-teal-950/70 text-teal-300 border border-teal-800/60">Đã lên món</span>;
-      case OrderStatus.Completed:
-        return <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-950/70 text-emerald-300 border border-emerald-800/60">Đã thanh toán</span>;
-      case OrderStatus.Cancelled:
-        return <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-rose-950/70 text-rose-300 border border-rose-800/60">Đã hủy</span>;
-      default:
-        return <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-gray-800 text-gray-300">Đơn hàng</span>;
+  const getStatusBadge = (status: any) => {
+    if (isOrderCompleted(status)) {
+      return <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-950/70 text-emerald-300 border border-emerald-800/60">Đã thanh toán</span>;
     }
+    if (isOrderCancelled(status)) {
+      return <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-rose-950/70 text-rose-300 border border-rose-800/60">Đã hủy</span>;
+    }
+    if (status === OrderStatus.Ready || status === 5 || status === "5" || status === "Ready") {
+      return <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-teal-950/70 text-teal-300 border border-teal-800/60">Đã lên món</span>;
+    }
+    if (status === OrderStatus.Preparing || status === 4 || status === "4" || status === "Preparing") {
+      return <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-orange-950/70 text-orange-300 border border-orange-800/60 flex items-center gap-1"><Flame size={11} /> Đang nấu</span>;
+    }
+    if (status === OrderStatus.Confirmed || status === 3 || status === "3" || status === "Confirmed") {
+      return <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-sky-950/70 text-sky-300 border border-sky-800/60">Chờ bếp</span>;
+    }
+    return <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-950/70 text-amber-300 border border-amber-800/60">Mới tạo</span>;
   };
 
   const handlePrintBill = () => {
@@ -514,7 +522,7 @@ export function OrdersView() {
                       <span>In Phiếu Tính Tiền</span>
                     </button>
 
-                    {activeOrder.status !== OrderStatus.Cancelled && activeOrder.status !== OrderStatus.Completed && (
+                    {!isOrderCancelled(activeOrder.status) && !isOrderCompleted(activeOrder.status) && (
                       <button
                         type="button"
                         className="px-3 py-2 rounded-xl text-xs font-bold text-rose-400 hover:bg-rose-950/40 border border-rose-900/60 transition-colors flex items-center gap-1.5"
@@ -526,7 +534,7 @@ export function OrdersView() {
                     )}
                   </div>
 
-                  {activeOrder.status !== OrderStatus.Completed && activeOrder.status !== OrderStatus.Cancelled && (
+                  {!isOrderCompleted(activeOrder.status) && !isOrderCancelled(activeOrder.status) && (
                     <button
                       type="button"
                       className="primary-button text-xs py-2 px-4 flex items-center gap-1.5 font-black shadow-lg shadow-orange-950/40"

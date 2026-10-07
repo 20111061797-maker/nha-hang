@@ -55,65 +55,88 @@ export function OrderTicket({
   const [cancelReason, setCancelReason] = useState("");
   const [copied, setCopied] = useState(false);
 
-  const isOpenOrDraft = order.status === OrderStatus.Draft || order.status === OrderStatus.Open;
-  const isConfirmed = order.status === OrderStatus.Confirmed;
-  const isPreparing = order.status === OrderStatus.Preparing;
-  const isReady = order.status === OrderStatus.Ready;
-  const isCompleted = order.status === OrderStatus.Completed;
-  const isCancelled = order.status === OrderStatus.Cancelled;
+  const isOpenOrDraft =
+    order.status === OrderStatus.Draft ||
+    order.status === OrderStatus.Open ||
+    (order.status as any) === 0 ||
+    (order.status as any) === 1 ||
+    (order.status as any) === "Draft" ||
+    (order.status as any) === "Open";
+  const isConfirmed =
+    order.status === OrderStatus.Confirmed ||
+    (order.status as any) === 3 ||
+    (order.status as any) === "Confirmed";
+  const isPreparing =
+    order.status === OrderStatus.Preparing ||
+    (order.status as any) === 4 ||
+    (order.status as any) === "Preparing";
+  const isReady =
+    order.status === OrderStatus.Ready ||
+    (order.status as any) === 5 ||
+    (order.status as any) === "Ready";
+  const isCompleted =
+    order.status === OrderStatus.Completed ||
+    (order.status as any) === 6 ||
+    (order.status as any) === "6" ||
+    (order.status as any) === "Completed";
+  const isCancelled =
+    order.status === OrderStatus.Cancelled ||
+    (order.status as any) === 7 ||
+    (order.status as any) === "7" ||
+    (order.status as any) === "Cancelled";
 
   const getStatusBadge = () => {
-    switch (order.status) {
-      case OrderStatus.Draft:
-      case OrderStatus.Open:
-        return {
-          label: "Đang chọn món",
-          class: "bg-sky-500/15 text-sky-300 border-sky-500/30",
-          dot: "bg-sky-400 animate-ping",
-        };
-      case OrderStatus.Confirmed:
-        return {
-          label: "Đã gửi bếp",
-          class: "bg-amber-500/15 text-amber-300 border-amber-500/30",
-          dot: "bg-amber-400",
-        };
-      case OrderStatus.Preparing:
-        return {
-          label: "Bếp đang nấu",
-          class: "bg-orange-500/20 text-orange-300 border-orange-500/40 shadow-sm",
-          dot: "bg-orange-400 animate-pulse",
-        };
-      case OrderStatus.Ready:
-        return {
-          label: "Món đã xong",
-          class: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-sm",
-          dot: "bg-emerald-400",
-        };
-      case OrderStatus.Completed:
-        return {
-          label: "Đã thanh toán",
-          class: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
-          dot: "bg-emerald-400",
-        };
-      case OrderStatus.Cancelled:
-        return {
-          label: "Đã hủy đơn",
-          class: "bg-rose-500/15 text-rose-300 border-rose-500/30",
-          dot: "bg-rose-400",
-        };
-      default:
-        return {
-          label: "Chưa xác định",
-          class: "bg-gray-500/15 text-gray-300 border-gray-500/30",
-          dot: "bg-gray-400",
-        };
+    if (isCompleted) {
+      return {
+        label: "Đã thanh toán",
+        class: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
+        dot: "bg-emerald-400",
+      };
     }
+    if (isCancelled) {
+      return {
+        label: "Đã hủy đơn",
+        class: "bg-rose-500/15 text-rose-300 border-rose-500/30",
+        dot: "bg-rose-400",
+      };
+    }
+    if (isReady) {
+      return {
+        label: "Món đã xong",
+        class: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-sm",
+        dot: "bg-emerald-400",
+      };
+    }
+    if (isPreparing) {
+      return {
+        label: "Bếp đang nấu",
+        class: "bg-orange-500/20 text-orange-300 border-orange-500/40 shadow-sm",
+        dot: "bg-orange-400 animate-pulse",
+      };
+    }
+    if (isConfirmed) {
+      return {
+        label: "Đã gửi bếp",
+        class: "bg-amber-500/15 text-amber-300 border-amber-500/30",
+        dot: "bg-amber-400",
+      };
+    }
+    return {
+      label: "Đang chọn món",
+      class: "bg-sky-500/15 text-sky-300 border-sky-500/30",
+      dot: "bg-sky-400 animate-ping",
+    };
   };
 
   const statusBadge = getStatusBadge();
 
   const handleConfirmCancel = () => {
     if (!cancelReason.trim()) return;
+    if (isCompleted) {
+      alert("Đơn hàng này đã thanh toán hoàn tất, không thể hủy.");
+      setCancelModalOpen(false);
+      return;
+    }
     onCancelOrder(cancelReason.trim());
     setCancelModalOpen(false);
   };
