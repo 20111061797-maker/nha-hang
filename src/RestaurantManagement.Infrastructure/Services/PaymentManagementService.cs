@@ -80,6 +80,48 @@ public sealed class PaymentManagementService(
     public async Task<IReadOnlyList<PaymentResponse>> GetBranchPaymentsAsync(Guid branchId, CancellationToken cancellationToken)
     {
         await EnsureBranchAccessAsync(branchId, cancellationToken);
+
+        // Tự động đồng bộ hóa: các đơn hàng đã hoàn tất tại chi nhánh nhưng chưa có phiếu thu
+        var existingOrderIds = await dbContext.Payments
+            .Where(x => x.BranchId == branchId)
+            .Select(x => x.OrderId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        var missingOrders = await dbContext.Orders
+            .Where(o => o.BranchId == branchId && o.Status == OrderStatus.Completed && !existingOrderIds.Contains(o.Id))
+            .OrderByDescending(o => o.CreatedAt)
+            .Take(100)
+            .ToListAsync(cancellationToken);
+
+        if (missingOrders.Count > 0)
+        {
+            foreach (var o in missingOrders)
+            {
+                var payDate = o.UpdatedAt > DateTimeOffset.MinValue ? o.UpdatedAt : o.CreatedAt;
+                var isQr = !string.IsNullOrWhiteSpace(o.Notes) && (o.Notes.Contains("SePay", StringComparison.OrdinalIgnoreCase) || o.Notes.Contains("QR", StringComparison.OrdinalIgnoreCase) || o.Notes.Contains("chuyển khoản", StringComparison.OrdinalIgnoreCase));
+                var payment = new Payment
+                {
+                    OrderId = o.Id,
+                    BranchId = o.BranchId,
+                    PaymentNumber = $"PAY-{payDate:yyyyMMdd}-{o.OrderNumber}",
+                    Method = isQr ? PaymentMethod.QrPayment : PaymentMethod.Cash,
+                    Status = PaymentStatus.Completed,
+                    Amount = o.TotalAmount,
+                    TenderedAmount = o.TotalAmount,
+                    ChangeAmount = 0,
+                    CurrencyCode = o.CurrencyCode,
+                    Provider = isQr ? "SePay" : null,
+                    Note = isQr ? "Thanh toán quét mã SePay / VietQR" : "Thanh toán tiền mặt tại quầy thu ngân",
+                    PaymentDate = payDate,
+                    CompletedAt = payDate
+                };
+                dbContext.Payments.Add(payment);
+                dbContext.PaymentAllocations.Add(new PaymentAllocation { PaymentId = payment.Id, OrderId = o.Id, Amount = payment.Amount });
+            }
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+
         return await dbContext.Payments.AsNoTracking().Where(x => x.BranchId == branchId).OrderByDescending(x => x.PaymentDate).Take(500).Select(x => ToResponse(x)).ToListAsync(cancellationToken);
     }
 

@@ -12,6 +12,8 @@ import {
   type OrderItemDetails,
   type OrderListItem,
 } from "@/types/pos";
+import { paymentApi } from "@/lib/api/payment-api";
+import { PaymentMethod } from "@/types/payments";
 import { announcePaymentSuccess } from "@/lib/audio/payment-sound";
 import { handleSepayPopupReturn, submitSepayCheckout } from "@/lib/sepay/checkout-redirect";
 import { TableFloorPlan } from "./table-floor-plan";
@@ -184,8 +186,20 @@ export function PosView() {
   });
 
   const completeOrderMutation = useMutation({
-    mutationFn: (orderId: string) =>
-      posApi.completeOrder(orderId, activeOrder?.version),
+    mutationFn: async (orderId: string) => {
+      const amount = activeOrder?.totalAmount || 0;
+      if (amount > 0) {
+        await paymentApi
+          .createPayment(orderId, {
+            paymentMethod: PaymentMethod.Cash,
+            amount,
+            tenderedAmount: amount,
+            note: `Thu tiền mặt tại quầy POS Bàn ${selectedTable?.tableNumber || "Mang về"}`,
+          })
+          .catch((err) => console.warn("Lỗi lưu phiếu thu tiền mặt:", err));
+      }
+      return await posApi.completeOrder(orderId, activeOrder?.version);
+    },
     onSuccess: (updated) => {
       const amount = activeOrder?.totalAmount || updated.totalAmount || 0;
       // Phát tiếng chuông và giọng đọc tiếng Việt thông báo số tiền
@@ -333,29 +347,39 @@ export function PosView() {
     completeOrderMutation.mutate(activeOrderId);
   };
 
-  const finalizeSepayPayment = (orderId: string, amount: number) => {
-    posApi
-      .completeOrder(orderId)
-      .then((updated) => {
-        const tableId = updated.diningTableId;
-        if (tableId) {
-          queryClient.setQueryData<DiningTable[]>(["pos-tables", branchId], (prev) =>
-            prev
-              ? prev.map((t) => (t.id === tableId ? { ...t, status: TableStatus.Available } : t))
-              : []
-          );
-        }
-        queryClient.invalidateQueries({ queryKey: ["pos-orders", branchId] });
-        queryClient.invalidateQueries({ queryKey: ["pos-tables", branchId] });
-        queryClient.invalidateQueries({ queryKey: ["branch-orders", branchId] });
-        showNotification(
-          "success",
-          `Thanh toán ${amount.toLocaleString("vi-VN")} ₫ thành công! Bàn đã được dọn trống.`
+  const finalizeSepayPayment = async (orderId: string, amount: number) => {
+    try {
+      if (amount > 0) {
+        await paymentApi
+          .createPayment(orderId, {
+            paymentMethod: PaymentMethod.QrPayment,
+            amount,
+            provider: "SePay",
+            note: `Thanh toán VietQR SePay Bàn ${selectedTable?.tableNumber || "Mang về"}`,
+          })
+          .catch((err) => console.warn("Lỗi lưu phiếu thu SePay:", err));
+      }
+
+      const updated = await posApi.completeOrder(orderId);
+      const tableId = updated.diningTableId;
+      if (tableId) {
+        queryClient.setQueryData<DiningTable[]>(["pos-tables", branchId], (prev) =>
+          prev
+            ? prev.map((t) => (t.id === tableId ? { ...t, status: TableStatus.Available } : t))
+            : []
         );
-      })
-      .catch((err) => {
-        console.error("Lỗi hoàn tất đơn SePay:", err);
-      });
+      }
+      queryClient.invalidateQueries({ queryKey: ["pos-orders", branchId] });
+      queryClient.invalidateQueries({ queryKey: ["pos-tables", branchId] });
+      queryClient.invalidateQueries({ queryKey: ["branch-orders", branchId] });
+      queryClient.invalidateQueries({ queryKey: ["branch-payments", branchId] });
+      showNotification(
+        "success",
+        `Thanh toán ${amount.toLocaleString("vi-VN")} ₫ thành công! Bàn đã được dọn trống.`
+      );
+    } catch (err) {
+      console.error("Lỗi hoàn tất đơn SePay:", err);
+    }
   };
 
   const handlePayWithSepay = async () => {

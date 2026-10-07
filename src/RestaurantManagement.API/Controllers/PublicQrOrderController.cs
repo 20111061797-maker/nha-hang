@@ -395,6 +395,28 @@ public sealed class PublicQrOrderController(
 
         activeOrder.Status = OrderStatus.Completed;
 
+        if (!await dbContext.Payments.AnyAsync(p => p.OrderId == activeOrder.Id, ct))
+        {
+            var now = DateTimeOffset.UtcNow;
+            var paymentNumber = $"PAY-{now:yyyyMMddHHmmss}-{Random.Shared.Next(100, 999)}";
+            var payment = new Payment
+            {
+                OrderId = activeOrder.Id,
+                BranchId = activeOrder.BranchId,
+                PaymentNumber = paymentNumber,
+                Method = PaymentMethod.QrPayment,
+                Status = PaymentStatus.Completed,
+                Amount = activeOrder.TotalAmount,
+                CurrencyCode = activeOrder.CurrencyCode,
+                Provider = "SePay",
+                Note = "Khách thanh toán quét mã SePay tại bàn",
+                PaymentDate = now,
+                CompletedAt = now
+            };
+            dbContext.Payments.Add(payment);
+            dbContext.PaymentAllocations.Add(new PaymentAllocation { PaymentId = payment.Id, OrderId = activeOrder.Id, Amount = payment.Amount });
+        }
+
         var allocations = await dbContext.OrderTableAllocations
             .Where(x => x.OrderId == activeOrder.Id && x.ReleasedAt == null)
             .ToListAsync(ct);
