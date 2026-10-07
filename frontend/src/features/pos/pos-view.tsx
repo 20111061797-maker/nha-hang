@@ -350,14 +350,20 @@ export function PosView() {
   const finalizeSepayPayment = async (orderId: string, amount: number) => {
     try {
       if (amount > 0) {
-        await paymentApi
+        const pay = await paymentApi
           .createPayment(orderId, {
             paymentMethod: PaymentMethod.QrPayment,
             amount,
             provider: "SePay",
             note: `Thanh toán VietQR SePay Bàn ${selectedTable?.tableNumber || "Mang về"}`,
           })
-          .catch((err) => console.warn("Lỗi lưu phiếu thu SePay:", err));
+          .catch((err) => {
+            console.warn("Lỗi lưu phiếu thu SePay:", err);
+            return null;
+          });
+        if (pay?.id) {
+          await paymentApi.completePayment(pay.id).catch(() => {});
+        }
       }
 
       const updated = await posApi.completeOrder(orderId);

@@ -49,6 +49,11 @@ export function OrdersView() {
       .createPayment(orderId, {
         paymentMethod: PaymentMethod.QrPayment,
         amount: amount,
+        provider: "SePay",
+        note: "Thanh toán quét mã SePay / VietQR",
+      })
+      .then((pay) => {
+        if (pay?.id) return paymentApi.completePayment(pay.id).catch(() => {});
       })
       .then(() => posApi.completeOrder(orderId))
       .then(() => {

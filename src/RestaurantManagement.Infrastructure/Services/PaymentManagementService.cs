@@ -81,6 +81,51 @@ public sealed class PaymentManagementService(
     {
         await EnsureBranchAccessAsync(branchId, cancellationToken);
 
+        // Tự động chuẩn hóa phân loại phiếu thu: chuyển các giao dịch từ đơn QR hoặc chứa ghi chú SePay/QR sang QrPayment
+        var existingPaymentsToFix = await dbContext.Payments
+            .Where(p => p.BranchId == branchId && p.Method == PaymentMethod.Cash && (
+                p.PaymentNumber.Contains("-QR-") ||
+                (p.Note != null && (p.Note.Contains("SePay") || p.Note.Contains("VietQR") || p.Note.Contains("quét mã") || p.Note.Contains("chuyển khoản")))
+            ))
+            .ToListAsync(cancellationToken);
+
+        if (existingPaymentsToFix.Count > 0)
+        {
+            foreach (var p in existingPaymentsToFix)
+            {
+                p.Method = PaymentMethod.QrPayment;
+                p.Provider = "SePay";
+                if (string.IsNullOrWhiteSpace(p.Note) || p.Note.Contains("tiền mặt"))
+                {
+                    p.Note = "Thanh toán quét mã SePay / VietQR";
+                }
+            }
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        var qrOrderIds = await dbContext.Orders
+            .Where(o => o.BranchId == branchId && o.OrderNumber.StartsWith("QR"))
+            .Select(o => o.Id)
+            .ToListAsync(cancellationToken);
+
+        if (qrOrderIds.Count > 0)
+        {
+            var misclassifiedQrPayments = await dbContext.Payments
+                .Where(p => p.BranchId == branchId && qrOrderIds.Contains(p.OrderId) && p.Method == PaymentMethod.Cash)
+                .ToListAsync(cancellationToken);
+
+            if (misclassifiedQrPayments.Count > 0)
+            {
+                foreach (var p in misclassifiedQrPayments)
+                {
+                    p.Method = PaymentMethod.QrPayment;
+                    p.Provider = "SePay";
+                    p.Note = "Thanh toán quét mã SePay / VietQR tại bàn";
+                }
+                await dbContext.SaveChangesAsync(cancellationToken);
+            }
+        }
+
         // Tự động đồng bộ hóa: các đơn hàng đã hoàn tất tại chi nhánh nhưng chưa có phiếu thu
         var existingOrderIds = await dbContext.Payments
             .Where(x => x.BranchId == branchId)
@@ -99,7 +144,8 @@ public sealed class PaymentManagementService(
             foreach (var o in missingOrders)
             {
                 var payDate = o.UpdatedAt > DateTimeOffset.MinValue ? o.UpdatedAt : o.CreatedAt;
-                var isQr = !string.IsNullOrWhiteSpace(o.Notes) && (o.Notes.Contains("SePay", StringComparison.OrdinalIgnoreCase) || o.Notes.Contains("QR", StringComparison.OrdinalIgnoreCase) || o.Notes.Contains("chuyển khoản", StringComparison.OrdinalIgnoreCase));
+                var isQr = (!string.IsNullOrWhiteSpace(o.OrderNumber) && o.OrderNumber.StartsWith("QR", StringComparison.OrdinalIgnoreCase))
+                    || (!string.IsNullOrWhiteSpace(o.Notes) && (o.Notes.Contains("SePay", StringComparison.OrdinalIgnoreCase) || o.Notes.Contains("QR", StringComparison.OrdinalIgnoreCase) || o.Notes.Contains("chuyển khoản", StringComparison.OrdinalIgnoreCase)));
                 var payment = new Payment
                 {
                     OrderId = o.Id,

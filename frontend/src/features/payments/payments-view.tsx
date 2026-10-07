@@ -78,6 +78,67 @@ export function PaymentsView() {
     refetchInterval: 12000,
   });
 
+  // Các helper phân loại chuẩn xác giao dịch (hỗ trợ cả enum dạng số lẫn chuỗi từ API / SePay)
+  const isCompletedPayment = (status: any): boolean => {
+    if (status === PaymentStatus.Completed) return true;
+    if (status === 2 || status === "2") return true;
+    if (typeof status === "string") {
+      const s = status.toUpperCase();
+      return s === "COMPLETED" || s === "CAPTURED" || s === "PAID" || s === "SUCCESS" || s === "APPROVED";
+    }
+    return false;
+  };
+
+  const isQrPayment = (payment: PaymentResponse): boolean => {
+    if (payment.provider?.toLowerCase() === "sepay") return true;
+    const method = payment.paymentMethod as any;
+    if (
+      method === PaymentMethod.QrPayment ||
+      method === PaymentMethod.BankTransfer ||
+      method === PaymentMethod.Online ||
+      method === 1 ||
+      method === "1" ||
+      method === 2 ||
+      method === "2" ||
+      method === 5 ||
+      method === "5"
+    ) {
+      return true;
+    }
+    if (typeof method === "string") {
+      const m = method.toLowerCase();
+      if (m.includes("qr") || m.includes("bank") || m.includes("sepay") || m.includes("online")) {
+        return true;
+      }
+    }
+    const text = `${payment.paymentNumber || ""} ${payment.orderId || ""} ${payment.note || ""} ${payment.transactionReference || ""}`.toLowerCase();
+    return (
+      text.includes("sepay") ||
+      text.includes("vietqr") ||
+      text.includes("chuyển khoản") ||
+      text.includes("quét mã") ||
+      text.includes("-qr-") ||
+      text.startsWith("qr-") ||
+      text.includes("qr")
+    );
+  };
+
+  const isCardPayment = (payment: PaymentResponse): boolean => {
+    if (isQrPayment(payment)) return false;
+    const method = payment.paymentMethod as any;
+    if (method === PaymentMethod.Card || method === 3 || method === "3") return true;
+    if (typeof method === "string" && method.toLowerCase().includes("card")) return true;
+    const text = `${payment.paymentNumber || ""} ${payment.note || ""}`.toLowerCase();
+    return text.includes("thẻ") || text.includes("pos") || text.includes("card");
+  };
+
+  const isCashPayment = (payment: PaymentResponse): boolean => {
+    if (isQrPayment(payment) || isCardPayment(payment)) return false;
+    const method = payment.paymentMethod as any;
+    if (method === PaymentMethod.Cash || method === 0 || method === "0") return true;
+    return true; // Mặc định thu ngân tại quán là tiền mặt nếu không phải QR/thẻ
+  };
+
   // Hợp nhất dữ liệu thanh toán: Tiền mặt + SePay (khử trùng lặp)
   const allPayments = useMemo(() => {
     const list: PaymentResponse[] = [...dbPayments];
@@ -131,13 +192,35 @@ export function PaymentsView() {
 
   const filteredPayments = useMemo(() => {
     return allPayments.filter((p) => {
-      if (methodFilter !== "all" && p.paymentMethod !== methodFilter) return false;
-      if (statusFilter !== "all" && p.status !== statusFilter) return false;
+      if (methodFilter !== "all") {
+        if (methodFilter === PaymentMethod.Cash && !isCashPayment(p)) return false;
+        if (methodFilter === PaymentMethod.QrPayment && !isQrPayment(p)) return false;
+        if (methodFilter === PaymentMethod.Card && !isCardPayment(p)) return false;
+      }
+      if (statusFilter !== "all") {
+        if (statusFilter === PaymentStatus.Completed && !isCompletedPayment(p.status)) return false;
+        if (statusFilter === PaymentStatus.Pending) {
+          const isPending =
+            p.status === PaymentStatus.Pending ||
+            (p.status as any) === 0 ||
+            (p.status as any) === "0" ||
+            (typeof p.status === "string" && p.status.toUpperCase() === "PENDING");
+          if (!isPending) return false;
+        }
+        if (statusFilter === PaymentStatus.Refunded) {
+          const isRefunded =
+            p.status === PaymentStatus.Refunded ||
+            (p.status as any) === 5 ||
+            (p.status as any) === "5" ||
+            (typeof p.status === "string" && p.status.toUpperCase() === "REFUNDED");
+          if (!isRefunded) return false;
+        }
+      }
       if (searchTerm.trim()) {
         const term = searchTerm.toLowerCase();
         return (
-          p.paymentNumber.toLowerCase().includes(term) ||
-          p.orderId.toLowerCase().includes(term) ||
+          p.paymentNumber?.toLowerCase().includes(term) ||
+          p.orderId?.toLowerCase().includes(term) ||
           (p.providerTransactionId && p.providerTransactionId.toLowerCase().includes(term)) ||
           (p.note && p.note.toLowerCase().includes(term))
         );
@@ -146,90 +229,94 @@ export function PaymentsView() {
     });
   }, [allPayments, methodFilter, statusFilter, searchTerm]);
 
-  // Tổng hợp thống kê doanh thu tài chính
+  // Tổng hợp thống kê doanh thu tài chính chuẩn xác
   const stats = useMemo(() => {
     const totalCount = allPayments.length;
-    const completedPayments = allPayments.filter((p) => p.status === PaymentStatus.Completed);
-    const totalAmount = completedPayments.reduce((sum, p) => sum + p.amount, 0);
+    const completedPayments = allPayments.filter((p) => isCompletedPayment(p.status));
+    const totalAmount = completedPayments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
 
     const cashAmount = completedPayments
-      .filter((p) => p.paymentMethod === PaymentMethod.Cash)
-      .reduce((sum, p) => sum + p.amount, 0);
+      .filter((p) => isCashPayment(p))
+      .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
 
     const qrAmount = completedPayments
-      .filter(
-        (p) =>
-          p.paymentMethod === PaymentMethod.QrPayment ||
-          p.paymentMethod === PaymentMethod.BankTransfer ||
-          p.provider === "SePay"
-      )
-      .reduce((sum, p) => sum + p.amount, 0);
+      .filter((p) => isQrPayment(p))
+      .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
 
     const cardAmount = completedPayments
-      .filter((p) => p.paymentMethod === PaymentMethod.Card)
-      .reduce((sum, p) => sum + p.amount, 0);
+      .filter((p) => isCardPayment(p))
+      .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
 
     return { totalCount, totalAmount, cashAmount, qrAmount, cardAmount };
   }, [allPayments]);
 
   const getMethodBadge = (payment: PaymentResponse) => {
-    if (payment.provider === "SePay" || payment.paymentMethod === PaymentMethod.QrPayment || payment.paymentMethod === PaymentMethod.BankTransfer) {
+    if (isQrPayment(payment)) {
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-950/70 text-amber-300 border border-amber-800/60">
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-950/70 text-amber-300 border border-amber-800/60 shadow-sm">
           📱 SePay VietQR
         </span>
       );
     }
-    if (payment.paymentMethod === PaymentMethod.Cash) {
+    if (isCardPayment(payment)) {
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-950/70 text-emerald-300 border border-emerald-800/60">
-          💵 Tiền mặt
-        </span>
-      );
-    }
-    if (payment.paymentMethod === PaymentMethod.Card) {
-      return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-sky-950/70 text-sky-300 border border-sky-800/60">
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-sky-950/70 text-sky-300 border border-sky-800/60 shadow-sm">
           💳 Quẹt thẻ POS
         </span>
       );
     }
     return (
-      <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-800 text-gray-300">
-        {payment.paymentMethod}
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-950/70 text-emerald-300 border border-emerald-800/60 shadow-sm">
+        💵 Tiền mặt
       </span>
     );
   };
 
-  const getStatusBadge = (status: PaymentStatus) => {
-    switch (status) {
-      case PaymentStatus.Completed:
-        return (
-          <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-950/70 text-emerald-300 border border-emerald-800/60">
-            Thành công
-          </span>
-        );
-      case PaymentStatus.Pending:
-        return (
-          <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-950/70 text-amber-300 border border-amber-800/60">
-            Chờ xử lý
-          </span>
-        );
-      case PaymentStatus.Refunded:
-        return (
-          <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-purple-950/70 text-purple-300 border border-purple-800/60">
-            Đã hoàn tiền
-          </span>
-        );
-      case PaymentStatus.Cancelled:
-        return (
-          <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-rose-950/70 text-rose-300 border border-rose-800/60">
-            Đã hủy
-          </span>
-        );
-      default:
-        return <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-gray-800 text-gray-300">{status}</span>;
+  const getStatusBadge = (status: any) => {
+    if (isCompletedPayment(status)) {
+      return (
+        <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-950/70 text-emerald-300 border border-emerald-800/60">
+          Thành công
+        </span>
+      );
     }
+    if (
+      status === PaymentStatus.Pending ||
+      status === 0 ||
+      status === "0" ||
+      (typeof status === "string" && status.toUpperCase() === "PENDING")
+    ) {
+      return (
+        <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-950/70 text-amber-300 border border-amber-800/60">
+          Chờ xử lý
+        </span>
+      );
+    }
+    if (
+      status === PaymentStatus.Refunded ||
+      status === 5 ||
+      status === "5" ||
+      (typeof status === "string" && status.toUpperCase() === "REFUNDED")
+    ) {
+      return (
+        <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-purple-950/70 text-purple-300 border border-purple-800/60">
+          Đã hoàn tiền
+        </span>
+      );
+    }
+    if (
+      status === PaymentStatus.Cancelled ||
+      status === 6 ||
+      status === "6" ||
+      (typeof status === "string" && status.toUpperCase() === "CANCELLED")
+    ) {
+      return (
+        <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-rose-950/70 text-rose-300 border border-rose-800/60">
+          Đã hủy
+        </span>
+      );
+    }
+    return <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-gray-800 text-gray-300">{status}</span>;
   };
 
   if (!branchId) {
@@ -511,7 +598,13 @@ export function PaymentsView() {
               </div>
               <div className="flex justify-between text-gray-300">
                 <span>Phương thức:</span>
-                <span>{selectedPayment.provider === "SePay" ? "Cổng SePay VietQR" : selectedPayment.paymentMethod}</span>
+                <span>
+                  {isQrPayment(selectedPayment)
+                    ? "📱 Cổng SePay VietQR"
+                    : isCardPayment(selectedPayment)
+                    ? "💳 Quẹt thẻ máy POS"
+                    : "💵 Tiền mặt (Cash)"}
+                </span>
               </div>
               <div className="flex justify-between text-gray-300">
                 <span>Trạng thái:</span>
