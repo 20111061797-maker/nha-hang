@@ -14,15 +14,23 @@ export async function GET(req: NextRequest) {
     }
 
     const orderData = await sepayClient.order.retrieve(invoiceNumber);
+    const rawOrder = (orderData as any)?.data?.data || (orderData as any)?.data || orderData;
+    const status = String(rawOrder?.order_status ?? rawOrder?.status ?? "").toUpperCase();
+    const isPaid = ["PAID", "CAPTURED", "COMPLETED", "SUCCESS", "APPROVED"].includes(status);
+
     return NextResponse.json({
       success: true,
-      data: orderData,
+      isPaid,
+      status,
+      data: rawOrder,
     });
   } catch (error: any) {
     console.error("SePay order status retrieve error:", error);
     return NextResponse.json(
       {
         success: false,
+        isPaid: false,
+        status: "ERROR",
         message: error?.response?.data?.message || error?.message || "Không thể kiểm tra trạng thái đơn hàng từ SePay",
       },
       { status: 500 }

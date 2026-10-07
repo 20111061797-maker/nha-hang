@@ -427,19 +427,40 @@ export function PosView() {
     if (typeof window === "undefined") return;
     if (handleSepayPopupReturn()) return;
     const url = new URL(window.location.href);
-    const sepaySuccess = url.searchParams.get("sepay_success");
+    const sepayVerify = url.searchParams.get("sepay_verify") === "true";
+    const sepaySuccess = url.searchParams.get("sepay_success") === "true";
+    const invoice = url.searchParams.get("invoice");
     const orderId = url.searchParams.get("order_id");
     const amountStr = url.searchParams.get("amount");
+    const amount = Number(amountStr) || 0;
 
-    if (sepaySuccess === "true" && orderId) {
-      const amount = Number(amountStr) || 0;
-      announcePaymentSuccess(amount);
-      finalizeSepayPayment(orderId, amount);
-
+    const cleanupUrl = () => {
+      url.searchParams.delete("sepay_verify");
       url.searchParams.delete("sepay_success");
+      url.searchParams.delete("sepay_popup");
+      url.searchParams.delete("invoice");
       url.searchParams.delete("order_id");
       url.searchParams.delete("amount");
       window.history.replaceState({}, "", url.pathname);
+    };
+
+    if (invoice && orderId && (sepayVerify || sepaySuccess)) {
+      fetch(`/api/sepay/status?invoiceNumber=${encodeURIComponent(invoice)}`)
+        .then((r) => r.json())
+        .then((res) => {
+          if (res?.isPaid === true) {
+            announcePaymentSuccess(amount);
+            finalizeSepayPayment(orderId, amount);
+          } else {
+            showNotification("error", "Giao dịch SePay chưa hoàn tất hoặc khách đã thoát khỏi cổng quét mã.");
+          }
+        })
+        .catch(() => {
+          showNotification("error", "Không thể xác thực trạng thái giao dịch từ SePay.");
+        })
+        .finally(cleanupUrl);
+    } else if (sepayVerify || sepaySuccess) {
+      cleanupUrl();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [branchId, queryClient]);

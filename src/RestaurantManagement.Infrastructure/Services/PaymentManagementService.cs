@@ -113,7 +113,7 @@ public sealed class PaymentManagementService(
         if (qrOrderIds.Count > 0)
         {
             var misclassifiedQrPayments = await dbContext.Payments
-                .Where(p => p.BranchId == branchId && qrOrderIds.Contains(p.OrderId) && p.Method == PaymentMethod.Cash)
+                .Where(p => p.BranchId == branchId && qrOrderIds.Contains(p.OrderId) && p.Method == PaymentMethod.Cash && (p.Provider == "SePay" || (p.Note != null && (p.Note.Contains("SePay") || p.Note.Contains("VietQR")))))
                 .ToListAsync(cancellationToken);
 
             if (misclassifiedQrPayments.Count > 0)

@@ -181,21 +181,25 @@ export function PaymentsView() {
       // Trích xuất mã đơn hàng, ví dụ: "PAY-20261007-ORD-20261007145044-13AEE4E9" -> "ORD-20261007145044-13AEE4E9"
       const orderMatch = (pNumber + " " + pNote).match(/(ord-[a-z0-9-]+|qr-[a-z0-9-]+)/i);
       const extractedOrderCode = orderMatch ? orderMatch[1].toLowerCase() : "";
+      const pCleanId = pOrderId.replace(/[^a-z0-9]/g, "");
 
       const matchedSepay = sepayOrders.find((s) => {
         const desc = (s.order_description || "").toLowerCase();
         const invoice = (s.order_invoice_number || "").toLowerCase();
         const sOrderId = (s.order_id || "").toLowerCase();
+        const sCleanId = sOrderId.replace(/[^a-z0-9]/g, "");
 
         if (extractedOrderCode && desc.includes(extractedOrderCode)) return true;
         if (invoice && (pNumber.includes(invoice) || pProvId.includes(invoice))) return true;
         if (sOrderId && (pNumber.includes(sOrderId) || pRef.includes(sOrderId) || pOrderId.includes(sOrderId))) return true;
+        if (pCleanId.length >= 8 && (sCleanId.includes(pCleanId.slice(0, 16)) || pCleanId.includes(sCleanId.replace(/^pay/, "")))) return true;
         return false;
       });
 
       if (matchedSepay) {
         matchedSepayInvoiceKeys.add((matchedSepay.order_invoice_number || matchedSepay.id || "").toLowerCase());
         matchedSepayInvoiceKeys.add((matchedSepay.order_id || "").toLowerCase());
+        const isPaid = isCompletedPayment(matchedSepay.order_status);
         return {
           ...p,
           paymentMethod: PaymentMethod.QrPayment,
@@ -203,7 +207,7 @@ export function PaymentsView() {
           providerTransactionId: matchedSepay.order_invoice_number || p.providerTransactionId,
           transactionReference: matchedSepay.order_id || p.transactionReference,
           note: matchedSepay.order_description || p.note || "Thanh toán quét mã SePay VietQR",
-          status: PaymentStatus.Completed,
+          status: isPaid ? PaymentStatus.Completed : PaymentStatus.Pending,
         };
       }
 
@@ -289,7 +293,7 @@ export function PaymentsView() {
           return false;
         });
 
-        if (matched) {
+        if (matched && isCompletedPayment(matched.order_status)) {
           reconciledPaymentIdsRef.current.add(p.id);
           paymentApi
             .reclassifyPayment(p.id, {

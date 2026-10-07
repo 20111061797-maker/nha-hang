@@ -91,8 +91,7 @@ function watchPayment(opts: {
       const res = await fetch(`/api/sepay/status?invoiceNumber=${encodeURIComponent(invoiceNumber)}`);
       if (!res.ok) return;
       const result = await res.json();
-      const status = String(result?.data?.order_status ?? result?.data?.status ?? "").toUpperCase();
-      if (PAID_STATUSES.includes(status)) finish();
+      if (result?.isPaid === true) finish();
     } catch {
       /* keep polling */
     }
@@ -100,31 +99,42 @@ function watchPayment(opts: {
 }
 
 /**
- * Call at the start of the "?sepay_success=true" handler.
- * If this tab is the SePay pop-up (marked with sepay_popup=1), it tells the original tab that
- * payment succeeded, closes itself and returns true so the caller skips its own handling.
+ * Call at the start of return handlers.
+ * If this tab is the SePay pop-up (marked with sepay_popup=1), it verifies whether the invoice
+ * is truly paid before notifying the parent tab and closing.
  */
 export function handleSepayPopupReturn(): boolean {
   if (typeof window === "undefined") return false;
   const url = new URL(window.location.href);
-  if (url.searchParams.get("sepay_success") !== "true" || url.searchParams.get("sepay_popup") !== "1") {
-    return false;
-  }
+  const isPopup = url.searchParams.get("sepay_popup") === "1";
+  if (!isPopup) return false;
 
-  const message: PaidMessage = {
-    type: "sepay_success",
-    orderId: url.searchParams.get("order_id") ?? "",
-    amount: Number(url.searchParams.get("amount")) || 0,
-  };
+  const invoice = url.searchParams.get("invoice") || "";
+  const orderId = url.searchParams.get("order_id") ?? "";
+  const amount = Number(url.searchParams.get("amount")) || 0;
 
-  try {
-    if (typeof BroadcastChannel !== "undefined") {
-      const channel = new BroadcastChannel(CHANNEL_NAME);
-      channel.postMessage(message);
-      setTimeout(() => channel.close(), 500);
-    }
-  } catch {
-    /* ignore */
+  if (invoice) {
+    fetch(`/api/sepay/status?invoiceNumber=${encodeURIComponent(invoice)}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.isPaid === true) {
+          const message: PaidMessage = {
+            type: "sepay_success",
+            orderId,
+            amount,
+          };
+          if (typeof BroadcastChannel !== "undefined") {
+            const channel = new BroadcastChannel(CHANNEL_NAME);
+            channel.postMessage(message);
+            setTimeout(() => channel.close(), 500);
+          }
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        setTimeout(() => window.close(), 300);
+      });
+    return true;
   }
 
   setTimeout(() => window.close(), 300);
@@ -152,7 +162,9 @@ export async function submitSepayCheckout(params: SepayCheckoutParams): Promise<
 
     const finalSuccessUrl = params.returnUrl
       ? `${params.returnUrl}${usePopup ? `${params.returnUrl.includes("?") ? "&" : "?"}sepay_popup=1` : ""}`
-      : `${currentOrigin}${currentPath}?sepay_success=true&order_id=${encodeURIComponent(
+      : `${currentOrigin}${currentPath}?sepay_verify=true&invoice=${encodeURIComponent(
+          invoiceNumber
+        )}&order_id=${encodeURIComponent(
           params.orderId
         )}&amount=${Math.round(params.amount)}${usePopup ? "&sepay_popup=1" : ""}`;
 
