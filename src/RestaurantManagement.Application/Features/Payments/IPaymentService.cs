@@ -11,4 +11,5 @@ public interface IPaymentService
     Task<PaymentRefundResponse> RefundAsync(Guid paymentId, CreatePaymentRefundRequest request, CancellationToken cancellationToken);
     Task<IReadOnlyList<PaymentRefundResponse>> GetRefundsAsync(Guid paymentId, CancellationToken cancellationToken);
     Task<PaymentSummary?> GetSummaryAsync(Guid orderId, CancellationToken cancellationToken);
+    Task<PaymentResponse?> ReclassifyAsync(Guid paymentId, ReclassifyPaymentRequest request, CancellationToken cancellationToken);
 }

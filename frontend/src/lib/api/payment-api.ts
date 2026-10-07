@@ -59,4 +59,37 @@ export const paymentApi = {
   getSummary(orderId: string): Promise<PaymentSummary> {
     return apiRequest<PaymentSummary>(`/api/orders/${orderId}/payment-summary`);
   },
+
+  reclassifyPayment(
+    paymentId: string,
+    payload: {
+      paymentMethod: number | string;
+      provider?: string;
+      note?: string;
+      providerTransactionId?: string;
+      transactionReference?: string;
+    }
+  ): Promise<PaymentResponse> {
+    const methodMap: Record<string, number> = {
+      Cash: 0,
+      BankTransfer: 1,
+      QrPayment: 2,
+      Card: 3,
+      EWallet: 4,
+      Online: 5,
+      Other: 6,
+    };
+    const paymentMethodInt =
+      typeof payload.paymentMethod === "number"
+        ? payload.paymentMethod
+        : methodMap[payload.paymentMethod] ?? 2;
+
+    return apiRequest<PaymentResponse>(`/api/payments/${paymentId}/reclassify`, {
+      method: "PATCH",
+      body: {
+        ...payload,
+        paymentMethod: paymentMethodInt,
+      },
+    });
+  },
 };

@@ -17,6 +17,12 @@ public sealed record CreatePaymentRequest(
 
 public sealed record CancelPaymentRequest(string Reason);
 public sealed record CreatePaymentRefundRequest(decimal Amount, string Reason, string? RefundReference, string? ProviderRefundId);
+public sealed record ReclassifyPaymentRequest(
+    PaymentMethod PaymentMethod,
+    string? Provider,
+    string? Note,
+    string? ProviderTransactionId,
+    string? TransactionReference);
 
 public sealed record PaymentResponse(
     Guid Id,

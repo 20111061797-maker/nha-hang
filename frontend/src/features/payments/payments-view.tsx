@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMemo, useState, useEffect, useRef } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { paymentApi } from "@/lib/api/payment-api";
 import { useBranch } from "@/features/branches/branch-provider";
 import { PaymentMethod, PaymentStatus, type PaymentResponse } from "@/types/payments";
@@ -29,14 +29,25 @@ interface SepayOrderItem {
   updated_at?: string;
 }
 
+const getCachedSepayOrders = (): SepayOrderItem[] => {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = sessionStorage.getItem("sepay_cached_orders");
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return [];
+};
+
 export function PaymentsView() {
   const { branchId } = useBranch();
+  const queryClient = useQueryClient();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [methodFilter, setMethodFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedPayment, setSelectedPayment] = useState<PaymentResponse | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const reconciledPaymentIdsRef = useRef<Set<string>>(new Set());
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -64,12 +75,21 @@ export function PaymentsView() {
     isFetching: isSepayFetching,
   } = useQuery({
     queryKey: ["sepay-pg-transactions"],
+    initialData: getCachedSepayOrders,
+    staleTime: 60 * 1000,
+    gcTime: 10 * 60 * 1000,
     queryFn: async () => {
       try {
         const res = await fetch("/api/sepay/transactions");
         if (!res.ok) return [];
         const json = await res.json();
-        return Array.isArray(json?.data) ? (json.data as SepayOrderItem[]) : [];
+        const orders = Array.isArray(json?.data) ? (json.data as SepayOrderItem[]) : [];
+        if (typeof window !== "undefined" && orders.length > 0) {
+          try {
+            sessionStorage.setItem("sepay_cached_orders", JSON.stringify(orders));
+          } catch {}
+        }
+        return orders;
       } catch (err) {
         console.warn("Lỗi tải lịch sử giao dịch SePay:", err);
         return [];
@@ -236,6 +256,51 @@ export function PaymentsView() {
     return list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [dbPayments, sepayOrders, branchId]);
 
+  // Tự động lưu chuẩn hóa vào CSDL backend nếu phát hiện phiếu thu ban đầu là tiền mặt nhưng thực chất là SePay
+  useEffect(() => {
+    if (!sepayOrders.length || !dbPayments.length) return;
+
+    dbPayments.forEach((p) => {
+      if (
+        p.id &&
+        !reconciledPaymentIdsRef.current.has(p.id) &&
+        isCashPayment(p) &&
+        p.provider !== "SePay"
+      ) {
+        const pNumber = (p.paymentNumber || "").toLowerCase();
+        const pNote = (p.note || "").toLowerCase();
+        const orderMatch = (pNumber + " " + pNote).match(/(ord-[a-z0-9-]+|qr-[a-z0-9-]+)/i);
+        const extractedOrderCode = orderMatch ? orderMatch[1].toLowerCase() : "";
+
+        const matched = sepayOrders.find((s) => {
+          const desc = (s.order_description || "").toLowerCase();
+          const invoice = (s.order_invoice_number || "").toLowerCase();
+          const sOrderId = (s.order_id || "").toLowerCase();
+          if (extractedOrderCode && desc.includes(extractedOrderCode)) return true;
+          if (invoice && (pNumber.includes(invoice) || (p.providerTransactionId || "").toLowerCase().includes(invoice))) return true;
+          if (sOrderId && (pNumber.includes(sOrderId) || (p.transactionReference || "").toLowerCase().includes(sOrderId))) return true;
+          return false;
+        });
+
+        if (matched) {
+          reconciledPaymentIdsRef.current.add(p.id);
+          paymentApi
+            .reclassifyPayment(p.id, {
+              paymentMethod: PaymentMethod.QrPayment,
+              provider: "SePay",
+              providerTransactionId: matched.order_invoice_number || p.providerTransactionId,
+              transactionReference: matched.order_id || p.transactionReference,
+              note: matched.order_description || "Thanh toán quét mã SePay / VietQR",
+            })
+            .then(() => {
+              queryClient.invalidateQueries({ queryKey: ["branch-payments", branchId] });
+            })
+            .catch((err) => console.warn("Lỗi đồng bộ chuẩn hóa SePay về CSDL:", err));
+        }
+      }
+    });
+  }, [dbPayments, sepayOrders, branchId, queryClient]);
+
   const handleRefreshAll = async () => {
     await Promise.all([refetchDb(), refetchSepay()]);
     showToast("Đã đồng bộ dữ liệu giao dịch SePay & Tiền mặt mới nhất!");
@@ -379,7 +444,8 @@ export function PaymentsView() {
     );
   }
 
-  const isLoading = dbLoading && sepayLoading;
+  // Đảm bảo không hiển thị dữ liệu chưa đối soát (tránh giật từ Tiền mặt sang QR khi SePay đang tải)
+  const isLoading = (dbLoading && dbPayments.length === 0) || (sepayLoading && sepayOrders.length === 0);
 
   if (isLoading) {
     return <LoadingState fullscreen label="Đang tải dữ liệu thanh toán SePay & Tiền mặt..." />;

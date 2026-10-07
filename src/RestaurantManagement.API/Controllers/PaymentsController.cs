@@ -31,6 +31,9 @@ public sealed class PaymentsController(
     [HttpGet("branches/{branchId:guid}/payments"), RequirePermission("payment.read")]
     public async Task<IActionResult> GetBranchPayments(Guid branchId, CancellationToken ct) => Ok(await service.GetBranchPaymentsAsync(branchId, ct));
 
+    [HttpPatch("payments/{id:guid}/reclassify"), RequirePermission("payment.create")]
+    public async Task<IActionResult> Reclassify(Guid id, ReclassifyPaymentRequest request, CancellationToken ct) => (await service.ReclassifyAsync(id, request, ct)) is { } result ? Ok(result) : NotFound();
+
     [HttpPost("payments/{id:guid}/complete"), RequirePermission("payment.complete")]
     public async Task<IActionResult> Complete(Guid id, CancellationToken ct) => (await service.CompleteAsync(id, ct)) is { } result ? Ok(result) : NotFound();
 

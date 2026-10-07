@@ -85,6 +85,8 @@ public sealed class PaymentManagementService(
         var existingPaymentsToFix = await dbContext.Payments
             .Where(p => p.BranchId == branchId && p.Method == PaymentMethod.Cash && (
                 p.PaymentNumber.Contains("-QR-") ||
+                p.PaymentNumber.Contains("13AEE4E9") ||
+                p.PaymentNumber.Contains("E3CFCCF5") ||
                 (p.Note != null && (p.Note.Contains("SePay") || p.Note.Contains("VietQR") || p.Note.Contains("quét mã") || p.Note.Contains("chuyển khoản")))
             ))
             .ToListAsync(cancellationToken);
@@ -231,6 +233,20 @@ public sealed class PaymentManagementService(
                           select (decimal?)refund.Amount).SumAsync(cancellationToken) ?? 0;
         var net = paid - refunded;
         return new PaymentSummary(order.TotalAmount, paid, refunded, net, Math.Max(0, order.TotalAmount - net), net <= 0 ? "Unpaid" : net < order.TotalAmount ? "PartiallyPaid" : "Paid");
+    }
+
+    public async Task<PaymentResponse?> ReclassifyAsync(Guid paymentId, ReclassifyPaymentRequest request, CancellationToken cancellationToken)
+    {
+        var payment = await LoadPaymentAsync(paymentId, cancellationToken);
+        payment.Method = request.PaymentMethod;
+        if (!string.IsNullOrWhiteSpace(request.Provider)) payment.Provider = request.Provider;
+        if (!string.IsNullOrWhiteSpace(request.Note)) payment.Note = request.Note;
+        if (!string.IsNullOrWhiteSpace(request.ProviderTransactionId)) payment.ProviderTransactionId = request.ProviderTransactionId;
+        if (!string.IsNullOrWhiteSpace(request.TransactionReference)) payment.TransactionReference = request.TransactionReference;
+        payment.Version++;
+        await auditWriter.WriteAsync("PaymentReclassified", nameof(Payment), payment.Id, currentUser.Username, null, cancellationToken);
+        await SaveAsync(cancellationToken);
+        return ToResponse(payment);
     }
 
     private async Task<Order> LoadOrderAsync(Guid id, CancellationToken ct) => await dbContext.Orders.FirstOrDefaultAsync(x => x.Id == id, ct) is { } order ? await EnsureOrderAccessAsync(order, ct) : throw new ApplicationException("Order does not exist.");
