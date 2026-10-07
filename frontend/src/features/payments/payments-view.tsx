@@ -139,11 +139,55 @@ export function PaymentsView() {
     return true; // Mặc định thu ngân tại quán là tiền mặt nếu không phải QR/thẻ
   };
 
-  // Hợp nhất dữ liệu thanh toán: Tiền mặt + SePay (khử trùng lặp)
+  // Hợp nhất dữ liệu thanh toán: Tiền mặt + SePay (khử trùng lặp và phân loại chính xác SePay)
   const allPayments = useMemo(() => {
-    const list: PaymentResponse[] = [...dbPayments];
+    // 1. Đối soát các bản ghi nội bộ dbPayments với dữ liệu giao dịch trực tiếp từ cổng SePay
+    const matchedSepayInvoiceKeys = new Set<string>();
+
+    const reconciledDbPayments: PaymentResponse[] = dbPayments.map((p) => {
+      const pNumber = (p.paymentNumber || "").toLowerCase();
+      const pOrderId = (p.orderId || "").toLowerCase();
+      const pRef = (p.transactionReference || "").toLowerCase();
+      const pProvId = (p.providerTransactionId || "").toLowerCase();
+      const pNote = (p.note || "").toLowerCase();
+
+      // Trích xuất mã đơn hàng, ví dụ: "PAY-20261007-ORD-20261007145044-13AEE4E9" -> "ORD-20261007145044-13AEE4E9"
+      const orderMatch = (pNumber + " " + pNote).match(/(ord-[a-z0-9-]+|qr-[a-z0-9-]+)/i);
+      const extractedOrderCode = orderMatch ? orderMatch[1].toLowerCase() : "";
+
+      const matchedSepay = sepayOrders.find((s) => {
+        const desc = (s.order_description || "").toLowerCase();
+        const invoice = (s.order_invoice_number || "").toLowerCase();
+        const sOrderId = (s.order_id || "").toLowerCase();
+
+        if (extractedOrderCode && desc.includes(extractedOrderCode)) return true;
+        if (invoice && (pNumber.includes(invoice) || pProvId.includes(invoice))) return true;
+        if (sOrderId && (pNumber.includes(sOrderId) || pRef.includes(sOrderId) || pOrderId.includes(sOrderId))) return true;
+        return false;
+      });
+
+      if (matchedSepay) {
+        matchedSepayInvoiceKeys.add((matchedSepay.order_invoice_number || matchedSepay.id || "").toLowerCase());
+        matchedSepayInvoiceKeys.add((matchedSepay.order_id || "").toLowerCase());
+        return {
+          ...p,
+          paymentMethod: PaymentMethod.QrPayment,
+          provider: "SePay",
+          providerTransactionId: matchedSepay.order_invoice_number || p.providerTransactionId,
+          transactionReference: matchedSepay.order_id || p.transactionReference,
+          note: matchedSepay.order_description || p.note || "Thanh toán quét mã SePay VietQR",
+          status: PaymentStatus.Completed,
+        };
+      }
+
+      return p;
+    });
+
+    const list: PaymentResponse[] = [...reconciledDbPayments];
+
+    // 2. Thêm các giao dịch SePay trực tiếp chưa có trong dbPayments
     const existingKeys = new Set(
-      dbPayments.map((p) =>
+      reconciledDbPayments.map((p) =>
         (p.providerTransactionId || p.transactionReference || p.paymentNumber || p.orderId || "").toLowerCase()
       )
     );
@@ -151,9 +195,16 @@ export function PaymentsView() {
     for (const s of sepayOrders) {
       const invoice = (s.order_invoice_number || "").toLowerCase();
       const orderId = (s.order_id || "").toLowerCase();
+      const sId = (s.id || "").toLowerCase();
 
-      // Nếu đã có bản ghi trong dbPayments trùng mã hóa đơn hoặc mã thanh toán thì bỏ qua
-      if ((invoice && existingKeys.has(invoice)) || (orderId && existingKeys.has(orderId))) {
+      // Nếu đã được đối soát vào bản ghi nội bộ thì không thêm trùng
+      if (
+        (invoice && matchedSepayInvoiceKeys.has(invoice)) ||
+        (orderId && matchedSepayInvoiceKeys.has(orderId)) ||
+        (sId && matchedSepayInvoiceKeys.has(sId)) ||
+        (invoice && existingKeys.has(invoice)) ||
+        (orderId && existingKeys.has(orderId))
+      ) {
         continue;
       }
 

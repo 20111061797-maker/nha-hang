@@ -7,9 +7,27 @@ import type {
 
 export const paymentApi = {
   createPayment(orderId: string, payload: CreatePaymentRequest): Promise<PaymentResponse> {
+    const methodMap: Record<string, number> = {
+      Cash: 0,
+      BankTransfer: 1,
+      QrPayment: 2,
+      Card: 3,
+      EWallet: 4,
+      Online: 5,
+      Other: 6,
+    };
+    const paymentMethodInt =
+      typeof payload.paymentMethod === "number"
+        ? payload.paymentMethod
+        : methodMap[payload.paymentMethod] ?? 0;
+
     return apiRequest<PaymentResponse>(`/api/orders/${orderId}/payments`, {
       method: "POST",
-      body: payload,
+      body: {
+        ...payload,
+        paymentMethod: paymentMethodInt,
+        tenderedAmount: payload.tenderedAmount ?? payload.amount,
+      },
     });
   },
 

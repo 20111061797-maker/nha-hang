@@ -4,6 +4,7 @@ using RestaurantManagement.Domain.Enums;
 namespace RestaurantManagement.Application.Features.Payments;
 
 public sealed record CreatePaymentRequest(
+    [property: System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
     PaymentMethod PaymentMethod,
     decimal Amount,
     decimal? TenderedAmount,

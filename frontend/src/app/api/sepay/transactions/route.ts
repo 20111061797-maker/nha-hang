@@ -4,7 +4,9 @@ import { sepayClient } from "@/lib/sepay/sepay-client";
 export async function GET() {
   try {
     const res = await sepayClient.order.all();
-    const orders = Array.isArray(res?.data)
+    const orders = Array.isArray(res?.data?.data)
+      ? res.data.data
+      : Array.isArray(res?.data)
       ? res.data
       : Array.isArray(res)
       ? res
