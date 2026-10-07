@@ -57,6 +57,10 @@ await using (var scope = app.Services.CreateAsyncScope())
         await RestaurantManagement.Infrastructure.Authentication.AuthenticationSeedHostedService.SeedAllAsync(
             dbContext, passwordHasher, adminOptions, demoOptions, logger, CancellationToken.None);
         logger.LogInformation("Database seeded successfully during startup.");
+
+        // Khôi phục trạng thái active cho các món ăn có trong chi nhánh nhưng bị ngưng bán nhầm
+        await dbContext.Database.ExecuteSqlRawAsync(
+            "UPDATE products SET is_active = true WHERE is_active = false AND id IN (SELECT product_id FROM branch_products WHERE is_active = true);");
     }
     catch (Exception ex)
     {

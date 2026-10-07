@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { productApi } from "@/lib/api/product-api";
 import { useBranch } from "@/features/branches/branch-provider";
@@ -13,6 +13,7 @@ import {
   Edit2,
   Trash2,
   CheckCircle2,
+  XCircle,
   AlertTriangle,
   X,
   Layers,
@@ -71,6 +72,11 @@ export function ProductsView() {
     category?: CategoryListItem;
   }>({ open: false });
 
+  // Persistent metadata cache for products (category, description)
+  const [productMetadata, setProductMetadata] = useState<
+    Record<string, { categoryId: string; categoryName: string; description?: string | null }>
+  >({});
+
   const showToast = (type: "success" | "error", text: string) => {
     setToastMessage({ type, text });
     setTimeout(() => setToastMessage(null), 3500);
@@ -94,6 +100,25 @@ export function ProductsView() {
     enabled: Boolean(branchId),
   });
 
+  // Track product metadata whenever menu updates
+  useEffect(() => {
+    if (menu?.categories) {
+      setProductMetadata((prev) => {
+        const next = { ...prev };
+        for (const cat of menu.categories) {
+          for (const p of cat.products) {
+            next[p.id] = {
+              categoryId: cat.id,
+              categoryName: cat.name,
+              description: p.description,
+            };
+          }
+        }
+        return next;
+      });
+    }
+  }, [menu]);
+
   // Invalidation helper
   const invalidateAll = () => {
     queryClient.invalidateQueries({ queryKey: ["branch-menu-mgmt", branchId] });
@@ -116,9 +141,13 @@ export function ProductsView() {
       isAvailable: boolean;
     }) => {
       if (!branchId) return;
+
+      // 1. Luôn kích hoạt lại Product master phòng trường hợp trước đây bị gán isActive = false nhầm
+      await productApi.setProductStatus(productId, true);
+
+      // 2. Cập nhật trạng thái Còn món / Ngưng bán (Hết món) cho chi nhánh
       if (branchProductId) {
-        // Toggle availability via branch product
-        await productApi.setProductStatus(productId, isAvailable);
+        await productApi.setBranchProductAvailability(branchProductId, isAvailable);
       } else {
         await productApi.createBranchProduct(branchId, {
           productId,
@@ -127,9 +156,14 @@ export function ProductsView() {
         });
       }
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       invalidateAll();
-      showToast("success", "Đã cập nhật trạng thái món ăn thành công!");
+      showToast(
+        "success",
+        variables.isAvailable
+          ? "Đã chuyển trạng thái sang Đang bán"
+          : "Đã chuyển sang Ngưng bán (Hết món)"
+      );
     },
     onError: (err: unknown) => {
       showToast("error", err instanceof Error ? err.message : "Không thể đổi trạng thái.");
@@ -297,21 +331,50 @@ export function ProductsView() {
 
   // Flatten products with category and branch info
   const allProducts = useMemo(() => {
-    if (!menu?.categories) return [];
-    return menu.categories.flatMap((cat) =>
-      cat.products.map((p) => {
-        const bp = branchProducts.find((b) => b.productId === p.id);
-        return {
-          ...p,
-          categoryId: cat.id,
-          categoryName: cat.name,
-          branchProductId: bp?.id,
-          isAvailable: bp ? bp.isAvailable : true,
-          imageUrl: p.imageUrl,
-        };
-      })
-    );
-  }, [menu, branchProducts]);
+    const list: ProductWithContext[] = [];
+    const seenProductIds = new Set<string>();
+
+    // 1. Thêm các món ăn đang có trong menu.categories
+    if (menu?.categories) {
+      for (const cat of menu.categories) {
+        for (const p of cat.products) {
+          const bp = branchProducts.find((b) => b.productId === p.id);
+          seenProductIds.add(p.id);
+          list.push({
+            ...p,
+            categoryId: cat.id,
+            categoryName: cat.name,
+            branchProductId: bp?.id,
+            isAvailable: bp ? bp.isAvailable : true,
+            imageUrl: p.imageUrl,
+          });
+        }
+      }
+    }
+
+    // 2. Bổ sung các món của chi nhánh đang tạm ngưng bán / hết món (giữ nguyên không bị mất đi)
+    for (const bp of branchProducts) {
+      if (!seenProductIds.has(bp.productId) && bp.isActive) {
+        seenProductIds.add(bp.productId);
+        const meta = productMetadata[bp.productId];
+        list.push({
+          id: bp.productId,
+          sku: bp.sku,
+          name: bp.productName,
+          description: meta?.description || null,
+          shortDescription: null,
+          price: bp.price,
+          categoryId: meta?.categoryId || "all",
+          categoryName: meta?.categoryName || "Thực đơn",
+          branchProductId: bp.id,
+          isAvailable: bp.isAvailable,
+          imageUrl: bp.imageUrl,
+        });
+      }
+    }
+
+    return list;
+  }, [menu, branchProducts, productMetadata]);
 
   const filteredProducts = useMemo(() => {
     return allProducts.filter((p) => {
@@ -563,11 +626,12 @@ export function ProductsView() {
                     {/* Toggle Status Button */}
                     <button
                       type="button"
+                      disabled={toggleStatusMutation.isPending}
                       className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all border ${
                         product.isAvailable !== false
                           ? "bg-emerald-950/40 text-emerald-400 border-emerald-500/40 hover:bg-emerald-900/60"
                           : "bg-rose-950/40 text-rose-400 border-rose-500/40 hover:bg-rose-900/60"
-                      }`}
+                      } ${toggleStatusMutation.isPending ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
                       onClick={() =>
                         toggleStatusMutation.mutate({
                           branchProductId: product.branchProductId,
@@ -576,10 +640,23 @@ export function ProductsView() {
                           isAvailable: !(product.isAvailable !== false),
                         })
                       }
-                      title="Bấm để chuyển trạng thái Còn / Hết món"
+                      title={
+                        product.isAvailable !== false
+                          ? "Bấm để chuyển sang Ngưng bán (Hết món)"
+                          : "Bấm để mở bán lại món này"
+                      }
                     >
-                      <CheckCircle2 size={13} />
-                      <span>{product.isAvailable !== false ? "Đang bán" : "Tạm hết"}</span>
+                      {product.isAvailable !== false ? (
+                        <>
+                          <CheckCircle2 size={13} />
+                          <span>Đang bán</span>
+                        </>
+                      ) : (
+                        <>
+                          <XCircle size={13} />
+                          <span>Ngưng bán</span>
+                        </>
+                      )}
                     </button>
                   </div>
 

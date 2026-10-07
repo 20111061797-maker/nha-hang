@@ -76,6 +76,7 @@ export type MenuProduct = {
   variants: MenuVariant[];
   modifierGroups: MenuModifierGroup[];
   imageUrl?: string | null;
+  isAvailable?: boolean;
 };
 
 export type MenuCategory = {

@@ -119,4 +119,11 @@ export const productApi = {
       body: payload,
     });
   },
+
+  setBranchProductAvailability(id: string, isAvailable: boolean): Promise<BranchProductItem> {
+    return apiRequest<BranchProductItem>(`/api/branch-products/${id}/availability`, {
+      method: "PATCH",
+      body: { isAvailable },
+    });
+  },
 };
