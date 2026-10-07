@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { inventoryApi } from "@/lib/api/inventory-api";
+import { Pagination } from "@/components/common/pagination";
 import { useBranch } from "@/features/branches/branch-provider";
 import type { InventoryItem, CreateInventoryItemPayload, AdjustInventoryPayload } from "@/types/inventory";
 import {
@@ -58,7 +59,14 @@ export function InventoryView() {
   const [activeTab, setActiveTab] = useState<"items" | "history">("items");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [itemsPage, setItemsPage] = useState(1);
+  const [historyPage, setHistoryPage] = useState(1);
   const [notice, setNotice] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
+  // Reset về trang 1 khi đổi bộ lọc hoặc tìm kiếm
+  useEffect(() => {
+    setItemsPage(1);
+  }, [search, statusFilter]);
 
   // Modals
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -113,6 +121,17 @@ export function InventoryView() {
     queryKey: ["inventory-units"],
     queryFn: () => inventoryApi.getUnits(),
   });
+
+  const PAGE_SIZE = 10;
+  const paginatedItems = useMemo(() => {
+    const start = (itemsPage - 1) * PAGE_SIZE;
+    return items.slice(start, start + PAGE_SIZE);
+  }, [items, itemsPage]);
+
+  const paginatedHistory = useMemo(() => {
+    const start = (historyPage - 1) * PAGE_SIZE;
+    return transactions.slice(start, start + PAGE_SIZE);
+  }, [transactions, historyPage]);
 
   // Mutations
   const createMutation = useMutation({
@@ -499,7 +518,7 @@ export function InventoryView() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#22252c]">
-                  {items.map((item) => {
+                  {paginatedItems.map((item) => {
                     const isOutOfStock = item.currentQuantity <= 0;
                     const isLowStock = !isOutOfStock && item.currentQuantity <= item.minStockThreshold;
 
@@ -626,6 +645,16 @@ export function InventoryView() {
               </table>
             </div>
           )}
+
+          {items.length > 0 && (
+            <Pagination
+              currentPage={itemsPage}
+              totalItems={items.length}
+              pageSize={PAGE_SIZE}
+              onPageChange={setItemsPage}
+              itemLabel="mặt hàng"
+            />
+          )}
         </div>
       )}
 
@@ -661,7 +690,7 @@ export function InventoryView() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#22252c]">
-                  {transactions.map((tx) => {
+                  {paginatedHistory.map((tx) => {
                     const isReceipt = tx.transactionType.toLowerCase() === "receipt";
                     const isIssue = tx.transactionType.toLowerCase() === "issue";
                     const isCount = tx.transactionType.toLowerCase() === "count";
@@ -750,6 +779,16 @@ export function InventoryView() {
                 </tbody>
               </table>
             </div>
+          )}
+
+          {transactions.length > 0 && (
+            <Pagination
+              currentPage={historyPage}
+              totalItems={transactions.length}
+              pageSize={PAGE_SIZE}
+              onPageChange={setHistoryPage}
+              itemLabel="biến động kho"
+            />
           )}
         </div>
       )}

@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { productApi } from "@/lib/api/product-api";
 import { useBranch } from "@/features/branches/branch-provider";
 import { LoadingState, EmptyState } from "@/components/feedback/states";
+import { Pagination } from "@/components/common/pagination";
 import type { CategoryListItem } from "@/types/products";
 import {
   UtensilsCrossed,
@@ -45,7 +46,13 @@ export function ProductsView() {
   // Filters & State
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [page, setPage] = useState(1);
   const [toastMessage, setToastMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  // Reset về trang 1 khi đổi danh mục hoặc tìm kiếm
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, selectedCategory]);
 
   // Modals state
   const [productModal, setProductModal] = useState<{
@@ -387,6 +394,12 @@ export function ProductsView() {
     });
   }, [allProducts, selectedCategory, searchTerm]);
 
+  const PAGE_SIZE = 10;
+  const paginatedProducts = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return filteredProducts.slice(start, start + PAGE_SIZE);
+  }, [filteredProducts, page]);
+
   const stats = useMemo(() => {
     const total = allProducts.length;
     const categoriesCount = categories.length || (menu?.categories?.length ?? 0);
@@ -544,7 +557,7 @@ export function ProductsView() {
             </button>
           </div>
         ) : (
-          filteredProducts.map((product) => {
+          paginatedProducts.map((product) => {
             const hasVariants = product.variants && product.variants.length > 0;
             return (
               <div
@@ -688,6 +701,18 @@ export function ProductsView() {
           })
         )}
       </div>
+
+      {filteredProducts.length > 0 && (
+        <div className="bg-[#1c1f26] border border-[#2e333d] rounded-2xl overflow-hidden shadow-lg mt-1">
+          <Pagination
+            currentPage={page}
+            totalItems={filteredProducts.length}
+            pageSize={PAGE_SIZE}
+            onPageChange={setPage}
+            itemLabel="món ăn"
+          />
+        </div>
+      )}
 
       {/* MODAL 1: Thêm / Sửa Món Ăn */}
       {productModal.open && (

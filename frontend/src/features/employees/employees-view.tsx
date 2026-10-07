@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { employeeApi } from "@/lib/api/employee-api";
+import { Pagination } from "@/components/common/pagination";
 import { useBranch } from "@/features/branches/branch-provider";
 import type { EmployeeItem, CreateEmployeePayload, UpdateEmployeePayload } from "@/types/employees";
 import {
@@ -76,6 +77,12 @@ export function EmployeesView() {
   const [selectedBranchId, setSelectedBranchId] = useState<string>("ALL");
   const [selectedRole, setSelectedRole] = useState<string>("ALL");
   const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
+  const [page, setPage] = useState(1);
+
+  // Reset về trang 1 khi đổi bộ lọc hoặc tìm kiếm
+  useEffect(() => {
+    setPage(1);
+  }, [search, selectedBranchId, selectedRole, selectedStatus]);
 
   // Modals state
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -245,6 +252,12 @@ export function EmployeesView() {
       return true;
     });
   }, [employees, selectedRole]);
+
+  const PAGE_SIZE = 10;
+  const paginatedEmployees = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return filteredEmployees.slice(start, start + PAGE_SIZE);
+  }, [filteredEmployees, page]);
 
   // Stats counters
   const totalCount = employees.length;
@@ -446,7 +459,7 @@ export function EmployeesView() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#262c3b]/60">
-                {filteredEmployees.map((emp) => (
+                {paginatedEmployees.map((emp) => (
                   <tr key={emp.id} className="hover:bg-[#1f2430]/60 transition-colors">
                     {/* Code */}
                     <td className="py-3.5 px-4">
@@ -550,6 +563,16 @@ export function EmployeesView() {
               </tbody>
             </table>
           </div>
+        )}
+
+        {filteredEmployees.length > 0 && (
+          <Pagination
+            currentPage={page}
+            totalItems={filteredEmployees.length}
+            pageSize={PAGE_SIZE}
+            onPageChange={setPage}
+            itemLabel="nhân viên"
+          />
         )}
       </div>
 

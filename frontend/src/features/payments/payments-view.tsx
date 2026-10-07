@@ -6,6 +6,7 @@ import { paymentApi } from "@/lib/api/payment-api";
 import { useBranch } from "@/features/branches/branch-provider";
 import { PaymentMethod, PaymentStatus, type PaymentResponse } from "@/types/payments";
 import { LoadingState, EmptyState } from "@/components/feedback/states";
+import { Pagination } from "@/components/common/pagination";
 import {
   CreditCard,
   Search,
@@ -45,9 +46,15 @@ export function PaymentsView() {
   const [searchTerm, setSearchTerm] = useState("");
   const [methodFilter, setMethodFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [page, setPage] = useState(1);
   const [selectedPayment, setSelectedPayment] = useState<PaymentResponse | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const reconciledPaymentIdsRef = useRef<Set<string>>(new Set());
+
+  // Reset về trang 1 khi đổi bộ lọc hoặc tìm kiếm
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, methodFilter, statusFilter]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -345,6 +352,12 @@ export function PaymentsView() {
     });
   }, [allPayments, methodFilter, statusFilter, searchTerm]);
 
+  const PAGE_SIZE = 10;
+  const paginatedPayments = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return filteredPayments.slice(start, start + PAGE_SIZE);
+  }, [filteredPayments, page]);
+
   // Tổng hợp thống kê doanh thu tài chính chuẩn xác
   const stats = useMemo(() => {
     const totalCount = allPayments.length;
@@ -630,7 +643,7 @@ export function PaymentsView() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#282b33]">
-                {filteredPayments.map((p) => (
+                {paginatedPayments.map((p) => (
                   <tr
                     key={p.id}
                     className="hover:bg-[#23262e] transition-colors cursor-pointer group"
@@ -683,6 +696,16 @@ export function PaymentsView() {
               </tbody>
             </table>
           </div>
+        )}
+
+        {filteredPayments.length > 0 && (
+          <Pagination
+            currentPage={page}
+            totalItems={filteredPayments.length}
+            pageSize={PAGE_SIZE}
+            onPageChange={setPage}
+            itemLabel="giao dịch"
+          />
         )}
       </div>
 

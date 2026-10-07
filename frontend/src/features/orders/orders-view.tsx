@@ -8,6 +8,7 @@ import { useBranch } from "@/features/branches/branch-provider";
 import { OrderStatus, OrderType } from "@/types/pos";
 import { PaymentMethod } from "@/types/payments";
 import { LoadingState, EmptyState } from "@/components/feedback/states";
+import { Pagination } from "@/components/common/pagination";
 import {
   Package,
   Search,
@@ -31,7 +32,13 @@ export function OrdersView() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [page, setPage] = useState(1);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+
+  // Reset về trang 1 khi thay đổi bộ lọc hoặc tìm kiếm
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, statusFilter, typeFilter]);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
@@ -187,6 +194,12 @@ export function OrdersView() {
     });
   }, [orders, statusFilter, typeFilter, searchTerm, tableMap]);
 
+  const PAGE_SIZE = 10;
+  const paginatedOrders = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return filteredOrders.slice(start, start + PAGE_SIZE);
+  }, [filteredOrders, page]);
+
   const stats = useMemo(() => {
     const total = orders.length;
     const active = orders.filter(
@@ -335,7 +348,7 @@ export function OrdersView() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#282b33]">
-                {filteredOrders.map((order) => {
+                {paginatedOrders.map((order) => {
                   const isTakeaway = order.orderType === OrderType.Takeaway;
                   const tableName = order.diningTableId ? tableMap.get(order.diningTableId) : null;
                   return (
@@ -384,6 +397,16 @@ export function OrdersView() {
               </tbody>
             </table>
           </div>
+        )}
+
+        {filteredOrders.length > 0 && (
+          <Pagination
+            currentPage={page}
+            totalItems={filteredOrders.length}
+            pageSize={PAGE_SIZE}
+            onPageChange={setPage}
+            itemLabel="đơn hàng"
+          />
         )}
       </div>
 

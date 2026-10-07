@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useBranch } from "@/features/branches/branch-provider";
 import { tableApi } from "@/lib/api/table-api";
@@ -9,6 +9,7 @@ import type { OrderListItem } from "@/types/pos";
 import { posApi } from "@/lib/api/pos-api";
 import type { TableListItem, AreaListItem } from "@/types/tables";
 import { LoadingState, EmptyState } from "@/components/feedback/states";
+import { Pagination } from "@/components/common/pagination";
 import {
   Grid3X3,
   Plus,
@@ -35,6 +36,12 @@ export function TablesManagementView() {
   const [selectedAreaId, setSelectedAreaId] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+
+  // Reset về trang 1 khi đổi khu vực, trạng thái hoặc tìm kiếm
+  useEffect(() => {
+    setPage(1);
+  }, [selectedAreaId, statusFilter, search]);
 
   // Modals
   const [tableModal, setTableModal] = useState<{
@@ -229,6 +236,12 @@ export function TablesManagementView() {
       return true;
     });
   }, [tables, selectedAreaId, statusFilter, search]);
+
+  const PAGE_SIZE = 10;
+  const paginatedTables = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return filteredTables.slice(start, start + PAGE_SIZE);
+  }, [filteredTables, page]);
 
   // Statistics
   const stats = useMemo(() => {
@@ -433,7 +446,7 @@ export function TablesManagementView() {
         />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {filteredTables.map((table) => {
+          {paginatedTables.map((table) => {
             const areaName = areasMap.get(table.areaId) ?? "Chưa phân khu";
             const activeOrder = activeOrdersByTable.get(table.id);
             const hasActiveOrder = Boolean(activeOrder);
@@ -605,6 +618,18 @@ export function TablesManagementView() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {filteredTables.length > 0 && (
+        <div className="bg-[#181a20] border border-[#262a34] rounded-2xl overflow-hidden shadow-lg mt-2">
+          <Pagination
+            currentPage={page}
+            totalItems={filteredTables.length}
+            pageSize={PAGE_SIZE}
+            onPageChange={setPage}
+            itemLabel="bàn ăn"
+          />
         </div>
       )}
 

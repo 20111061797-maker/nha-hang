@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { customerApi } from "@/lib/api/customer-api";
+import { Pagination } from "@/components/common/pagination";
 import type { CustomerListItem, CustomerDetails } from "@/types/customers";
 import {
   Users,
@@ -67,11 +68,17 @@ export function CustomersView() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [selectedTier, setSelectedTier] = useState<string>("ALL");
+  const [page, setPage] = useState(1);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerDetails | null>(null);
   const [pointsAdjustDelta, setPointsAdjustDelta] = useState<number>(50);
   const [pointsAdjustReason, setPointsAdjustReason] = useState("");
   const [notice, setNotice] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
+  // Reset về trang 1 khi thay đổi hạng hội viên hoặc tìm kiếm
+  useEffect(() => {
+    setPage(1);
+  }, [search, selectedTier]);
 
   // Form states
   const [formName, setFormName] = useState("");
@@ -138,6 +145,12 @@ export function CustomersView() {
       return true;
     });
   }, [customers, selectedTier]);
+
+  const PAGE_SIZE = 10;
+  const paginatedCustomers = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return filteredCustomers.slice(start, start + PAGE_SIZE);
+  }, [filteredCustomers, page]);
 
   const stats = useMemo(() => {
     const total = customers.length;
@@ -323,7 +336,7 @@ export function CustomersView() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#2d3138]">
-                {filteredCustomers.map((c) => (
+                {paginatedCustomers.map((c) => (
                   <tr
                     key={c.id}
                     className="hover:bg-[#24272e]/50 transition-colors group cursor-pointer"
@@ -390,6 +403,16 @@ export function CustomersView() {
               </tbody>
             </table>
           </div>
+        )}
+
+        {filteredCustomers.length > 0 && (
+          <Pagination
+            currentPage={page}
+            totalItems={filteredCustomers.length}
+            pageSize={PAGE_SIZE}
+            onPageChange={setPage}
+            itemLabel="khách hàng"
+          />
         )}
       </div>
 
