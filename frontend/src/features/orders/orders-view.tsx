@@ -160,7 +160,7 @@ export function OrdersView() {
         amount: activeOrder.totalAmount,
         tenderedAmount: paymentMethod === PaymentMethod.Cash ? tenderedAmount || activeOrder.totalAmount : undefined,
       });
-      await posApi.completeOrder(activeOrder.id, activeOrder.version);
+      await posApi.completeOrder(activeOrder.id);
     },
     onSuccess: () => {
       if (activeOrder) {

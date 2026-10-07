@@ -78,7 +78,14 @@ public sealed class OrderManagementService(
         var order = await dbContext.Orders.FirstOrDefaultAsync(x => x.Id == orderId, cancellationToken); 
         if (order is null) return null; 
         await EnsureBranchAccessAsync(order.BranchId, cancellationToken); 
-        EnsureVersion(order, request.ExpectedVersion); 
+        if (order.Status == request.Status)
+        {
+            return await BuildDetailsAsync(orderId, cancellationToken);
+        }
+        if (request.Status != OrderStatus.Completed)
+        {
+            EnsureVersion(order, request.ExpectedVersion); 
+        }
         if (!AllowedTransition(order.Status, request.Status)) 
             throw new ApplicationException($"Cannot change order status from {order.Status} to {request.Status}."); 
         var old = order.Status; 
@@ -165,7 +172,28 @@ public sealed class OrderManagementService(
     private async Task<DiningTable> EnsureTableAsync(Guid branchId, Guid tableId, CancellationToken ct) { var table = await dbContext.DiningTables.FirstOrDefaultAsync(x => x.Id == tableId && x.BranchId == branchId && x.IsActive, ct) ?? throw new ApplicationException("Table does not exist in this branch."); if (table.Status == TableStatus.OutOfService) throw new ApplicationException("Table is out of service."); return table; }
     private async Task EnsureBranchAccessAsync(Guid branchId, CancellationToken ct) { if (currentUser.IsAdministrator) return; if (currentUser.UserId is not Guid userId || (!await dbContext.UserBranchAccesses.AnyAsync(x => x.UserId == userId && x.BranchId == branchId && x.IsActive, ct) && !await dbContext.Users.AnyAsync(x => x.Id == userId && x.EmployeeId != null && dbContext.Employees.Any(e => e.Id == x.EmployeeId && e.BranchId == branchId && e.IsActive), ct))) throw new ForbiddenException("You do not have access to this branch."); }
     private async Task<string> GenerateOrderNumberAsync(CancellationToken ct) { string number; do { number = $"ORD-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid():N}"[..27].ToUpperInvariant(); } while (await dbContext.Orders.AnyAsync(x => x.OrderNumber == number, ct)); return number; }
-    private async Task SaveAsync(CancellationToken ct) { try { await dbContext.SaveChangesAsync(ct); } catch (DbUpdateConcurrencyException) { throw new ConflictException("The order was changed by another user."); } }
+    private async Task SaveAsync(CancellationToken ct) 
+    { 
+        try 
+        { 
+            await dbContext.SaveChangesAsync(ct); 
+        } 
+        catch (DbUpdateConcurrencyException ex) 
+        { 
+            var orderEntry = ex.Entries.FirstOrDefault(e => e.Entity is Order);
+            if (orderEntry != null)
+            {
+                var databaseValues = await orderEntry.GetDatabaseValuesAsync(ct);
+                if (databaseValues != null)
+                {
+                    orderEntry.OriginalValues.SetValues(databaseValues);
+                    await dbContext.SaveChangesAsync(ct);
+                    return;
+                }
+            }
+            throw new ConflictException("The order was changed by another user."); 
+        } 
+    }
     private async Task ConsolidateDuplicateTableOrdersAsync(Guid branchId, CancellationToken cancellationToken)
     {
         var activeOrders = await dbContext.Orders

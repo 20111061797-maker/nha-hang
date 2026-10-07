@@ -198,7 +198,7 @@ export function PosView() {
           })
           .catch((err) => console.warn("Lỗi lưu phiếu thu tiền mặt:", err));
       }
-      return await posApi.completeOrder(orderId, activeOrder?.version);
+      return await posApi.completeOrder(orderId);
     },
     onSuccess: (updated) => {
       const amount = activeOrder?.totalAmount || updated.totalAmount || 0;
