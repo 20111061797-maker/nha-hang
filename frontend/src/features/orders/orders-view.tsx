@@ -622,11 +622,10 @@ export function OrdersView() {
             {/* Payment Method Selector */}
             <div className="flex flex-col gap-1.5">
               <label className="text-xs text-gray-300 font-bold">Phương thức thanh toán:</label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 {[
                   { id: PaymentMethod.Cash, label: "Tiền mặt", icon: "💵" },
-                  { id: PaymentMethod.QrPayment, label: "VietQR", icon: "📱" },
-                  { id: PaymentMethod.Card, label: "Quẹt thẻ", icon: "💳" },
+                  { id: PaymentMethod.QrPayment, label: "QR SePay", icon: "📱" },
                 ].map((m) => (
                   <button
                     key={m.id}
@@ -648,7 +647,7 @@ export function OrdersView() {
             {/* Quick SePay Payment Option */}
             {paymentMethod !== PaymentMethod.Cash && (
               <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 text-xs text-amber-200 flex flex-col gap-2">
-                <span className="leading-relaxed">Khách có thể quét mã VietQR ngân hàng hoặc thanh toán thẻ tự động qua cổng SePay:</span>
+                <span className="leading-relaxed">Khách có thể quét mã VietQR tự động qua cổng SePay:</span>
                 <button
                   type="button"
                   onClick={async () => {
@@ -670,7 +669,7 @@ export function OrdersView() {
                   className="w-full py-2.5 px-3 rounded-xl font-bold text-xs text-white bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 flex items-center justify-center gap-2 cursor-pointer shadow-md transition-all"
                 >
                   <QrCode size={16} />
-                  <span>Mở cổng SePay (Tự động nhận tiền VietQR / Thẻ)</span>
+                  <span>Mở cổng QR SePay (Tự động nhận tiền VietQR)</span>
                 </button>
               </div>
             )}

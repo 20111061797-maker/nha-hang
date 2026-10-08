@@ -4,7 +4,7 @@ import { useState } from "react";
 import { OrderStatus, OrderType, type OrderDetails } from "@/types/pos";
 import {
   ChefHat,
-  CreditCard,
+  Banknote,
   Trash2,
   Plus,
   Minus,
@@ -426,7 +426,7 @@ export function OrderTicket({
                   ) : (
                     <>
                       <QrCode size={16} className="text-amber-400" />
-                      <span>Thanh toán SePay (VietQR / Thẻ)</span>
+                      <span>Thanh toán QR SePay (VietQR)</span>
                     </>
                   )}
                 </button>
@@ -438,7 +438,7 @@ export function OrderTicket({
                 onClick={onCompleteOrder}
                 className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-black text-sm text-white bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 shadow-lg shadow-emerald-500/25 active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer"
               >
-                <CreditCard size={18} />
+                <Banknote size={18} />
                 <span>Thanh toán Tiền mặt &amp; Trả bàn</span>
               </button>
             </div>

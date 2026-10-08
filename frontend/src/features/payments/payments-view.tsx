@@ -8,7 +8,6 @@ import { PaymentMethod, PaymentStatus, type PaymentResponse } from "@/types/paym
 import { LoadingState, EmptyState } from "@/components/feedback/states";
 import { Pagination } from "@/components/common/pagination";
 import {
-  CreditCard,
   Search,
   CheckCircle2,
   Receipt,
@@ -150,20 +149,8 @@ export function PaymentsView() {
     );
   };
 
-  const isCardPayment = (payment: PaymentResponse): boolean => {
-    if (isQrPayment(payment)) return false;
-    const method = payment.paymentMethod as any;
-    if (method === PaymentMethod.Card || method === 3 || method === "3") return true;
-    if (typeof method === "string" && method.toLowerCase().includes("card")) return true;
-    const text = `${payment.paymentNumber || ""} ${payment.note || ""}`.toLowerCase();
-    return text.includes("thẻ") || text.includes("pos") || text.includes("card");
-  };
-
   const isCashPayment = (payment: PaymentResponse): boolean => {
-    if (isQrPayment(payment) || isCardPayment(payment)) return false;
-    const method = payment.paymentMethod as any;
-    if (method === PaymentMethod.Cash || method === 0 || method === "0") return true;
-    return true; // Mặc định thu ngân tại quán là tiền mặt nếu không phải QR/thẻ
+    return !isQrPayment(payment);
   };
 
   // Hợp nhất dữ liệu thanh toán: Tiền mặt + SePay (khử trùng lặp và phân loại chính xác SePay)
@@ -322,7 +309,6 @@ export function PaymentsView() {
       if (methodFilter !== "all") {
         if (methodFilter === PaymentMethod.Cash && !isCashPayment(p)) return false;
         if (methodFilter === PaymentMethod.QrPayment && !isQrPayment(p)) return false;
-        if (methodFilter === PaymentMethod.Card && !isCardPayment(p)) return false;
       }
       if (statusFilter !== "all") {
         if (statusFilter === PaymentStatus.Completed && !isCompletedPayment(p.status)) return false;
@@ -376,11 +362,7 @@ export function PaymentsView() {
       .filter((p) => isQrPayment(p))
       .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
 
-    const cardAmount = completedPayments
-      .filter((p) => isCardPayment(p))
-      .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
-
-    return { totalCount, totalAmount, cashAmount, qrAmount, cardAmount };
+    return { totalCount, totalAmount, cashAmount, qrAmount };
   }, [allPayments]);
 
   const getMethodBadge = (payment: PaymentResponse) => {
@@ -388,13 +370,6 @@ export function PaymentsView() {
       return (
         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-950/70 text-amber-300 border border-amber-800/60 shadow-sm">
           📱 SePay VietQR
-        </span>
-      );
-    }
-    if (isCardPayment(payment)) {
-      return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-sky-950/70 text-sky-300 border border-sky-800/60 shadow-sm">
-          💳 Quẹt thẻ POS
         </span>
       );
     }
@@ -481,7 +456,7 @@ export function PaymentsView() {
       )}
 
       {/* Top Financial Breakdown Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Total revenue */}
         <div className="bg-[#241e1b] border border-[#443329] rounded-2xl p-4 sm:p-5 flex justify-between items-start shadow-lg">
           <div>
@@ -542,27 +517,6 @@ export function PaymentsView() {
             📱
           </div>
         </div>
-
-        {/* Card POS */}
-        <div className="bg-[#1c1e22] border border-[#2d3138] rounded-2xl p-4 sm:p-5 flex justify-between items-start shadow-lg">
-          <div>
-            <span className="text-xs text-sky-400 font-semibold flex items-center gap-1">
-              <CreditCard size={13} /> Quẹt thẻ máy POS
-            </span>
-            <div className="flex items-baseline gap-1 mt-1">
-              <span className="text-xl sm:text-2xl font-black text-white font-mono">
-                {stats.cardAmount.toLocaleString("vi-VN")}
-              </span>
-              <span className="text-xs font-bold text-gray-400">đ</span>
-            </div>
-            <span className="text-[11px] text-gray-400 font-mono mt-1 block">
-              Thẻ ATM nội địa / Visa / Master
-            </span>
-          </div>
-          <div className="w-10 h-10 rounded-xl bg-sky-950/40 border border-sky-800/40 flex items-center justify-center text-xl">
-            💳
-          </div>
-        </div>
       </div>
 
       {/* Filter, Search and Refresh Bar */}
@@ -589,7 +543,6 @@ export function PaymentsView() {
             <option value="all">Tất cả phương thức</option>
             <option value={PaymentMethod.Cash}>Tiền mặt (Cash)</option>
             <option value={PaymentMethod.QrPayment}>VietQR / SePay</option>
-            <option value={PaymentMethod.Card}>Thẻ POS</option>
           </select>
 
           {/* Status Filter */}
@@ -745,8 +698,6 @@ export function PaymentsView() {
                 <span>
                   {isQrPayment(selectedPayment)
                     ? "📱 Cổng SePay VietQR"
-                    : isCardPayment(selectedPayment)
-                    ? "💳 Quẹt thẻ máy POS"
                     : "💵 Tiền mặt (Cash)"}
                 </span>
               </div>
