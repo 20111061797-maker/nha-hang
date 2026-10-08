@@ -143,14 +143,14 @@ export function KitchenTicketCard({
 
   return (
     <div
-      className={`group relative flex flex-col rounded-2xl shrink-0 w-full transition-all duration-300 overflow-hidden bg-[#181c26] border ${
+      className={`group relative flex flex-col rounded-2xl shrink-0 w-full transition-all duration-300 overflow-hidden bg-white dark:bg-[#181c26] border ${
         isUrgent
           ? "border-rose-500/70 shadow-[0_4px_24px_rgba(244,63,94,0.25)] ring-1 ring-rose-500/50"
           : isReady
           ? "border-emerald-500/50 shadow-[0_4px_24px_rgba(16,185,129,0.18)]"
           : isPreparing
           ? "border-amber-500/40 shadow-[0_4px_20px_rgba(245,158,11,0.12)]"
-          : "border-[#2c3345] hover:border-[#3e4863] shadow-lg shadow-black/40 hover:shadow-xl hover:-translate-y-0.5"
+          : "border-slate-200 hover:border-slate-300 dark:border-[#2c3345] dark:hover:border-[#3e4863] shadow-sm dark:shadow-lg dark:shadow-black/40 hover:shadow-md hover:-translate-y-0.5"
       }`}
     >
       {/* Top Accent Strip */}
@@ -167,24 +167,24 @@ export function KitchenTicketCard({
       />
 
       {/* Ticket Header */}
-      <div className="p-3.5 bg-[#1e2330] border-b border-[#2a3142] flex flex-col gap-2.5 shrink-0">
+      <div className="p-3.5 bg-slate-50 dark:bg-[#1e2330] border-b border-slate-200 dark:border-[#2a3142] flex flex-col gap-2.5 shrink-0">
         {/* Row 1: Table Badge + Order Number + Timer */}
         <div className="flex items-center justify-between gap-2">
           {/* Table / Order Type Badge */}
           <div className="flex items-center gap-2 flex-wrap">
             {isTakeaway ? (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider bg-gradient-to-r from-amber-500/25 to-orange-500/25 text-amber-300 border border-amber-500/40 shadow-sm">
-                <ShoppingBag size={13} className="text-amber-400" />
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider bg-gradient-to-r from-amber-500/25 to-orange-500/25 text-amber-700 dark:text-amber-300 border border-amber-500/40 shadow-sm">
+                <ShoppingBag size={13} className="text-amber-500 dark:text-amber-400" />
                 MANG VỀ
               </span>
             ) : isDelivery ? (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider bg-gradient-to-r from-purple-500/25 to-pink-500/25 text-purple-300 border border-purple-500/40 shadow-sm">
-                <Bike size={13} className="text-purple-400" />
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider bg-gradient-to-r from-purple-500/25 to-pink-500/25 text-purple-700 dark:text-purple-300 border border-purple-500/40 shadow-sm">
+                <Bike size={13} className="text-purple-500 dark:text-purple-400" />
                 GIAO HÀNG
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-sm font-black tracking-wide bg-gradient-to-r from-sky-500/20 via-blue-500/25 to-indigo-500/20 text-sky-200 border border-sky-500/40 shadow-sm">
-                <UtensilsCrossed size={13} className="text-sky-400" />
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-sm font-black tracking-wide bg-sky-50 dark:bg-gradient-to-r dark:from-sky-500/20 dark:via-blue-500/25 dark:to-indigo-500/20 text-sky-800 dark:text-sky-200 border border-sky-300 dark:border-sky-500/40 shadow-sm">
+                <UtensilsCrossed size={13} className="text-sky-600 dark:text-sky-400" />
                 {ticket.tableNumber ? `BÀN ${ticket.tableNumber}` : "TẠI BÀN"}
               </span>
             )}
@@ -193,12 +193,12 @@ export function KitchenTicketCard({
             <button
               type="button"
               onClick={copyOrderNo}
-              className="inline-flex items-center gap-1 text-[11px] font-mono text-gray-400 hover:text-gray-200 bg-[#141720] hover:bg-[#252a38] px-2 py-0.5 rounded border border-[#2a3040] transition-colors"
+              className="inline-flex items-center gap-1 text-[11px] font-mono text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-100 dark:text-gray-400 dark:hover:text-gray-200 dark:bg-[#141720] dark:hover:bg-[#252a38] px-2 py-0.5 rounded border border-slate-200 dark:border-[#2a3040] transition-colors"
               title={`Đơn hàng đầy đủ: ${ticket.orderNumber}. Nhấn để sao chép.`}
             >
               <span>{displayOrderNo}</span>
               {copied ? (
-                <CheckCheck size={11} className="text-emerald-400" />
+                <CheckCheck size={11} className="text-emerald-500 dark:text-emerald-400" />
               ) : (
                 <Copy size={11} className="opacity-60" />
               )}
@@ -219,9 +219,9 @@ export function KitchenTicketCard({
 
         {/* Row 2: Station Name + Status Badge */}
         <div className="flex items-center justify-between gap-2 pt-0.5">
-          <div className="flex items-center gap-1.5 text-xs text-gray-300">
-            <span className="px-2 py-0.5 rounded-md bg-[#13161f] border border-[#2c3345] font-medium text-gray-300 flex items-center gap-1">
-              <span className="text-orange-400">❖</span>
+          <div className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-gray-300">
+            <span className="px-2 py-0.5 rounded-md bg-white dark:bg-[#13161f] border border-slate-200 dark:border-[#2c3345] font-medium flex items-center gap-1 shadow-xs">
+              <span className="text-orange-500 dark:text-orange-400">❖</span>
               {ticket.stationName || "Chung"}
             </span>
           </div>
@@ -236,33 +236,33 @@ export function KitchenTicketCard({
 
         {/* Priority Urgent Banner */}
         {isUrgent && (
-          <div className="flex items-center justify-center gap-1.5 py-1 px-2.5 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/40 text-xs font-black uppercase tracking-wider shadow-sm animate-pulse">
-            <Flame size={14} className="text-rose-400 fill-rose-400" />
+          <div className="flex items-center justify-center gap-1.5 py-1 px-2.5 rounded-lg bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-500/40 text-xs font-black uppercase tracking-wider shadow-sm animate-pulse">
+            <Flame size={14} className="text-rose-500 dark:text-rose-400 fill-rose-500 dark:fill-rose-400" />
             <span>Ưu tiên hỏa tốc</span>
           </div>
         )}
       </div>
 
       {/* Ticket Items (Body) */}
-      <div className="p-3.5 flex flex-col gap-2 overflow-y-auto max-h-[320px] min-h-[80px] bg-[#141720]/80">
+      <div className="p-3.5 flex flex-col gap-2 overflow-y-auto max-h-[320px] min-h-[80px] bg-white dark:bg-[#141720]/80">
         {ticket.items.map((item) => (
           <div
             key={item.id}
-            className="flex items-start gap-3 p-2.5 rounded-xl bg-[#1d222e] hover:bg-[#232938] border border-[#2b3244] transition-colors shrink-0"
+            className="flex items-start gap-3 p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 dark:bg-[#1d222e] dark:hover:bg-[#232938] dark:border-[#2b3244] transition-colors shrink-0"
           >
             {/* Quantity Badge */}
-            <div className="shrink-0 flex items-center justify-center w-8 h-8 rounded-lg bg-amber-500/20 text-amber-300 font-mono font-black text-sm border border-amber-500/35 shadow-inner">
+            <div className="shrink-0 flex items-center justify-center w-8 h-8 rounded-lg bg-amber-500/20 text-amber-800 dark:text-amber-300 font-mono font-black text-sm border border-amber-500/35 shadow-inner">
               {item.quantity}x
             </div>
 
             {/* Dish details */}
             <div className="flex-1 min-w-0 flex flex-col gap-1">
               <div className="flex items-baseline gap-1.5 flex-wrap">
-                <span className="font-bold text-gray-100 text-sm leading-snug">
+                <span className="font-bold text-slate-900 dark:text-gray-100 text-sm leading-snug">
                   {item.productName}
                 </span>
                 {item.variantName && (
-                  <span className="text-[11px] font-medium text-sky-400 bg-sky-500/10 px-1.5 py-0.5 rounded border border-sky-500/20">
+                  <span className="text-[11px] font-medium text-sky-700 dark:text-sky-400 bg-sky-50 dark:bg-sky-500/10 px-1.5 py-0.5 rounded border border-sky-200 dark:border-sky-500/20">
                     {item.variantName}
                   </span>
                 )}
@@ -302,7 +302,7 @@ export function KitchenTicketCard({
       </div>
 
       {/* Ticket Actions (Footer) */}
-      <div className="p-3 bg-[#1a1e29] border-t border-[#2a3040] flex items-center gap-2 shrink-0">
+      <div className="p-3 bg-slate-50 border-t border-slate-200 dark:bg-[#1a1e29] dark:border-[#2a3040] flex items-center gap-2 shrink-0">
         {ticket.status === KitchenOrderStatus.New && (
           <>
             <button

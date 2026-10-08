@@ -60,7 +60,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span className="text-xl">🔥</span>
             <div className="flex flex-col leading-tight">
               <span className="text-[9px] font-extrabold tracking-widest text-amber-500 uppercase">QUÁN</span>
-              <span className="text-base font-black tracking-tight text-white font-heading">BẾP NHẬU</span>
+              <span className="text-base font-black tracking-tight text-slate-900 dark:text-white font-heading">BẾP NHẬU</span>
             </div>
             <span className="text-xl ml-0.5">🍺</span>
           </div>
@@ -134,13 +134,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
 
           {/* Central Module TabBar (Dashboard, POS, Kitchen KDS) */}
-          <div className="flex items-center gap-0.5 sm:gap-1 bg-[#1f2229] border border-[#353a45] p-1 rounded-xl shadow-inner shrink-0">
+          <div className="flex items-center gap-0.5 sm:gap-1 bg-slate-100 dark:bg-[#1f2229] border border-slate-200 dark:border-[#353a45] p-1 rounded-xl shadow-inner shrink-0">
             <Link
               href="/"
               className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                 pathname === "/"
                   ? "bg-gradient-to-b from-[#e44d13] to-[#b82d02] text-white shadow-md shadow-orange-950/40"
-                  : "text-gray-400 hover:text-white hover:bg-[#282c35]"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/80 dark:text-gray-400 dark:hover:text-white dark:hover:bg-[#282c35]"
               }`}
               title="Dashboard Quản lý"
             >
@@ -153,7 +153,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                 pathname === "/pos"
                   ? "bg-gradient-to-b from-[#e44d13] to-[#b82d02] text-white shadow-md shadow-orange-950/40"
-                  : "text-gray-400 hover:text-white hover:bg-[#282c35]"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/80 dark:text-gray-400 dark:hover:text-white dark:hover:bg-[#282c35]"
               }`}
               title="Điểm bán hàng (POS)"
             >
@@ -166,7 +166,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                 pathname === "/kitchen"
                   ? "bg-gradient-to-b from-[#e44d13] to-[#b82d02] text-white shadow-md shadow-orange-950/40"
-                  : "text-gray-400 hover:text-white hover:bg-[#282c35]"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/80 dark:text-gray-400 dark:hover:text-white dark:hover:bg-[#282c35]"
               }`}
               title="Trạm Bếp KDS"
             >
@@ -179,7 +179,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                 pathname === "/tables"
                   ? "bg-gradient-to-b from-[#e44d13] to-[#b82d02] text-white shadow-md shadow-orange-950/40"
-                  : "text-gray-400 hover:text-white hover:bg-[#282c35]"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/80 dark:text-gray-400 dark:hover:text-white dark:hover:bg-[#282c35]"
               }`}
               title="Bàn ăn & Khu vực"
             >

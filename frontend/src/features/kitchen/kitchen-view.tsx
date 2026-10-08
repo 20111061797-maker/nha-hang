@@ -307,28 +307,28 @@ export function KitchenView() {
   }
 
   return (
-    <div className="flex flex-col gap-5 min-h-[calc(100vh-80px)] text-gray-100">
+    <div className="flex flex-col gap-5 min-h-[calc(100vh-80px)] text-slate-800 dark:text-gray-100">
       {/* KDS Control Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-[#141822]/90 backdrop-blur-md border border-[#262c3d] shadow-lg">
+      <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-white dark:bg-[#141822]/90 backdrop-blur-md border border-slate-200 dark:border-[#262c3d] shadow-sm dark:shadow-lg">
         {/* Left: Branch & Screen Title */}
         <div className="flex items-center gap-4 flex-wrap">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-amber-700 bg-amber-500/15 dark:text-amber-400 dark:bg-amber-500/10 px-2 py-0.5 rounded border border-amber-300 dark:border-amber-500/20">
                 {currentBranch?.name || "Chi Nhánh"}
               </span>
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#1a1f2c] border border-[#2e374d]">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 border border-emerald-200 dark:bg-[#1a1f2c] dark:border-[#2e374d]">
                 <span
                   className={`w-2 h-2 rounded-full ${
-                    isConnected ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" : "bg-rose-500"
+                    isConnected ? "bg-emerald-500 shadow-[0_0_8px_rgba(52,211,153,0.8)]" : "bg-rose-500"
                   }`}
                 />
-                <span className={isConnected ? "text-emerald-300" : "text-rose-400"}>
+                <span className={isConnected ? "text-emerald-700 dark:text-emerald-300" : "text-rose-600 dark:text-rose-400"}>
                   {isConnected ? "Kết nối trực tiếp (Live)" : "Mất kết nối..."}
                 </span>
               </div>
             </div>
-            <h1 className="text-xl md:text-2xl font-black text-white tracking-tight flex items-center gap-2 mt-1">
+            <h1 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2 mt-1">
               <ChefHat className="text-orange-500" size={26} />
               <span>Màn hình Bếp (Kitchen Display System)</span>
             </h1>
@@ -349,24 +349,24 @@ export function KitchenView() {
             }}
             className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
               soundEnabled
-                ? "bg-amber-500/15 text-amber-300 border-amber-500/30 hover:bg-amber-500/25 shadow-sm"
-                : "bg-[#1c212d] text-gray-400 border-[#2d3547] hover:text-gray-200"
+                ? "bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/30 dark:hover:bg-amber-500/25 shadow-sm"
+                : "bg-white text-slate-600 border-slate-200 hover:text-slate-900 dark:bg-[#1c212d] dark:text-gray-400 dark:border-[#2d3547] dark:hover:text-gray-200"
             }`}
             title={soundEnabled ? "Đang bật âm chuông báo món mới (Bấm để thử âm hoặc tắt)" : "Đã tắt âm chuông (Bấm để bật)"}
           >
-            {soundEnabled ? <Volume2 size={16} className="text-amber-400" /> : <VolumeX size={16} />}
+            {soundEnabled ? <Volume2 size={16} className="text-amber-500" /> : <VolumeX size={16} />}
             <span>{soundEnabled ? "Âm báo: Bật" : "Âm báo: Tắt"}</span>
           </button>
 
           {/* View Mode Toggle Switch */}
-          <div className="flex items-center p-1 rounded-xl bg-[#12151e] border border-[#272e3f]">
+          <div className="flex items-center p-1 rounded-xl bg-slate-100 border border-slate-200 dark:bg-[#12151e] dark:border-[#272e3f]">
             <button
               type="button"
               onClick={() => setViewMode("kanban")}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 viewMode === "kanban"
                   ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md shadow-orange-500/20"
-                  : "text-gray-400 hover:text-gray-200"
+                  : "text-slate-600 hover:text-slate-900 dark:text-gray-400 dark:hover:text-gray-200"
               }`}
             >
               <Layers size={14} />
@@ -378,7 +378,7 @@ export function KitchenView() {
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 viewMode === "grid"
                   ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md shadow-orange-500/20"
-                  : "text-gray-400 hover:text-gray-200"
+                  : "text-slate-600 hover:text-slate-900 dark:text-gray-400 dark:hover:text-gray-200"
               }`}
             >
               <LayoutGrid size={14} />
@@ -390,17 +390,17 @@ export function KitchenView() {
           <button
             type="button"
             onClick={() => refetchTickets()}
-            className="p-2.5 rounded-xl bg-[#1c212d] hover:bg-[#252c3c] text-gray-300 hover:text-white border border-[#2d3547] transition-all cursor-pointer"
+            className="p-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-600 hover:text-slate-900 border border-slate-200 dark:bg-[#1c212d] dark:hover:bg-[#252c3c] dark:text-gray-300 dark:hover:text-white dark:border-[#2d3547] transition-all cursor-pointer shadow-sm"
             title="Làm mới danh sách vé bếp"
           >
-            <RefreshCw size={15} className={isFetching ? "animate-spin text-orange-400" : ""} />
+            <RefreshCw size={15} className={isFetching ? "animate-spin text-orange-500" : ""} />
           </button>
 
           {/* Fullscreen Toggle */}
           <button
             type="button"
             onClick={toggleFullscreen}
-            className="p-2.5 rounded-xl bg-[#1c212d] hover:bg-[#252c3c] text-gray-300 hover:text-white border border-[#2d3547] transition-all cursor-pointer"
+            className="p-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-600 hover:text-slate-900 border border-slate-200 dark:bg-[#1c212d] dark:hover:bg-[#252c3c] dark:text-gray-300 dark:hover:text-white dark:border-[#2d3547] transition-all cursor-pointer shadow-sm"
             title={isFullscreen ? "Thoát toàn màn hình" : "Bật toàn màn hình KDS"}
           >
             {isFullscreen ? <Minimize size={15} /> : <Maximize size={15} />}
@@ -419,7 +419,7 @@ export function KitchenView() {
       </div>
 
       {/* Station Selector Bar & Metrics Summary */}
-      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 p-3 rounded-2xl bg-[#141822]/80 border border-[#242a3a]">
+      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 p-3 rounded-2xl bg-white border border-slate-200 shadow-sm dark:bg-[#141822]/80 dark:border-[#242a3a]">
         {/* Station Pill Tabs */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 lg:pb-0 scrollbar-none">
           <button
@@ -428,7 +428,7 @@ export function KitchenView() {
             className={`shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
               selectedStationId === "all"
                 ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white border-orange-400/60 shadow-md shadow-orange-500/25"
-                : "bg-[#181c27] text-gray-300 hover:text-white hover:bg-[#212736] border-[#2b3345]"
+                : "bg-slate-50 text-slate-700 hover:text-orange-600 hover:bg-slate-100 border-slate-200 dark:bg-[#181c27] dark:text-gray-300 dark:hover:text-white dark:hover:bg-[#212736] dark:border-[#2b3345]"
             }`}
           >
             <span>Tất cả trạm</span>
@@ -436,7 +436,7 @@ export function KitchenView() {
               className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
                 selectedStationId === "all"
                   ? "bg-white/25 text-white"
-                  : "bg-white/10 text-gray-300"
+                  : "bg-slate-200 text-slate-700 dark:bg-white/10 dark:text-gray-300"
               }`}
             >
               {tickets.length}
@@ -454,7 +454,7 @@ export function KitchenView() {
                 className={`shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
                   isSelected
                     ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white border-orange-400/60 shadow-md shadow-orange-500/25"
-                    : "bg-[#181c27] text-gray-300 hover:text-white hover:bg-[#212736] border-[#2b3345]"
+                    : "bg-slate-50 text-slate-700 hover:text-orange-600 hover:bg-slate-100 border-slate-200 dark:bg-[#181c27] dark:text-gray-300 dark:hover:text-white dark:hover:bg-[#212736] dark:border-[#2b3345]"
                 }`}
               >
                 <span>{st.name}</span>
@@ -463,7 +463,7 @@ export function KitchenView() {
                     className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
                       isSelected
                         ? "bg-white/25 text-white"
-                        : "bg-orange-500/20 text-orange-400 border border-orange-500/30"
+                        : "bg-orange-100 text-orange-700 border border-orange-300 dark:bg-orange-500/20 dark:text-orange-400 dark:border-orange-500/30"
                     }`}
                   >
                     {count}
@@ -477,28 +477,28 @@ export function KitchenView() {
         {/* Live Metrics Cards */}
         <div className="flex items-center gap-2 shrink-0">
           {/* Waiting */}
-          <div className="flex-1 lg:flex-initial flex items-center gap-2 px-3 py-1.5 rounded-xl bg-sky-500/10 border border-sky-500/25 text-sky-300">
-            <Clock size={15} className="text-sky-400" />
+          <div className="flex-1 lg:flex-initial flex items-center gap-2 px-3 py-1.5 rounded-xl bg-sky-50 border border-sky-200 text-sky-700 dark:bg-sky-500/10 dark:border-sky-500/25 dark:text-sky-300 shadow-sm">
+            <Clock size={15} className="text-sky-500 dark:text-sky-400" />
             <span className="text-xs font-medium">Chờ chế biến:</span>
-            <span className="font-mono font-black text-sm text-sky-200">
+            <span className="font-mono font-black text-sm text-sky-900 dark:text-sky-200">
               {newAndAcceptedTickets.length}
             </span>
           </div>
 
           {/* Cooking */}
-          <div className="flex-1 lg:flex-initial flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-300">
-            <Flame size={15} className="text-amber-400" />
+          <div className="flex-1 lg:flex-initial flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 dark:bg-amber-500/10 dark:border-amber-500/25 dark:text-amber-300 shadow-sm">
+            <Flame size={15} className="text-amber-500 dark:text-amber-400" />
             <span className="text-xs font-medium">Đang nấu:</span>
-            <span className="font-mono font-black text-sm text-amber-200">
+            <span className="font-mono font-black text-sm text-amber-900 dark:text-amber-200">
               {preparingTickets.length}
             </span>
           </div>
 
           {/* Ready */}
-          <div className="flex-1 lg:flex-initial flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-300">
-            <CheckCircle2 size={15} className="text-emerald-400" />
+          <div className="flex-1 lg:flex-initial flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 dark:bg-emerald-500/10 dark:border-emerald-500/25 dark:text-emerald-300 shadow-sm">
+            <CheckCircle2 size={15} className="text-emerald-500 dark:text-emerald-400" />
             <span className="text-xs font-medium">Đã xong:</span>
-            <span className="font-mono font-black text-sm text-emerald-200">
+            <span className="font-mono font-black text-sm text-emerald-900 dark:text-emerald-200">
               {readyTickets.length}
             </span>
           </div>
@@ -507,14 +507,14 @@ export function KitchenView() {
 
       {/* No stations empty state prompt */}
       {stations.length === 0 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-gradient-to-r from-amber-950/40 via-orange-950/30 to-[#141822] border border-amber-500/30">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-amber-50 border border-amber-300 shadow-sm dark:bg-gradient-to-r dark:from-amber-950/40 dark:via-orange-950/30 dark:to-[#141822] dark:border-amber-500/30">
           <div className="flex items-center gap-3">
-            <div className="p-3 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
+            <div className="p-3 rounded-xl bg-amber-100 text-amber-600 border border-amber-300 dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/30">
               <Sparkles size={24} />
             </div>
             <div>
-              <h4 className="font-bold text-white text-sm">Chi nhánh chưa thiết lập trạm bếp nào!</h4>
-              <p className="text-xs text-gray-300 mt-0.5">
+              <h4 className="font-bold text-slate-900 dark:text-white text-sm">Chi nhánh chưa thiết lập trạm bếp nào!</h4>
+              <p className="text-xs text-slate-600 dark:text-gray-300 mt-0.5">
                 Tạo nhanh các trạm mặc định (Bếp Nóng, Bếp Lạnh, Quầy Pha Chế) để hệ thống tự động chia món khi gửi đơn.
               </p>
             </div>
@@ -532,16 +532,16 @@ export function KitchenView() {
 
       {/* Main Workspace (Kanban vs Grid) */}
       {tickets.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center py-20 px-4 rounded-2xl bg-[#141822]/60 border border-[#242a3a] text-center">
-          <div className="w-16 h-16 rounded-2xl bg-[#1d222e] border border-[#2e374a] flex items-center justify-center text-gray-500 mb-4 shadow-inner">
-            <ChefHat size={32} className="text-gray-400 opacity-60" />
+        <div className="flex-1 flex flex-col items-center justify-center py-20 px-4 rounded-2xl bg-white border border-slate-200 shadow-sm dark:bg-[#141822]/60 dark:border-[#242a3a] text-center">
+          <div className="w-16 h-16 rounded-2xl bg-orange-50 border border-orange-200 dark:bg-[#1d222e] dark:border-[#2e374a] flex items-center justify-center text-orange-500 dark:text-gray-400 mb-4 shadow-sm">
+            <ChefHat size={32} className="text-orange-500 dark:text-gray-400" />
           </div>
-          <h3 className="text-lg font-bold text-white mb-1">Không có món nào cần chế biến</h3>
-          <p className="text-xs text-gray-400 max-w-md mb-6 leading-relaxed">
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">Không có món nào cần chế biến</h3>
+          <p className="text-xs text-slate-500 dark:text-gray-400 max-w-md mb-6 leading-relaxed">
             Tất cả đơn hàng đã được phục vụ xong. Khi nhân viên thu ngân hoặc khách quét mã QR gửi đơn,
             các vé chế biến sẽ tức thì xuất hiện tại đây kèm âm báo chuông.
           </p>
-          <div className="inline-flex items-center gap-2 text-xs text-gray-500 font-mono">
+          <div className="inline-flex items-center gap-2 text-xs text-slate-500 dark:text-gray-500 font-mono">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
             <span>Hệ thống KDS đang sẵn sàng tiếp nhận đơn mới</span>
           </div>
@@ -549,21 +549,21 @@ export function KitchenView() {
       ) : viewMode === "kanban" ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-start">
           {/* Column 1: Chờ chế biến */}
-          <div className="flex flex-col rounded-2xl bg-[#131620] border border-[#262c3d] shadow-xl overflow-hidden min-h-[500px]">
+          <div className="flex flex-col rounded-2xl bg-white border border-slate-200 shadow-sm dark:bg-[#131620] dark:border-[#262c3d] dark:shadow-xl overflow-hidden min-h-[500px]">
             {/* Column Header */}
-            <div className="flex items-center justify-between p-3.5 bg-gradient-to-r from-sky-950/80 via-blue-900/30 to-[#131620] border-b border-sky-500/30 shrink-0">
+            <div className="flex items-center justify-between p-3.5 bg-sky-50 border-b border-sky-200 dark:bg-gradient-to-r dark:from-sky-950/80 dark:via-blue-900/30 dark:to-[#131620] dark:border-sky-500/30 shrink-0">
               <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-sky-500/20 text-sky-400 border border-sky-500/30">
+                <div className="p-1.5 rounded-lg bg-sky-100 text-sky-600 border border-sky-200 dark:bg-sky-500/20 dark:text-sky-400 dark:border-sky-500/30">
                   <Clock size={15} />
                 </div>
                 <div>
-                  <h4 className="font-black text-xs uppercase tracking-wider text-sky-200">
+                  <h4 className="font-black text-xs uppercase tracking-wider text-sky-900 dark:text-sky-200">
                     1. Chờ chế biến
                   </h4>
-                  <span className="text-[10px] text-gray-400">Vé mới &amp; đã xác nhận</span>
+                  <span className="text-[10px] text-sky-600 dark:text-gray-400">Vé mới &amp; đã xác nhận</span>
                 </div>
               </div>
-              <span className="font-mono font-black text-xs px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/40">
+              <span className="font-mono font-black text-xs px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-800 border border-sky-300 dark:bg-sky-500/20 dark:text-sky-300 dark:border-sky-500/40">
                 {newAndAcceptedTickets.length}
               </span>
             </div>
@@ -584,10 +584,10 @@ export function KitchenView() {
               ))}
 
               {newAndAcceptedTickets.length === 0 && (
-                <div className="flex-1 flex flex-col items-center justify-center py-16 px-4 border-2 border-dashed border-[#242b3b] rounded-xl text-center">
-                  <Clock size={28} className="text-gray-600 mb-2 opacity-60" />
-                  <span className="text-xs font-semibold text-gray-400">Không có vé mới</span>
-                  <span className="text-[11px] text-gray-500 mt-1 max-w-[200px]">
+                <div className="flex-1 flex flex-col items-center justify-center py-16 px-4 border-2 border-dashed border-slate-200 dark:border-[#242b3b] rounded-xl text-center">
+                  <Clock size={28} className="text-slate-400 dark:text-gray-600 mb-2 opacity-60" />
+                  <span className="text-xs font-semibold text-slate-600 dark:text-gray-400">Không có vé mới</span>
+                  <span className="text-[11px] text-slate-400 dark:text-gray-500 mt-1 max-w-[200px]">
                     Đang sẵn sàng đón nhận đơn từ POS hoặc quét QR
                   </span>
                 </div>
@@ -596,21 +596,21 @@ export function KitchenView() {
           </div>
 
           {/* Column 2: Đang nấu */}
-          <div className="flex flex-col rounded-2xl bg-[#131620] border border-[#262c3d] shadow-xl overflow-hidden min-h-[500px]">
+          <div className="flex flex-col rounded-2xl bg-white border border-slate-200 shadow-sm dark:bg-[#131620] dark:border-[#262c3d] dark:shadow-xl overflow-hidden min-h-[500px]">
             {/* Column Header */}
-            <div className="flex items-center justify-between p-3.5 bg-gradient-to-r from-amber-950/80 via-orange-900/30 to-[#131620] border-b border-amber-500/30 shrink-0">
+            <div className="flex items-center justify-between p-3.5 bg-amber-50 border-b border-amber-200 dark:bg-gradient-to-r dark:from-amber-950/80 dark:via-orange-900/30 dark:to-[#131620] dark:border-amber-500/30 shrink-0">
               <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                <div className="p-1.5 rounded-lg bg-amber-100 text-amber-600 border border-amber-200 dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/30">
                   <Flame size={15} />
                 </div>
                 <div>
-                  <h4 className="font-black text-xs uppercase tracking-wider text-amber-200">
+                  <h4 className="font-black text-xs uppercase tracking-wider text-amber-900 dark:text-amber-200">
                     2. Đang nấu
                   </h4>
-                  <span className="text-[10px] text-gray-400">Đang thao tác tại bếp</span>
+                  <span className="text-[10px] text-amber-600 dark:text-gray-400">Đang thao tác tại bếp</span>
                 </div>
               </div>
-              <span className="font-mono font-black text-xs px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
+              <span className="font-mono font-black text-xs px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/40">
                 {preparingTickets.length}
               </span>
             </div>
@@ -631,10 +631,10 @@ export function KitchenView() {
               ))}
 
               {preparingTickets.length === 0 && (
-                <div className="flex-1 flex flex-col items-center justify-center py-16 px-4 border-2 border-dashed border-[#242b3b] rounded-xl text-center">
-                  <Flame size={28} className="text-gray-600 mb-2 opacity-60" />
-                  <span className="text-xs font-semibold text-gray-400">Bếp đang trống</span>
-                  <span className="text-[11px] text-gray-500 mt-1 max-w-[200px]">
+                <div className="flex-1 flex flex-col items-center justify-center py-16 px-4 border-2 border-dashed border-slate-200 dark:border-[#242b3b] rounded-xl text-center">
+                  <Flame size={28} className="text-slate-400 dark:text-gray-600 mb-2 opacity-60" />
+                  <span className="text-xs font-semibold text-slate-600 dark:text-gray-400">Bếp đang trống</span>
+                  <span className="text-[11px] text-slate-400 dark:text-gray-500 mt-1 max-w-[200px]">
                     Bấm &quot;Bắt đầu nấu món&quot; ở cột chờ để chuyển vé vào đây
                   </span>
                 </div>
@@ -643,21 +643,21 @@ export function KitchenView() {
           </div>
 
           {/* Column 3: Sẵn sàng lên món */}
-          <div className="flex flex-col rounded-2xl bg-[#131620] border border-[#262c3d] shadow-xl overflow-hidden min-h-[500px]">
+          <div className="flex flex-col rounded-2xl bg-white border border-slate-200 shadow-sm dark:bg-[#131620] dark:border-[#262c3d] dark:shadow-xl overflow-hidden min-h-[500px]">
             {/* Column Header */}
-            <div className="flex items-center justify-between p-3.5 bg-gradient-to-r from-emerald-950/80 via-teal-900/30 to-[#131620] border-b border-emerald-500/30 shrink-0">
+            <div className="flex items-center justify-between p-3.5 bg-emerald-50 border-b border-emerald-200 dark:bg-gradient-to-r dark:from-emerald-950/80 dark:via-teal-900/30 dark:to-[#131620] dark:border-emerald-500/30 shrink-0">
               <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                <div className="p-1.5 rounded-lg bg-emerald-100 text-emerald-600 border border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30">
                   <CheckCircle2 size={15} />
                 </div>
                 <div>
-                  <h4 className="font-black text-xs uppercase tracking-wider text-emerald-200">
+                  <h4 className="font-black text-xs uppercase tracking-wider text-emerald-900 dark:text-emerald-200">
                     3. Sẵn sàng lên món
                   </h4>
-                  <span className="text-[10px] text-gray-400">Đã xong / Chờ phục vụ bưng</span>
+                  <span className="text-[10px] text-emerald-600 dark:text-gray-400">Đã xong / Chờ phục vụ bưng</span>
                 </div>
               </div>
-              <span className="font-mono font-black text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+              <span className="font-mono font-black text-xs px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/40">
                 {readyTickets.length}
               </span>
             </div>
@@ -678,10 +678,10 @@ export function KitchenView() {
               ))}
 
               {readyTickets.length === 0 && (
-                <div className="flex-1 flex flex-col items-center justify-center py-16 px-4 border-2 border-dashed border-[#242b3b] rounded-xl text-center">
-                  <CheckCircle2 size={28} className="text-gray-600 mb-2 opacity-60" />
-                  <span className="text-xs font-semibold text-gray-400">Chưa có món hoàn tất</span>
-                  <span className="text-[11px] text-gray-500 mt-1 max-w-[200px]">
+                <div className="flex-1 flex flex-col items-center justify-center py-16 px-4 border-2 border-dashed border-slate-200 dark:border-[#242b3b] rounded-xl text-center">
+                  <CheckCircle2 size={28} className="text-slate-400 dark:text-gray-600 mb-2 opacity-60" />
+                  <span className="text-xs font-semibold text-slate-600 dark:text-gray-400">Chưa có món hoàn tất</span>
+                  <span className="text-[11px] text-slate-400 dark:text-gray-500 mt-1 max-w-[200px]">
                     Món nấu xong sẽ xuất hiện ở đây để nhân viên bưng lên bàn
                   </span>
                 </div>
