@@ -64,8 +64,8 @@ export function ErrorState({
   return (
     <div className="beer-error-panel">
       <div className="text-3xl mb-2">⚠️</div>
-      <strong className="text-sm text-white font-bold">Đã có lỗi xảy ra</strong>
-      <span className="text-xs text-gray-400 max-w-sm text-center">{message}</span>
+      <strong className="text-sm text-slate-900 dark:text-white font-bold">Đã có lỗi xảy ra</strong>
+      <span className="text-xs text-slate-500 dark:text-gray-400 max-w-sm text-center">{message}</span>
       {onRetry ? (
         <button type="button" className="primary-button text-xs mt-3 px-4 py-1.5" onClick={onRetry}>
           Thử lại
@@ -79,8 +79,8 @@ export function EmptyState({ title, detail }: { title: string; detail: string })
   return (
     <div className="beer-empty-panel">
       <div className="text-3xl mb-2">📋</div>
-      <strong className="text-sm text-white font-bold">{title}</strong>
-      <span className="text-xs text-gray-400 max-w-sm text-center">{detail}</span>
+      <strong className="text-sm text-slate-900 dark:text-white font-bold">{title}</strong>
+      <span className="text-xs text-slate-500 dark:text-gray-400 max-w-sm text-center">{detail}</span>
     </div>
   );
 }
