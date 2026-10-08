@@ -2083,3 +2083,737 @@ button {
   margin: 20px 0;
 }
 
+/* ========================================================
+   5. LIGHT THEME (GIAO DIỆN SÁNG - WARM MODERN BISTRO PALETTE)
+   ======================================================== */
+html.light,
+[data-theme="light"] {
+  --paper: #f8fafc;
+  --surface: #ffffff;
+  --surface-raised: #f1f5f9;
+  --surface-hover: #e2e8f0;
+  --line: #e2e8f0;
+  --line-strong: #cbd5e1;
+
+  --ink: #0f172a;
+  --ink-secondary: #334155;
+  --muted: #64748b;
+
+  --amber: #d97706;
+  --amber-light: #fef3c7;
+  --flame-start: #ea580c;
+  --flame-end: #c2410c;
+  --emerald: #059669;
+  --emerald-bg: #d1fae5;
+  --rose: #e11d48;
+  --blue: #0284c7;
+
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 14px -2px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 14px 34px -4px rgba(0, 0, 0, 0.12);
+}
+
+/* Base Body & App Shell */
+html.light body {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+html.light .app-frame {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+html.light .main-area {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+html.light .sidebar {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border-right: 1px solid #e2e8f0 !important;
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.03);
+}
+
+html.light .sidebar .brand .brand-main {
+  color: #0f172a !important;
+}
+
+html.light .sidebar .brand-prefix {
+  color: #b45309 !important;
+}
+
+html.light .sidebar-label {
+  color: #d97706 !important;
+}
+
+html.light .nav-item {
+  color: #475569 !important;
+}
+
+html.light .nav-item:hover {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+html.light .nav-active {
+  background: linear-gradient(90deg, #ea580c 0%, #c2410c 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(234, 88, 12, 0.3) !important;
+}
+
+html.light .sidebar-footer {
+  border-top-color: #e2e8f0 !important;
+}
+
+html.light .connection-dot {
+  color: #64748b !important;
+}
+
+html.light .topbar {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border-bottom-color: #e2e8f0 !important;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+html.light .branch-control select {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+html.light .user-chip {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+html.light .icon-button {
+  color: #475569 !important;
+}
+
+html.light .icon-button:hover {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+html.light .crumb {
+  color: #64748b !important;
+}
+
+html.light .crumb span {
+  color: #94a3b8 !important;
+}
+
+/* Surface Cards & Containers */
+html.light .surface {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+html.light .surface h2 {
+  color: #0f172a !important;
+}
+
+html.light .metric-card {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+html.light .metric-card strong {
+  color: #0f172a !important;
+}
+
+html.light .metric-label {
+  color: #64748b !important;
+}
+
+html.light .metric-icon {
+  background: #fef3c7 !important;
+  color: #d97706 !important;
+}
+
+/* Tailwind Dark Hex Overrides in Light Mode */
+html.light .bg-\[\#141517\] { background-color: #f8fafc !important; }
+html.light .bg-\[\#121316\] { background-color: #ffffff !important; }
+
+html.light .bg-\[\#1c1e22\],
+html.light .bg-\[\#1a1c1e\],
+html.light .bg-\[\#16181b\],
+html.light .bg-\[\#20232a\] {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+html.light .bg-\[\#241e1b\] {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+html.light .bg-\[\#24272e\],
+html.light .bg-\[\#1f2229\],
+html.light .bg-\[\#22252c\] {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+html.light .bg-\[\#282c35\],
+html.light .bg-\[\#2a2e38\] {
+  background-color: #f1f5f9 !important;
+}
+
+html.light .bg-\[\#382b24\],
+html.light .bg-\[\#382b1d\] {
+  background-color: #fef3c7 !important;
+  border-color: #fde68a !important;
+}
+
+html.light .bg-\[\#1c2e24\] {
+  background-color: #ecfdf5 !important;
+  border-color: #a7f3d0 !important;
+  color: #065f46 !important;
+}
+
+/* Borders in Light Mode */
+html.light .border-\[\#2d3138\],
+html.light .border-\[\#2d3035\],
+html.light .border-\[\#443329\],
+html.light .border-\[\#353a45\],
+html.light .border-\[\#23262d\],
+html.light .border-\[\#282b32\],
+html.light .border-\[\#383d47\],
+html.light .border-\[\#533f34\],
+html.light .border-\[\#6a4f3e\],
+html.light .border-\[\#1f242d\],
+html.light .border-\[\#333845\] {
+  border-color: #e2e8f0 !important;
+}
+
+/* Headings and Typography in Light Mode */
+html.light h1,
+html.light h2,
+html.light h3,
+html.light h4,
+html.light h5,
+html.light h6 {
+  color: #0f172a !important;
+}
+
+html.light .page-heading h1 {
+  color: #0f172a !important;
+}
+
+html.light .page-heading p {
+  color: #64748b !important;
+}
+
+/* Text Overrides for Card Titles, Stats & Body */
+html.light .bg-\[\#241e1b\] .text-white,
+html.light .bg-\[\#1c1e22\] .text-white,
+html.light .bg-\[\#1a1c1e\] .text-white,
+html.light .surface .text-white,
+html.light tr .text-white {
+  color: #0f172a !important;
+}
+
+html.light .text-\[\#fef3c7\] {
+  color: #b45309 !important;
+}
+
+html.light .text-\[\#a99182\] {
+  color: #78350f !important;
+}
+
+html.light .text-gray-200,
+html.light .text-gray-300 {
+  color: #334155 !important;
+}
+
+html.light .text-gray-400 {
+  color: #64748b !important;
+}
+
+html.light .text-\[\#e5e7eb\] {
+  color: #1e293b !important;
+}
+
+html.light .text-\[\#f3f4f6\] {
+  color: #0f172a !important;
+}
+
+/* Table Text & Formatting */
+html.light table {
+  color: #1e293b !important;
+}
+
+html.light th {
+  background-color: #f8fafc !important;
+  color: #475569 !important;
+  border-color: #e2e8f0 !important;
+}
+
+html.light td {
+  border-color: #e2e8f0 !important;
+  color: #1e293b !important;
+}
+
+html.light tr:hover td {
+  background-color: #f8fafc !important;
+}
+
+/* Form Controls */
+html.light input[type="text"],
+html.light input[type="number"],
+html.light input[type="search"],
+html.light input[type="email"],
+html.light input[type="password"],
+html.light select,
+html.light textarea {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+html.light input::placeholder,
+html.light textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+html.light input:focus,
+html.light select:focus,
+html.light textarea:focus {
+  border-color: #ea580c !important;
+  box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.15) !important;
+}
+
+/* POS Floor Plan in Light Mode */
+html.light .pos-page-title-row h2 {
+  color: #0f172a !important;
+}
+
+html.light .pos-subtext {
+  color: #64748b !important;
+}
+
+html.light .pos-floor-header {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+html.light .pos-pill-tab {
+  background: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+  color: #475569 !important;
+}
+
+html.light .pos-pill-tab:hover {
+  border-color: #ea580c !important;
+  color: #ea580c !important;
+}
+
+html.light .pos-pill-active {
+  background: linear-gradient(180deg, #ea580c 0%, #c2410c 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(234, 88, 12, 0.3) !important;
+}
+
+html.light .pos-pill-filter {
+  color: #64748b !important;
+}
+
+html.light .pos-pill-filter:hover {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+html.light .pos-filter-active {
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+html.light .pos-stat-pill {
+  background: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+  color: #334155 !important;
+}
+
+html.light .pos-stat-pill strong {
+  color: #0f172a !important;
+}
+
+html.light .pos-stat-pill.stat-avail {
+  background: #ecfdf5 !important;
+  border-color: #a7f3d0 !important;
+  color: #065f46 !important;
+}
+html.light .pos-stat-pill.stat-avail strong { color: #065f46 !important; }
+
+html.light .pos-stat-pill.stat-occ {
+  background: #fffbeb !important;
+  border-color: #fde68a !important;
+  color: #92400e !important;
+}
+html.light .pos-stat-pill.stat-occ strong { color: #92400e !important; }
+
+html.light .pos-stat-pill.stat-res {
+  background: #faf5ff !important;
+  border-color: #e9d5ff !important;
+  color: #6b21a8 !important;
+}
+html.light .pos-stat-pill.stat-res strong { color: #6b21a8 !important; }
+
+/* Table Cards */
+html.light .pos-table-card {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+html.light .pos-table-number {
+  color: #0f172a !important;
+}
+
+html.light .pos-table-area-tag {
+  color: #64748b !important;
+}
+
+html.light .pos-table-capacity {
+  color: #64748b !important;
+}
+
+html.light .pos-table-card-footer {
+  border-top-color: #f1f5f9 !important;
+}
+
+html.light .pos-table-card.pos-table-available {
+  background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%) !important;
+  border-color: #86efac !important;
+}
+html.light .pos-table-card.pos-table-available .pos-table-number {
+  color: #065f46 !important;
+}
+
+html.light .pos-table-card.pos-table-occupied {
+  background: linear-gradient(180deg, #fffbeb 0%, #fef3c7 100%) !important;
+  border-color: #fcd34d !important;
+}
+html.light .pos-table-card.pos-table-occupied .pos-table-number {
+  color: #92400e !important;
+}
+
+html.light .pos-table-card.pos-table-reserved {
+  background: linear-gradient(180deg, #faf5ff 0%, #f3e8ff 100%) !important;
+  border-color: #d8b4fe !important;
+}
+html.light .pos-table-card.pos-table-reserved .pos-table-number {
+  color: #6b21a8 !important;
+}
+
+/* POS Workspace & Menu */
+html.light .pos-workspace-bar {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+html.light .pos-menu-panel {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+html.light .pos-search-input {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+html.light .pos-category-tab {
+  background: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+  color: #475569 !important;
+}
+
+html.light .pos-category-tab:hover {
+  border-color: #ea580c !important;
+  color: #ea580c !important;
+}
+
+html.light .pos-category-tab-active {
+  background: linear-gradient(180deg, #ea580c 0%, #c2410c 100%) !important;
+  color: #ffffff !important;
+}
+
+html.light .pos-item-card {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+html.light .pos-item-card:hover {
+  border-color: #ea580c !important;
+  box-shadow: 0 6px 18px rgba(234, 88, 12, 0.15);
+}
+
+html.light .pos-item-name {
+  color: #0f172a !important;
+}
+
+html.light .pos-item-price {
+  color: #d97706 !important;
+}
+
+/* Order Ticket */
+html.light .pos-order-ticket {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+html.light .pos-ticket-header {
+  background: #f8fafc !important;
+  border-bottom-color: #e2e8f0 !important;
+}
+
+html.light .pos-ticket-item {
+  background: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+html.light .pos-qty-stepper {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+
+html.light .pos-stepper-btn {
+  color: #334155 !important;
+}
+
+html.light .pos-stepper-val {
+  color: #0f172a !important;
+}
+
+html.light .pos-ticket-footer {
+  background: #f8fafc !important;
+  border-top-color: #e2e8f0 !important;
+}
+
+html.light .secondary-button {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #334155 !important;
+}
+html.light .secondary-button:hover {
+  background: #f1f5f9 !important;
+}
+
+/* Kitchen KDS in Light Mode */
+html.light .kds-header-bar {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+html.light .kds-title-group h2 {
+  color: #0f172a !important;
+}
+
+html.light .kds-live-indicator {
+  background: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+html.light .kds-mode-switcher {
+  background: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+}
+
+html.light .kds-mode-btn {
+  color: #64748b !important;
+}
+
+html.light .kds-mode-active {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+}
+
+html.light .kds-station-tab {
+  background: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+  color: #475569 !important;
+}
+
+html.light .kds-station-tab-active {
+  background: linear-gradient(180deg, #ea580c 0%, #c2410c 100%) !important;
+  color: #ffffff !important;
+}
+
+html.light .kds-ticket-card {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+html.light .kds-ticket-header {
+  background: #f8fafc !important;
+  border-bottom-color: #e2e8f0 !important;
+}
+
+html.light .kds-item-row {
+  border-color: #f1f5f9 !important;
+}
+
+html.light .kds-item-name {
+  color: #0f172a !important;
+}
+
+/* Modals & Dialogs in Light Mode */
+html.light .pos-modal-card {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15) !important;
+}
+
+html.light .pos-modal-header {
+  background: #f8fafc !important;
+  border-bottom-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+html.light .pos-modal-footer {
+  background: #f8fafc !important;
+  border-top-color: #e2e8f0 !important;
+}
+
+html.light .pos-option-btn {
+  background: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+  color: #334155 !important;
+}
+
+html.light .pos-option-btn-active {
+  background: #fef3c7 !important;
+  border-color: #f59e0b !important;
+  color: #92400e !important;
+}
+
+/* Beer Loading Screen in Light Mode */
+html.light .beer-loading-fullscreen {
+  background: #f8fafc !important;
+}
+
+/* Universal Neutral Surface & Border Remapping for Light Mode */
+html.light [class*="border-[#1"],
+html.light [class*="border-[#2"],
+html.light [class*="border-[#3"],
+html.light [class*="border-[#4"],
+html.light [class*="border-[#5"],
+html.light [class*="border-[#6"] {
+  border-color: #e2e8f0 !important;
+}
+
+/* Secondary dark backgrounds used in POS cart, sub-bars, filters */
+html.light .bg-\[\#141822\]\/90,
+html.light .bg-\[\#12151e\]\/80,
+html.light .bg-\[\#181c26\],
+html.light .bg-\[\#1a202c\],
+html.light .bg-\[\#1b202c\],
+html.light .bg-\[\#191d28\],
+html.light .bg-\[\#131620\],
+html.light .bg-\[\#1c2230\],
+html.light .bg-\[\#10131a\] {
+  background-color: #ffffff !important;
+}
+
+html.light [class*="hover:bg-[#202534]"]:hover,
+html.light [class*="hover:bg-[#202635]"]:hover,
+html.light [class*="hover:bg-[#252c3e]"]:hover,
+html.light [class*="hover:bg-[#1a1f2b]"]:hover,
+html.light [class*="hover:bg-[#2f384d]"]:hover {
+  background-color: #f1f5f9 !important;
+}
+
+/* Typography contrast adjustments in light mode */
+html.light [class*="text-gray-1"],
+html.light [class*="text-gray-2"],
+html.light [class*="text-gray-3"] {
+  color: #1e293b !important;
+}
+
+html.light [class*="text-gray-4"],
+html.light [class*="text-gray-5"] {
+  color: #64748b !important;
+}
+
+/* Ensure headings, card labels, and stat digits are crisp dark */
+html.light h1.text-white,
+html.light h2.text-white,
+html.light h3.text-white,
+html.light h4.text-white,
+html.light p.text-white,
+html.light strong.text-white,
+html.light [class*="text-2xl"].text-white,
+html.light [class*="text-3xl"].text-white,
+html.light [class*="text-4xl"].text-white,
+html.light [class*="text-xl"].text-white {
+  color: #0f172a !important;
+}
+
+/* Preserve bright text inside gradient and badge buttons */
+html.light button.text-white,
+html.light a.text-white,
+html.light .nav-active,
+html.light .pos-pill-active,
+html.light .kds-station-tab-active,
+html.light [class*="from-orange"],
+html.light [class*="from-amber"],
+html.light [class*="from-emerald"],
+html.light [class*="bg-emerald-6"],
+html.light [class*="bg-orange-5"],
+html.light [class*="bg-amber-5"] {
+  color: #ffffff !important;
+}
+
+/* Light Mode Badges */
+html.light .bg-emerald-500\/15 {
+  background-color: #ecfdf5 !important;
+  color: #065f46 !important;
+  border-color: #a7f3d0 !important;
+}
+html.light .bg-amber-500\/15 {
+  background-color: #fffbeb !important;
+  color: #92400e !important;
+  border-color: #fde68a !important;
+}
+html.light .bg-sky-500\/15 {
+  background-color: #f0f9ff !important;
+  color: #0369a1 !important;
+  border-color: #bae6fd !important;
+}
+html.light .bg-rose-500\/15 {
+  background-color: #fff1f2 !important;
+  color: #be123c !important;
+  border-color: #fecdd3 !important;
+}
+
+/* Scrollbars in Light Mode */
+html.light ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 6px;
+}
+html.light ::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+
+

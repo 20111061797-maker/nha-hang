@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { WaiterNotifications } from "@/features/notifications/waiter-notifications";
+import { ThemeToggle } from "@/components/common/theme-toggle";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -188,6 +189,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="topbar-tools shrink-0 flex items-center gap-1.5 sm:gap-3">
+            <ThemeToggle />
             <div className="user-chip">
               <span className="avatar">{user.username.slice(0, 1).toUpperCase()}</span>
               <span className="hidden md:inline">{user.username}</span>
