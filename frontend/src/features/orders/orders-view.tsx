@@ -271,7 +271,7 @@ export function OrdersView() {
     <div className="flex flex-col gap-5">
       {/* Toast */}
       {toastMessage && (
-        <div className="fixed top-20 right-6 z-50 bg-[#1c2e24] border border-emerald-600 text-emerald-100 px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2 text-xs font-bold animate-in fade-in slide-in-from-top-4">
+        <div className="fixed top-20 right-6 z-50 bg-success-soft border border-emerald-600 text-emerald-100 px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2 text-xs font-bold animate-in fade-in slide-in-from-top-4">
           <CheckCircle2 size={16} className="text-emerald-400" />
           <span>{toastMessage}</span>
         </div>
@@ -601,9 +601,9 @@ export function OrdersView() {
       {/* Payment Processing Modal */}
       {paymentModalOpen && activeOrder && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#1c1e22] border border-[#383d47] rounded-2xl w-full max-w-md p-5 shadow-2xl flex flex-col gap-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#2d3138]">
-              <div className="flex items-center gap-2 font-bold text-white text-sm">
+          <div className="bg-surface border border-line-strong rounded-2xl w-full max-w-md p-5 shadow-2xl flex flex-col gap-4">
+            <div className="flex items-center justify-between pb-3 border-b border-line">
+              <div className="flex items-center gap-2 font-bold text-ink text-sm">
                 <CreditCard size={18} className="text-amber-400" />
                 <span>Thanh Toán Đơn #{activeOrder.orderNumber}</span>
               </div>
@@ -612,8 +612,8 @@ export function OrdersView() {
               </button>
             </div>
 
-            <div className="bg-[#24272e] p-3 rounded-xl text-center">
-              <span className="text-xs text-gray-400 font-medium">Số tiền cần thanh toán</span>
+            <div className="bg-raised p-3 rounded-xl text-center">
+              <span className="text-xs text-muted font-medium">Số tiền cần thanh toán</span>
               <div className="text-2xl font-black text-amber-400 font-mono mt-0.5">
                 {activeOrder.totalAmount.toLocaleString("vi-VN")} VNĐ
               </div>
@@ -621,7 +621,7 @@ export function OrdersView() {
 
             {/* Payment Method Selector */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs text-gray-300 font-bold">Phương thức thanh toán:</label>
+              <label className="text-xs text-ink-secondary font-bold">Phương thức thanh toán:</label>
               <div className="grid grid-cols-2 gap-2">
                 {[
                   { id: PaymentMethod.Cash, label: "Tiền mặt", icon: "💵" },
@@ -634,7 +634,7 @@ export function OrdersView() {
                     className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center gap-1 transition-all ${
                       paymentMethod === m.id
                         ? "bg-amber-950/60 border-amber-500 text-amber-300 shadow-md"
-                        : "bg-[#22252c] border-[#383d47] text-gray-300 hover:bg-[#2b2f38]"
+                        : "bg-raised border-line-strong text-ink-secondary hover:bg-surface-hover"
                     }`}
                   >
                     <span className="text-xl">{m.icon}</span>
@@ -677,13 +677,13 @@ export function OrdersView() {
             {/* Cash Tendered Amount input */}
             {paymentMethod === PaymentMethod.Cash && (
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs text-gray-300 font-bold">Tiền khách đưa (VNĐ):</label>
+                <label className="text-xs text-ink-secondary font-bold">Tiền khách đưa (VNĐ):</label>
                 <input
                   type="number"
                   value={tenderedAmount || ""}
                   onChange={(e) => setTenderedAmount(Number(e.target.value))}
                   placeholder="Nhập số tiền..."
-                  className="w-full px-3 py-2 bg-[#22252b] border border-[#383d47] rounded-xl text-sm font-mono text-white focus:outline-none focus:border-amber-500"
+                  className="w-full px-3 py-2 bg-raised border border-line-strong rounded-xl text-sm font-mono text-ink focus:outline-none focus:border-amber-500"
                 />
                 {tenderedAmount > activeOrder.totalAmount && (
                   <div className="flex justify-between text-xs text-emerald-400 font-bold pt-1">
@@ -718,12 +718,12 @@ export function OrdersView() {
       {/* Cancel Order Modal */}
       {cancelModalOpen && activeOrder && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#1c1e22] border border-[#383d47] rounded-2xl w-full max-w-sm p-5 shadow-2xl flex flex-col gap-4">
+          <div className="bg-surface border border-line-strong rounded-2xl w-full max-w-sm p-5 shadow-2xl flex flex-col gap-4">
             <div className="flex items-center gap-2 text-rose-400 font-bold text-sm">
               <AlertCircle size={18} />
               <span>Hủy Đơn Hàng #{activeOrder.orderNumber}</span>
             </div>
-            <p className="text-xs text-gray-300 m-0">
+            <p className="text-xs text-ink-secondary m-0">
               Vui lòng nhập lý do hủy đơn (ví dụ: Khách đổi ý, trùng đơn, v.v.):
             </p>
             <textarea
@@ -731,7 +731,7 @@ export function OrdersView() {
               onChange={(e) => setCancelReason(e.target.value)}
               placeholder="Nhập lý do hủy..."
               rows={3}
-              className="w-full p-2.5 bg-[#22252b] border border-[#383d47] rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-rose-500"
+              className="w-full p-2.5 bg-raised border border-line-strong rounded-xl text-xs text-ink placeholder-subtle focus:outline-none focus:border-rose-500"
             />
             <div className="flex justify-end gap-2">
               <button

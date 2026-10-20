@@ -65,28 +65,28 @@ export function ProductOptionModal({ product, onClose, onAdd }: Props) {
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg rounded-2xl bg-[#161a25] border border-[#2b3347] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        className="w-full max-w-lg rounded-2xl bg-surface border border-line-strong shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-start justify-between p-5 bg-[#1c2231] border-b border-[#293245]">
+        <div className="flex items-start justify-between p-5 bg-raised border-b border-line-strong">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-[11px] font-mono text-gray-400 bg-[#11141c] px-2 py-0.5 rounded border border-white/5 font-semibold">
+              <span className="text-[11px] font-mono text-muted bg-well px-2 py-0.5 rounded border border-ink/5 font-semibold">
                 {product.sku}
               </span>
               <span className="text-xs font-bold text-orange-400 flex items-center gap-1">
                 <Sparkles size={12} /> Tùy chỉnh món
               </span>
             </div>
-            <h3 className="text-lg font-black text-white">{product.name}</h3>
+            <h3 className="text-lg font-black text-ink">{product.name}</h3>
             {product.description && (
-              <p className="text-xs text-gray-400 mt-0.5">{product.description}</p>
+              <p className="text-xs text-muted mt-0.5">{product.description}</p>
             )}
           </div>
           <button
             type="button"
-            className="p-2 rounded-xl text-gray-400 hover:text-white bg-[#252c3c] hover:bg-[#2f384d] border border-[#374259] transition-all cursor-pointer"
+            className="p-2 rounded-xl text-muted hover:text-ink bg-surface-hover hover:bg-surface-hover border border-line-strong transition-all cursor-pointer"
             onClick={onClose}
             aria-label="Đóng"
           >
@@ -99,7 +99,7 @@ export function ProductOptionModal({ product, onClose, onAdd }: Props) {
           {/* Variants */}
           {product.variants.length > 0 && (
             <div className="flex flex-col gap-2">
-              <label className="text-xs font-bold text-gray-300 uppercase tracking-wider">
+              <label className="text-xs font-bold text-ink-secondary uppercase tracking-wider">
                 Chọn kích cỡ / Phân loại
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -111,8 +111,8 @@ export function ProductOptionModal({ product, onClose, onAdd }: Props) {
                       type="button"
                       className={`flex items-center justify-between p-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                         isSelected
-                          ? "bg-orange-500/15 border-orange-500 text-white shadow-sm"
-                          : "bg-[#131620] border-[#293042] text-gray-300 hover:bg-[#1a1f2b]"
+                          ? "bg-orange-500/15 border-orange-500 text-ink shadow-sm"
+                          : "bg-surface border-line text-ink-secondary hover:bg-raised"
                       }`}
                       onClick={() => setSelectedVariant(v)}
                     >
@@ -131,7 +131,7 @@ export function ProductOptionModal({ product, onClose, onAdd }: Props) {
           {product.modifierGroups.map((group) => (
             <div key={group.id} className="flex flex-col gap-2">
               <div className="flex justify-between items-center">
-                <label className="text-xs font-bold text-gray-300 uppercase tracking-wider flex items-center gap-1.5">
+                <label className="text-xs font-bold text-ink-secondary uppercase tracking-wider flex items-center gap-1.5">
                   <span>{group.name}</span>
                   {group.isRequired && (
                     <span className="text-[10px] text-rose-400 bg-rose-500/10 px-1.5 py-0.2 rounded border border-rose-500/20 font-bold">
@@ -139,7 +139,7 @@ export function ProductOptionModal({ product, onClose, onAdd }: Props) {
                     </span>
                   )}
                 </label>
-                <small className="text-[11px] text-gray-500">
+                <small className="text-[11px] text-subtle">
                   {group.maxSelections > 1 ? `Tối đa ${group.maxSelections}` : "Chọn 1"}
                 </small>
               </div>
@@ -153,8 +153,8 @@ export function ProductOptionModal({ product, onClose, onAdd }: Props) {
                       type="button"
                       className={`flex items-center justify-between p-3 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
                         isChecked
-                          ? "bg-orange-500/15 border-orange-500 text-white shadow-sm font-bold"
-                          : "bg-[#131620] border-[#293042] text-gray-300 hover:bg-[#1a1f2b]"
+                          ? "bg-orange-500/15 border-orange-500 text-ink shadow-sm font-bold"
+                          : "bg-surface border-line text-ink-secondary hover:bg-raised"
                       }`}
                       onClick={() => toggleModifier(mod.id, group.maxSelections)}
                     >
@@ -163,7 +163,7 @@ export function ProductOptionModal({ product, onClose, onAdd }: Props) {
                           className={`w-4 h-4 rounded flex items-center justify-center border ${
                             isChecked
                               ? "bg-orange-500 border-orange-500 text-white"
-                              : "border-[#3b455b] bg-[#1a1f2c]"
+                              : "border-line-strong bg-raised"
                           }`}
                         >
                           {isChecked && <Check size={11} className="stroke-[3]" />}
@@ -184,12 +184,12 @@ export function ProductOptionModal({ product, onClose, onAdd }: Props) {
 
           {/* Notes */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold text-gray-300 uppercase tracking-wider">
+            <label className="text-xs font-bold text-ink-secondary uppercase tracking-wider">
               Ghi chú cho bếp
             </label>
             <input
               type="text"
-              className="bg-[#12151e] border border-[#2b3345] text-xs text-white placeholder:text-gray-500 rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-orange-500"
+              className="bg-well border border-line-strong text-xs text-ink placeholder:text-subtle rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-orange-500"
               placeholder="VD: Không cay, ít đá, nhiều hành, vắt chanh riêng..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -197,26 +197,26 @@ export function ProductOptionModal({ product, onClose, onAdd }: Props) {
           </div>
 
           {/* Quantity Row */}
-          <div className="flex items-center justify-between p-3 rounded-xl bg-[#12151e] border border-[#272e3e]">
-            <span className="text-xs font-bold text-gray-300 uppercase tracking-wider">
+          <div className="flex items-center justify-between p-3 rounded-xl bg-well border border-line">
+            <span className="text-xs font-bold text-ink-secondary uppercase tracking-wider">
               Số lượng
             </span>
-            <div className="flex items-center rounded-lg bg-[#181c26] border border-[#2f374a] overflow-hidden">
+            <div className="flex items-center rounded-lg bg-surface border border-line-strong overflow-hidden">
               <button
                 type="button"
                 disabled={quantity <= 1}
                 onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                className="p-2 hover:bg-[#283042] text-gray-300 hover:text-white transition-colors cursor-pointer disabled:opacity-40"
+                className="p-2 hover:bg-surface-hover text-ink-secondary hover:text-ink transition-colors cursor-pointer disabled:opacity-40"
               >
                 <Minus size={14} />
               </button>
-              <span className="font-mono font-bold text-sm px-4 text-white min-w-[36px] text-center">
+              <span className="font-mono font-bold text-sm px-4 text-ink min-w-[36px] text-center">
                 {quantity}
               </span>
               <button
                 type="button"
                 onClick={() => setQuantity((q) => q + 1)}
-                className="p-2 hover:bg-[#283042] text-gray-300 hover:text-white transition-colors cursor-pointer"
+                className="p-2 hover:bg-surface-hover text-ink-secondary hover:text-ink transition-colors cursor-pointer"
               >
                 <Plus size={14} />
               </button>
@@ -225,9 +225,9 @@ export function ProductOptionModal({ product, onClose, onAdd }: Props) {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between p-4 bg-[#141822] border-t border-[#262c3e]">
+        <div className="flex items-center justify-between p-4 bg-surface border-t border-line">
           <div>
-            <span className="text-[11px] text-gray-400 block uppercase tracking-wider font-semibold">
+            <span className="text-[11px] text-muted block uppercase tracking-wider font-semibold">
               Tạm tính
             </span>
             <strong className="text-xl font-mono font-black text-amber-400">

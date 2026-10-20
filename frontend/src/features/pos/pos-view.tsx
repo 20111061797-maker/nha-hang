@@ -492,8 +492,8 @@ export function PosView() {
         <div
           className={`fixed top-6 right-6 z-[100] flex items-center gap-3 px-4 py-3 rounded-2xl border shadow-2xl backdrop-blur-xl animate-fade-in ${
             notification.type === "success"
-              ? "bg-[#0d2218]/95 text-emerald-200 border-emerald-500/50 shadow-[0_10px_30px_rgba(16,185,129,0.25)]"
-              : "bg-[#280f14]/95 text-rose-200 border-rose-500/50 shadow-[0_10px_30px_rgba(244,63,94,0.25)]"
+              ? "bg-success-soft/95 text-emerald-200 border-emerald-500/50 shadow-[0_10px_30px_rgba(16,185,129,0.25)]"
+              : "bg-danger-soft/95 text-rose-200 border-rose-500/50 shadow-[0_10px_30px_rgba(244,63,94,0.25)]"
           }`}
         >
           {notification.type === "success" ? (
@@ -507,13 +507,13 @@ export function PosView() {
 
       {/* Main Mode: Split View or Floor Plan */}
       {activeOrderId && activeOrder ? (
-        <div className="flex flex-col gap-4 text-gray-100">
+        <div className="flex flex-col gap-4 text-ink">
           {/* Subheader bar when inside an order */}
-          <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-[#141822]/90 backdrop-blur-md border border-[#252c3c] shadow-lg">
+          <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-surface/90 backdrop-blur-md border border-line shadow-lg">
             <div className="flex items-center gap-3.5 flex-wrap">
               <button
                 type="button"
-                className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-gray-300 hover:text-white bg-[#1c2230] hover:bg-[#252c3e] border border-[#2e374c] transition-all cursor-pointer shadow-sm active:scale-95"
+                className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-ink-secondary hover:text-ink bg-raised hover:bg-surface-hover border border-line-strong transition-all cursor-pointer shadow-sm active:scale-95"
                 onClick={handleBackToFloor}
               >
                 <ArrowLeft size={15} />
@@ -521,7 +521,7 @@ export function PosView() {
               </button>
 
               <div className="flex items-center gap-2.5 flex-wrap">
-                <span className="text-lg font-black text-white tracking-tight flex items-center gap-1.5">
+                <span className="text-lg font-black text-ink tracking-tight flex items-center gap-1.5">
                   <Utensils size={18} className="text-orange-500" />
                   {activeOrder.orderType === OrderType.DineIn
                     ? selectedTable
@@ -530,9 +530,9 @@ export function PosView() {
                     : "Đơn Mang về"}
                 </span>
 
-                <span className="text-gray-500">•</span>
+                <span className="text-subtle">•</span>
 
-                <span className="text-xs font-mono text-gray-400 bg-[#10131a] px-2.5 py-1 rounded-lg border border-[#252c3c]">
+                <span className="text-xs font-mono text-muted bg-well px-2.5 py-1 rounded-lg border border-line">
                   Mã đơn: #{activeOrder.orderNumber.length > 14 ? activeOrder.orderNumber.slice(-8) : activeOrder.orderNumber}
                 </span>
 
@@ -620,7 +620,7 @@ export function PosView() {
             </div>
             <Link
               href="/tables"
-              className="px-3.5 py-2 bg-[#252a35] hover:bg-[#2e3442] text-amber-400 hover:text-amber-300 border border-amber-500/30 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm shrink-0"
+              className="px-3.5 py-2 bg-surface-hover hover:bg-surface-hover text-amber-400 hover:text-amber-300 border border-amber-500/30 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm shrink-0"
             >
               <Grid3X3 size={15} />
               <span>Quản lý Bàn &amp; Mã QR</span>

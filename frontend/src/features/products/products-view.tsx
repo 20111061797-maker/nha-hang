@@ -426,8 +426,8 @@ export function ProductsView() {
         <div
           className={`fixed top-4 right-4 z-[100] flex items-center gap-2 px-4 py-3 rounded-xl border shadow-2xl text-xs font-bold transition-all animate-in fade-in slide-in-from-top-4 ${
             toastMessage.type === "success"
-              ? "bg-[#0f2e1b] border-emerald-500/60 text-emerald-200"
-              : "bg-[#331111] border-rose-500/60 text-rose-200"
+              ? "bg-success-soft border-emerald-500/60 text-emerald-200"
+              : "bg-danger-soft border-rose-500/60 text-rose-200"
           }`}
         >
           {toastMessage.type === "success" ? (
@@ -438,7 +438,7 @@ export function ProductsView() {
           <span>{toastMessage.text}</span>
           <button
             onClick={() => setToastMessage(null)}
-            className="ml-2 text-gray-400 hover:text-white"
+            className="ml-2 text-muted hover:text-ink"
           >
             <X size={14} />
           </button>
@@ -446,21 +446,21 @@ export function ProductsView() {
       )}
 
       {/* Header Info Row & Actions */}
-      <div className="bg-[#1c1f26] border border-[#2e333d] p-4 sm:p-6 rounded-2xl flex flex-wrap items-center justify-between gap-4 shadow-xl">
+      <div className="bg-surface border border-line-strong p-4 sm:p-6 rounded-2xl flex flex-wrap items-center justify-between gap-4 shadow-xl">
         <div className="flex items-center gap-3.5">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/10 border border-amber-500/30 flex items-center justify-center text-2xl shadow-inner">
             🍲
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-lg sm:text-xl font-black text-white uppercase tracking-tight font-heading">
+              <h1 className="text-lg sm:text-xl font-black text-ink uppercase tracking-tight font-heading">
                 QUẢN LÝ THỰC ĐƠN &amp; MÓN ĂN
               </h1>
               <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-orange-950/60 border border-orange-500/40 text-orange-400">
                 <Sparkles size={11} /> Thực đơn Bếp Nhậu
               </span>
             </div>
-            <p className="text-xs text-gray-400 m-0 mt-0.5">
+            <p className="text-xs text-muted m-0 mt-0.5">
               Chi nhánh: <strong className="text-amber-400">{currentBranch?.name}</strong> •{" "}
               {stats.categoriesCount} nhóm danh mục • {stats.total} món ăn &amp; đồ uống
             </p>
@@ -472,7 +472,7 @@ export function ProductsView() {
           <button
             type="button"
             onClick={() => setCategoriesModalOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-gray-200 bg-[#252a35] hover:bg-[#2f3543] border border-[#384050] transition-all shadow-sm"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-ink bg-surface-hover hover:bg-surface-hover border border-line-strong transition-all shadow-sm"
           >
             <Layers size={15} className="text-amber-400" />
             <span>Quản Lý Danh Mục</span>
@@ -490,17 +490,17 @@ export function ProductsView() {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-[#181a20] border border-[#2a2e38] p-3 sm:p-4 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-md">
+      <div className="bg-surface border border-line p-3 sm:p-4 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-md">
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 flex-1 min-w-[260px]">
           {/* Search Box */}
           <div className="relative flex-1 min-w-[180px] max-w-xs">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Tìm theo tên món, mã SKU..."
-              className="w-full pl-9 pr-3 py-1.5 bg-[#20242c] border border-[#353a47] rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition-colors"
+              className="w-full pl-9 pr-3 py-1.5 bg-raised border border-line-strong rounded-xl text-xs text-ink placeholder-subtle focus:outline-none focus:border-orange-500 transition-colors"
             />
           </div>
 
@@ -511,7 +511,7 @@ export function ProductsView() {
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
                 selectedCategory === "all"
                   ? "bg-gradient-to-b from-[#e44d13] to-[#b82d02] text-white shadow-md"
-                  : "bg-[#20242c] border border-[#353a47] text-gray-400 hover:text-white"
+                  : "bg-raised border border-line-strong text-muted hover:text-ink"
               }`}
               onClick={() => setSelectedCategory("all")}
             >
@@ -526,7 +526,7 @@ export function ProductsView() {
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
                     selectedCategory === cat.id
                       ? "bg-gradient-to-b from-[#e44d13] to-[#b82d02] text-white shadow-md"
-                      : "bg-[#20242c] border border-[#353a47] text-gray-400 hover:text-white"
+                      : "bg-raised border border-line-strong text-muted hover:text-ink"
                   }`}
                   onClick={() => setSelectedCategory(cat.id)}
                 >
@@ -542,10 +542,10 @@ export function ProductsView() {
       {/* Products Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {filteredProducts.length === 0 ? (
-          <div className="col-span-full bg-[#1c1f26] border border-[#2e333d] rounded-2xl p-12 text-center text-gray-400 flex flex-col items-center gap-3">
-            <UtensilsCrossed size={42} className="text-gray-500 mb-1" />
-            <span className="text-sm font-bold text-gray-200">Không tìm thấy món ăn nào</span>
-            <span className="text-xs text-gray-500 max-w-sm">
+          <div className="col-span-full bg-surface border border-line-strong rounded-2xl p-12 text-center text-muted flex flex-col items-center gap-3">
+            <UtensilsCrossed size={42} className="text-subtle mb-1" />
+            <span className="text-sm font-bold text-ink">Không tìm thấy món ăn nào</span>
+            <span className="text-xs text-subtle max-w-sm">
               Chưa có món trong danh mục này hoặc không khớp với từ khóa tìm kiếm.
             </span>
             <button
@@ -562,11 +562,11 @@ export function ProductsView() {
             return (
               <div
                 key={product.id}
-                className="bg-[#1c1f26] border border-[#2e333d] hover:border-[#434b5c] rounded-2xl p-4 flex flex-col justify-between shadow-lg transition-all group relative overflow-hidden"
+                className="bg-surface border border-line-strong hover:border-line-strong rounded-2xl p-4 flex flex-col justify-between shadow-lg transition-all group relative overflow-hidden"
               >
                 <div className="flex flex-col gap-2">
                   {/* Dish Image Banner */}
-                  <div className="relative w-full h-36 rounded-xl overflow-hidden bg-[#14161c] border border-[#2e333d] mb-1">
+                  <div className="relative w-full h-36 rounded-xl overflow-hidden bg-well border border-line-strong mb-1">
                     {product.imageUrl ? (
                       <img
                         src={product.imageUrl}
@@ -577,34 +577,34 @@ export function ProductsView() {
                         }}
                       />
                     ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center gap-1.5 text-gray-500 bg-gradient-to-br from-[#1a1e28] to-[#12151d]">
-                        <UtensilsCrossed size={26} className="text-gray-600" />
-                        <span className="text-[10px] text-gray-500">Chưa có ảnh món</span>
+                      <div className="w-full h-full flex flex-col items-center justify-center gap-1.5 text-subtle bg-gradient-to-br from-surface to-well">
+                        <UtensilsCrossed size={26} className="text-faint" />
+                        <span className="text-[10px] text-subtle">Chưa có ảnh món</span>
                       </div>
                     )}
-                    <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-black/70 backdrop-blur-md border border-white/10 text-amber-300 font-mono text-[10px] font-bold">
+                    <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-black/70 backdrop-blur-md border border-ink/10 text-amber-300 font-mono text-[10px] font-bold">
                       {product.sku}
                     </span>
                   </div>
 
                   {/* Category Tag */}
-                  <div className="flex justify-between items-center text-[10px] text-gray-400 font-mono">
-                    <span className="px-2 py-0.5 rounded-full bg-[#252a35] border border-[#394152] text-amber-400 font-bold truncate max-w-[160px]">
+                  <div className="flex justify-between items-center text-[10px] text-muted font-mono">
+                    <span className="px-2 py-0.5 rounded-full bg-surface-hover border border-line-strong text-amber-400 font-bold truncate max-w-[160px]">
                       {product.categoryName}
                     </span>
                   </div>
 
                   {/* Product Title */}
-                  <h3 className="text-sm font-bold text-white group-hover:text-amber-300 transition-colors line-clamp-1 mt-0.5">
+                  <h3 className="text-sm font-bold text-ink group-hover:text-amber-300 transition-colors line-clamp-1 mt-0.5">
                     {product.name}
                   </h3>
 
                   {product.description ? (
-                    <p className="text-xs text-gray-400 line-clamp-2 m-0 min-h-[32px]">
+                    <p className="text-xs text-muted line-clamp-2 m-0 min-h-[32px]">
                       {product.description}
                     </p>
                   ) : (
-                    <p className="text-xs text-gray-600 italic line-clamp-2 m-0 min-h-[32px]">
+                    <p className="text-xs text-faint italic line-clamp-2 m-0 min-h-[32px]">
                       Chưa có mô tả món ăn.
                     </p>
                   )}
@@ -615,7 +615,7 @@ export function ProductsView() {
                       {product.variants!.map((v) => (
                         <span
                           key={v.id}
-                          className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#252a34] text-gray-300 border border-[#3a4150]"
+                          className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-surface-hover text-ink-secondary border border-line-strong"
                         >
                           {v.name}: {v.price.toLocaleString("vi-VN")} đ
                         </span>
@@ -625,13 +625,13 @@ export function ProductsView() {
                 </div>
 
                 {/* Price, Status Actions and Edit/Delete */}
-                <div className="mt-4 pt-3 border-t border-[#292e3a] flex flex-col gap-3">
+                <div className="mt-4 pt-3 border-t border-line flex flex-col gap-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold block">
+                      <span className="text-[10px] text-muted uppercase tracking-wider font-semibold block">
                         Giá bán niêm yết
                       </span>
-                      <span className="text-base font-black text-[#fef3c7] font-mono">
+                      <span className="text-base font-black text-amber-soft font-mono">
                         {product.price.toLocaleString("vi-VN")} đ
                       </span>
                     </div>
@@ -678,7 +678,7 @@ export function ProductsView() {
                     <button
                       type="button"
                       onClick={() => setProductModal({ open: true, mode: "edit", product })}
-                      className="p-1.5 rounded-lg border text-xs text-gray-300 hover:text-white bg-[#262b36] hover:bg-[#323947] border-[#394050] transition-all flex items-center gap-1"
+                      className="p-1.5 rounded-lg border text-xs text-ink-secondary hover:text-ink bg-surface-hover hover:bg-surface-hover border-line-strong transition-all flex items-center gap-1"
                       title="Sửa thông tin món"
                     >
                       <Edit2 size={12} className="text-amber-400" />
@@ -703,7 +703,7 @@ export function ProductsView() {
       </div>
 
       {filteredProducts.length > 0 && (
-        <div className="bg-[#1c1f26] border border-[#2e333d] rounded-2xl overflow-hidden shadow-lg mt-1">
+        <div className="bg-surface border border-line-strong rounded-2xl overflow-hidden shadow-lg mt-1">
           <Pagination
             currentPage={page}
             totalItems={filteredProducts.length}
@@ -859,34 +859,34 @@ function ProductFormModal({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
-      <div className="bg-[#1c1f26] border border-[#353a47] rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between border-b border-[#2e333e] pb-3">
-          <h3 className="text-base font-black text-white font-heading flex items-center gap-2">
+      <div className="bg-surface border border-line-strong rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between border-b border-line-strong pb-3">
+          <h3 className="text-base font-black text-ink font-heading flex items-center gap-2">
             <UtensilsCrossed size={18} className="text-orange-400" />
             <span>{mode === "create" ? "Thêm Món Ăn Mới" : "Cập Nhật Món Ăn"}</span>
           </h3>
-          <button onClick={onClose} disabled={isSubmitting} className="text-gray-400 hover:text-white">
+          <button onClick={onClose} disabled={isSubmitting} className="text-muted hover:text-ink">
             <X size={18} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1">
-            <label className="text-xs font-bold text-gray-300">Tên món ăn <span className="text-rose-400">*</span></label>
+            <label className="text-xs font-bold text-ink-secondary">Tên món ăn <span className="text-rose-400">*</span></label>
             <input
               type="text"
               required
               placeholder="VD: Bò nướng tảng sốt tiêu đen, Bia Tuborg..."
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full bg-[#14161b] border border-[#353a47] rounded-xl px-3.5 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-orange-500"
+              className="w-full bg-well border border-line-strong rounded-xl px-3.5 py-2 text-xs text-ink placeholder-subtle focus:outline-none focus:border-orange-500"
             />
           </div>
 
           {/* Dish Image Section */}
-          <div className="space-y-2 p-3 bg-[#151820] rounded-xl border border-[#2d323e]">
+          <div className="space-y-2 p-3 bg-surface rounded-xl border border-line-strong">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-gray-200 flex items-center gap-1.5">
+              <label className="text-xs font-bold text-ink flex items-center gap-1.5">
                 <ImageIcon size={14} className="text-amber-400" />
                 <span>Ảnh đại diện món ăn</span>
               </label>
@@ -906,7 +906,7 @@ function ProductFormModal({
 
             <div className="flex gap-3 items-center">
               {/* Thumbnail preview */}
-              <div className="w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-[#0d0f14] border border-[#353a47] flex items-center justify-center">
+              <div className="w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-sunken border border-line-strong flex items-center justify-center">
                 {imageUrl && !imageError ? (
                   <img
                     src={imageUrl}
@@ -915,7 +915,7 @@ function ProductFormModal({
                     onError={() => setImageError(true)}
                   />
                 ) : (
-                  <UtensilsCrossed size={20} className="text-gray-600" />
+                  <UtensilsCrossed size={20} className="text-faint" />
                 )}
               </div>
 
@@ -929,7 +929,7 @@ function ProductFormModal({
                     setImageUrl(e.target.value);
                     setImageError(false);
                   }}
-                  className="w-full bg-[#14161b] border border-[#353a47] rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-orange-500"
+                  className="w-full bg-well border border-line-strong rounded-xl px-3 py-2 text-xs text-ink placeholder-subtle focus:outline-none focus:border-orange-500"
                 />
                 {imageError && (
                   <p className="text-[10px] text-rose-400">Không tải được link ảnh này, vui lòng kiểm tra lại.</p>
@@ -938,8 +938,8 @@ function ProductFormModal({
             </div>
 
             {/* Quick Presets */}
-            <div className="space-y-1.5 pt-1 border-t border-[#252934]">
-              <span className="text-[10px] text-gray-400 font-medium block">
+            <div className="space-y-1.5 pt-1 border-t border-line">
+              <span className="text-[10px] text-muted font-medium block">
                 Gợi ý ảnh mẫu nhanh:
               </span>
               <div className="flex flex-wrap gap-1.5">
@@ -954,7 +954,7 @@ function ProductFormModal({
                     className={`text-[10px] px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
                       imageUrl === preset.url
                         ? "bg-amber-500/20 border-amber-500 text-amber-300 font-bold"
-                        : "bg-[#20242e] border-[#353b49] text-gray-300 hover:text-white hover:bg-[#282d3a]"
+                        : "bg-raised border-line-strong text-ink-secondary hover:text-ink hover:bg-surface-hover"
                     }`}
                   >
                     {preset.label}
@@ -966,24 +966,24 @@ function ProductFormModal({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-xs font-bold text-gray-300">Mã SKU <span className="text-rose-400">*</span></label>
+              <label className="text-xs font-bold text-ink-secondary">Mã SKU <span className="text-rose-400">*</span></label>
               <input
                 type="text"
                 required
                 placeholder="VD: BO-NUONG-01"
                 value={sku}
                 onChange={(e) => setSku(e.target.value)}
-                className="w-full bg-[#14161b] border border-[#353a47] rounded-xl px-3.5 py-2 text-xs font-mono text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 uppercase"
+                className="w-full bg-well border border-line-strong rounded-xl px-3.5 py-2 text-xs font-mono text-ink placeholder-subtle focus:outline-none focus:border-orange-500 uppercase"
               />
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-bold text-gray-300">Nhóm danh mục <span className="text-rose-400">*</span></label>
+              <label className="text-xs font-bold text-ink-secondary">Nhóm danh mục <span className="text-rose-400">*</span></label>
               <select
                 required
                 value={categoryId}
                 onChange={(e) => setCategoryId(e.target.value)}
-                className="w-full bg-[#14161b] border border-[#353a47] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-orange-500"
+                className="w-full bg-well border border-line-strong rounded-xl px-3 py-2 text-xs text-ink focus:outline-none focus:border-orange-500"
               >
                 {categories.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -996,7 +996,7 @@ function ProductFormModal({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-xs font-bold text-gray-300">Giá bán (VNĐ) <span className="text-rose-400">*</span></label>
+              <label className="text-xs font-bold text-ink-secondary">Giá bán (VNĐ) <span className="text-rose-400">*</span></label>
               <input
                 type="number"
                 required
@@ -1005,39 +1005,39 @@ function ProductFormModal({
                 placeholder="50000"
                 value={price}
                 onChange={(e) => setPrice(Number(e.target.value))}
-                className="w-full bg-[#14161b] border border-[#353a47] rounded-xl px-3.5 py-2 text-xs font-mono font-bold text-amber-300 focus:outline-none focus:border-orange-500"
+                className="w-full bg-well border border-line-strong rounded-xl px-3.5 py-2 text-xs font-mono font-bold text-amber-300 focus:outline-none focus:border-orange-500"
               />
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-bold text-gray-300">Thứ tự hiển thị</label>
+              <label className="text-xs font-bold text-ink-secondary">Thứ tự hiển thị</label>
               <input
                 type="number"
                 min={1}
                 value={displayOrder}
                 onChange={(e) => setDisplayOrder(Number(e.target.value))}
-                className="w-full bg-[#14161b] border border-[#353a47] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-orange-500"
+                className="w-full bg-well border border-line-strong rounded-xl px-3.5 py-2 text-xs text-ink focus:outline-none focus:border-orange-500"
               />
             </div>
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-bold text-gray-300">Mô tả món ăn</label>
+            <label className="text-xs font-bold text-ink-secondary">Mô tả món ăn</label>
             <textarea
               rows={2}
               placeholder="Nguyên liệu chính, hương vị, khẩu phần..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full bg-[#14161b] border border-[#353a47] rounded-xl p-3 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-orange-500"
+              className="w-full bg-well border border-line-strong rounded-xl p-3 text-xs text-ink placeholder-subtle focus:outline-none focus:border-orange-500"
             />
           </div>
 
-          <div className="flex justify-end gap-2.5 pt-3 border-t border-[#2e333e]">
+          <div className="flex justify-end gap-2.5 pt-3 border-t border-line-strong">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-gray-400 hover:text-white bg-[#262a34] hover:bg-[#303642] transition-all cursor-pointer"
+              className="px-4 py-2 rounded-xl text-xs font-bold text-muted hover:text-ink bg-surface-hover hover:bg-surface-hover transition-all cursor-pointer"
             >
               Hủy
             </button>
@@ -1080,21 +1080,21 @@ function CategoriesManagementModal({
 }) {
   return (
     <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
-      <div className="bg-[#1c1f26] border border-[#353a47] rounded-2xl w-full max-w-xl p-6 shadow-2xl space-y-4">
-        <div className="flex items-center justify-between border-b border-[#2e333e] pb-3">
+      <div className="bg-surface border border-line-strong rounded-2xl w-full max-w-xl p-6 shadow-2xl space-y-4">
+        <div className="flex items-center justify-between border-b border-line-strong pb-3">
           <div className="flex items-center gap-2">
             <Layers size={20} className="text-amber-400" />
-            <h3 className="text-base font-black text-white font-heading">
+            <h3 className="text-base font-black text-ink font-heading">
               Quản Lý Nhóm Danh Mục Món
             </h3>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-white">
+          <button onClick={onClose} className="text-muted hover:text-ink">
             <X size={18} />
           </button>
         </div>
 
         <div className="flex justify-between items-center">
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-muted">
             Hiện có <strong className="text-amber-400">{categories.length}</strong> nhóm món
           </p>
           <button
@@ -1110,24 +1110,24 @@ function CategoriesManagementModal({
         {/* Categories list */}
         <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
           {categories.length === 0 ? (
-            <p className="text-xs text-gray-500 italic py-4 text-center">Chưa có danh mục nào.</p>
+            <p className="text-xs text-subtle italic py-4 text-center">Chưa có danh mục nào.</p>
           ) : (
             categories.map((cat) => {
               const productCount = allProducts.filter((p) => p.categoryId === cat.id).length;
               return (
                 <div
                   key={cat.id}
-                  className="bg-[#14161b] border border-[#2c313d] hover:border-[#3e4555] p-3 rounded-xl flex items-center justify-between gap-3 transition-colors"
+                  className="bg-well border border-line hover:border-line-strong p-3 rounded-xl flex items-center justify-between gap-3 transition-colors"
                 >
                   <div>
-                    <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                    <h4 className="text-sm font-bold text-ink flex items-center gap-2">
                       <span>{cat.name}</span>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#222630] border border-[#363d4d] text-amber-400 font-mono font-normal">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-raised border border-line-strong text-amber-400 font-mono font-normal">
                         {productCount} món
                       </span>
                     </h4>
                     {cat.description && (
-                      <p className="text-xs text-gray-400 mt-0.5">{cat.description}</p>
+                      <p className="text-xs text-muted mt-0.5">{cat.description}</p>
                     )}
                   </div>
 
@@ -1135,7 +1135,7 @@ function CategoriesManagementModal({
                     <button
                       type="button"
                       onClick={() => onOpenEdit(cat)}
-                      className="p-1.5 rounded-lg border text-xs text-gray-300 hover:text-white bg-[#252a35] hover:bg-[#323947] border-[#384050] transition-all"
+                      className="p-1.5 rounded-lg border text-xs text-ink-secondary hover:text-ink bg-surface-hover hover:bg-surface-hover border-line-strong transition-all"
                       title="Sửa danh mục"
                     >
                       <Edit2 size={13} className="text-amber-400" />
@@ -1155,11 +1155,11 @@ function CategoriesManagementModal({
           )}
         </div>
 
-        <div className="flex justify-end pt-2 border-t border-[#2e333e]">
+        <div className="flex justify-end pt-2 border-t border-line-strong">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl text-xs font-bold text-gray-300 hover:text-white bg-[#262a34] hover:bg-[#303642] transition-all"
+            className="px-4 py-2 rounded-xl text-xs font-bold text-ink-secondary hover:text-ink bg-surface-hover hover:bg-surface-hover transition-all"
           >
             Đóng
           </button>
@@ -1199,58 +1199,58 @@ function CategoryFormModal({
 
   return (
     <div className="fixed inset-0 z-[60] bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
-      <div className="bg-[#1c1f26] border border-[#353a47] rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
-        <div className="flex items-center justify-between border-b border-[#2e333e] pb-3">
-          <h3 className="text-base font-black text-white font-heading flex items-center gap-2">
+      <div className="bg-surface border border-line-strong rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
+        <div className="flex items-center justify-between border-b border-line-strong pb-3">
+          <h3 className="text-base font-black text-ink font-heading flex items-center gap-2">
             <Layers size={18} className="text-amber-400" />
             <span>{mode === "create" ? "Tạo Nhóm Danh Mục Mới" : "Cập Nhật Danh Mục"}</span>
           </h3>
-          <button onClick={onClose} disabled={isSubmitting} className="text-gray-400 hover:text-white">
+          <button onClick={onClose} disabled={isSubmitting} className="text-muted hover:text-ink">
             <X size={18} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3.5">
           <div className="space-y-1">
-            <label className="text-xs font-bold text-gray-300">Tên danh mục <span className="text-rose-400">*</span></label>
+            <label className="text-xs font-bold text-ink-secondary">Tên danh mục <span className="text-rose-400">*</span></label>
             <input
               type="text"
               required
               placeholder="VD: Món nướng than hoa, Đồ nhúng lẩu, Bia & Đồ uống..."
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full bg-[#14161b] border border-[#353a47] rounded-xl px-3.5 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-orange-500"
+              className="w-full bg-well border border-line-strong rounded-xl px-3.5 py-2 text-xs text-ink placeholder-subtle focus:outline-none focus:border-orange-500"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-bold text-gray-300">Thứ tự hiển thị</label>
+            <label className="text-xs font-bold text-ink-secondary">Thứ tự hiển thị</label>
             <input
               type="number"
               min={1}
               value={displayOrder}
               onChange={(e) => setDisplayOrder(Number(e.target.value))}
-              className="w-full bg-[#14161b] border border-[#353a47] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-orange-500"
+              className="w-full bg-well border border-line-strong rounded-xl px-3.5 py-2 text-xs text-ink focus:outline-none focus:border-orange-500"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-bold text-gray-300">Mô tả ngắn</label>
+            <label className="text-xs font-bold text-ink-secondary">Mô tả ngắn</label>
             <textarea
               rows={2}
               placeholder="Mô tả nhóm danh mục (tùy chọn)..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full bg-[#14161b] border border-[#353a47] rounded-xl p-3 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-orange-500"
+              className="w-full bg-well border border-line-strong rounded-xl p-3 text-xs text-ink placeholder-subtle focus:outline-none focus:border-orange-500"
             />
           </div>
 
-          <div className="flex justify-end gap-2.5 pt-3 border-t border-[#2e333e]">
+          <div className="flex justify-end gap-2.5 pt-3 border-t border-line-strong">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-gray-400 hover:text-white bg-[#262a34] hover:bg-[#303642] transition-all"
+              className="px-4 py-2 rounded-xl text-xs font-bold text-muted hover:text-ink bg-surface-hover hover:bg-surface-hover transition-all"
             >
               Hủy
             </button>
@@ -1293,30 +1293,30 @@ function DeleteConfirmModal({
 }) {
   return (
     <div className="fixed inset-0 z-[70] bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
-      <div className="bg-[#1c1f26] border border-[#353a47] rounded-2xl w-full max-w-sm p-6 shadow-2xl space-y-4">
-        <div className="flex items-center justify-between border-b border-[#2e333e] pb-3">
+      <div className="bg-surface border border-line-strong rounded-2xl w-full max-w-sm p-6 shadow-2xl space-y-4">
+        <div className="flex items-center justify-between border-b border-line-strong pb-3">
           <div className="flex items-center gap-2 text-rose-400">
             <AlertTriangle size={20} />
-            <h3 className="text-base font-black text-white font-heading">{title}</h3>
+            <h3 className="text-base font-black text-ink font-heading">{title}</h3>
           </div>
-          <button onClick={onClose} disabled={isDeleting} className="text-gray-400 hover:text-white">
+          <button onClick={onClose} disabled={isDeleting} className="text-muted hover:text-ink">
             <X size={18} />
           </button>
         </div>
 
         <div className="space-y-2">
-          <p className="text-xs text-gray-300">
-            Bạn có chắc chắn muốn xóa: <strong className="text-white text-sm underline decoration-rose-500">{itemName}</strong>?
+          <p className="text-xs text-ink-secondary">
+            Bạn có chắc chắn muốn xóa: <strong className="text-ink text-sm underline decoration-rose-500">{itemName}</strong>?
           </p>
-          <p className="text-[11px] text-gray-500 leading-relaxed">{message}</p>
+          <p className="text-[11px] text-subtle leading-relaxed">{message}</p>
         </div>
 
-        <div className="flex justify-end gap-2.5 pt-3 border-t border-[#2e333e]">
+        <div className="flex justify-end gap-2.5 pt-3 border-t border-line-strong">
           <button
             type="button"
             onClick={onClose}
             disabled={isDeleting}
-            className="px-4 py-2 rounded-xl text-xs font-bold text-gray-400 hover:text-white bg-[#262a34] hover:bg-[#303642] transition-all"
+            className="px-4 py-2 rounded-xl text-xs font-bold text-muted hover:text-ink bg-surface-hover hover:bg-surface-hover transition-all"
           >
             Hủy
           </button>

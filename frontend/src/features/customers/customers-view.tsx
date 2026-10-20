@@ -203,10 +203,10 @@ export function CustomersView() {
       {/* Header & KPI Summary */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+          <h1 className="text-2xl font-bold tracking-tight text-ink flex items-center gap-2">
             <Users className="text-amber-500" size={26} /> Quản lý Khách hàng &amp; Hội viên
           </h1>
-          <p className="text-sm text-gray-400 mt-1">
+          <p className="text-sm text-muted mt-1">
             Chăm sóc khách quen, quản lý tích điểm thưởng và phân hạng thành viên quán.
           </p>
         </div>
@@ -223,19 +223,19 @@ export function CustomersView() {
 
       {/* Top Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-[#1c1e22] border border-[#2d3138] rounded-2xl p-4.5 flex flex-col justify-between">
-          <div className="flex items-center justify-between text-gray-400 text-xs font-medium">
+        <div className="bg-surface border border-line rounded-2xl p-4.5 flex flex-col justify-between">
+          <div className="flex items-center justify-between text-muted text-xs font-medium">
             <span>Tổng hội viên</span>
             <Users size={16} className="text-amber-500" />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-white">{stats.total}</span>
-            <span className="text-xs text-gray-400">khách hàng</span>
+            <span className="text-2xl font-bold text-ink">{stats.total}</span>
+            <span className="text-xs text-muted">khách hàng</span>
           </div>
         </div>
 
-        <div className="bg-[#1c1e22] border border-[#2d3138] rounded-2xl p-4.5 flex flex-col justify-between">
-          <div className="flex items-center justify-between text-gray-400 text-xs font-medium">
+        <div className="bg-surface border border-line rounded-2xl p-4.5 flex flex-col justify-between">
+          <div className="flex items-center justify-between text-muted text-xs font-medium">
             <span>Hội viên VIP (Vàng/Kim Cương)</span>
             <Crown size={16} className="text-yellow-400" />
           </div>
@@ -245,19 +245,19 @@ export function CustomersView() {
           </div>
         </div>
 
-        <div className="bg-[#1c1e22] border border-[#2d3138] rounded-2xl p-4.5 flex flex-col justify-between">
-          <div className="flex items-center justify-between text-gray-400 text-xs font-medium">
+        <div className="bg-surface border border-line rounded-2xl p-4.5 flex flex-col justify-between">
+          <div className="flex items-center justify-between text-muted text-xs font-medium">
             <span>Tổng điểm tích lũy</span>
             <Sparkles size={16} className="text-cyan-400" />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
             <span className="text-2xl font-bold text-cyan-400">{stats.totalPoints.toLocaleString("vi-VN")}</span>
-            <span className="text-xs text-gray-400">điểm</span>
+            <span className="text-xs text-muted">điểm</span>
           </div>
         </div>
 
-        <div className="bg-[#1c1e22] border border-[#2d3138] rounded-2xl p-4.5 flex flex-col justify-between">
-          <div className="flex items-center justify-between text-gray-400 text-xs font-medium">
+        <div className="bg-surface border border-line rounded-2xl p-4.5 flex flex-col justify-between">
+          <div className="flex items-center justify-between text-muted text-xs font-medium">
             <span>Doanh thu từ hội viên</span>
             <CreditCard size={16} className="text-emerald-400" />
           </div>
@@ -268,16 +268,16 @@ export function CustomersView() {
       </div>
 
       {/* Filter & Search Bar */}
-      <div className="bg-[#1c1e22] border border-[#2d3138] rounded-2xl p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+      <div className="bg-surface border border-line rounded-2xl p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
         {/* Search Input */}
         <div className="relative flex-1 max-w-md">
-          <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Tìm theo tên khách, số điện thoại..."
-            className="w-full bg-[#141517] border border-[#2d3138] rounded-xl pl-10 pr-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 transition-colors"
+            className="w-full bg-paper border border-line rounded-xl pl-10 pr-4 py-2 text-sm text-ink placeholder-subtle focus:outline-none focus:border-amber-500 transition-colors"
           />
         </div>
 
@@ -297,7 +297,7 @@ export function CustomersView() {
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap cursor-pointer ${
                 selectedTier === tab.id
                   ? "bg-amber-500 text-black font-semibold shadow-md shadow-amber-900/30"
-                  : "bg-[#141517] text-gray-400 hover:text-white hover:bg-[#24272e]"
+                  : "bg-paper text-muted hover:text-ink hover:bg-raised"
               }`}
             >
               {tab.label}
@@ -307,24 +307,24 @@ export function CustomersView() {
       </div>
 
       {/* Customers List / Table */}
-      <div className="bg-[#1c1e22] border border-[#2d3138] rounded-2xl overflow-hidden shadow-xl">
+      <div className="bg-surface border border-line rounded-2xl overflow-hidden shadow-xl">
         {isLoading ? (
-          <div className="py-16 text-center text-gray-400">
+          <div className="py-16 text-center text-muted">
             <div className="animate-spin inline-block w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full mb-3" />
             <p>Đang tải danh sách khách hàng...</p>
           </div>
         ) : filteredCustomers.length === 0 ? (
-          <div className="py-16 text-center text-gray-400 space-y-3">
-            <Users size={40} className="mx-auto text-gray-600" />
-            <p className="text-base font-medium text-gray-300">Không tìm thấy khách hàng nào</p>
-            <p className="text-xs text-gray-500 max-w-sm mx-auto">
+          <div className="py-16 text-center text-muted space-y-3">
+            <Users size={40} className="mx-auto text-faint" />
+            <p className="text-base font-medium text-ink-secondary">Không tìm thấy khách hàng nào</p>
+            <p className="text-xs text-subtle max-w-sm mx-auto">
               Thử tìm kiếm với số điện thoại khác hoặc đăng ký thành viên mới vào hệ thống.
             </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-gray-300">
-              <thead className="bg-[#141517] text-xs font-semibold text-gray-400 uppercase tracking-wider border-b border-[#2d3138]">
+            <table className="w-full text-left text-sm text-ink-secondary">
+              <thead className="bg-paper text-xs font-semibold text-muted uppercase tracking-wider border-b border-line">
                 <tr>
                   <th className="py-3.5 px-4">Khách hàng</th>
                   <th className="py-3.5 px-4">Số điện thoại</th>
@@ -335,11 +335,11 @@ export function CustomersView() {
                   <th className="py-3.5 px-4 text-center">Thao tác</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#2d3138]">
+              <tbody className="divide-y divide-line">
                 {paginatedCustomers.map((c) => (
                   <tr
                     key={c.id}
-                    className="hover:bg-[#24272e]/50 transition-colors group cursor-pointer"
+                    className="hover:bg-raised/50 transition-colors group cursor-pointer"
                     onClick={() => handleOpenDetail(c)}
                   >
                     <td className="py-3.5 px-4">
@@ -348,11 +348,11 @@ export function CustomersView() {
                           {c.fullName.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <p className="font-semibold text-white group-hover:text-amber-400 transition-colors">
+                          <p className="font-semibold text-ink group-hover:text-amber-400 transition-colors">
                             {c.fullName}
                           </p>
                           {c.email && (
-                            <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                            <p className="text-xs text-subtle flex items-center gap-1 mt-0.5">
                               <Mail size={11} /> {c.email}
                             </p>
                           )}
@@ -360,9 +360,9 @@ export function CustomersView() {
                       </div>
                     </td>
 
-                    <td className="py-3.5 px-4 font-mono font-medium text-gray-200">
+                    <td className="py-3.5 px-4 font-mono font-medium text-ink">
                       <span className="flex items-center gap-1.5">
-                        <Phone size={13} className="text-gray-500" />
+                        <Phone size={13} className="text-subtle" />
                         {c.phone}
                       </span>
                     </td>
@@ -378,7 +378,7 @@ export function CustomersView() {
                       </span>
                     </td>
 
-                    <td className="py-3.5 px-4 text-right font-medium text-gray-300">
+                    <td className="py-3.5 px-4 text-right font-medium text-ink-secondary">
                       {c.totalOrders} đơn
                     </td>
 
@@ -393,7 +393,7 @@ export function CustomersView() {
                           e.stopPropagation();
                           handleOpenDetail(c);
                         }}
-                        className="px-2.5 py-1 rounded-lg text-xs font-medium bg-[#141517] hover:bg-amber-500 hover:text-black border border-[#2d3138] hover:border-amber-500 transition-all cursor-pointer text-gray-300"
+                        className="px-2.5 py-1 rounded-lg text-xs font-medium bg-paper hover:bg-amber-500 hover:text-black border border-line hover:border-amber-500 transition-all cursor-pointer text-ink-secondary"
                       >
                         Hồ sơ &amp; Điểm
                       </button>
@@ -420,17 +420,17 @@ export function CustomersView() {
       {createModalOpen && (
         <div className="pos-modal-backdrop" onClick={() => setCreateModalOpen(false)}>
           <div
-            className="pos-modal-card pos-modal-sm bg-[#1c1e22] border border-[#2d3138]"
+            className="pos-modal-card pos-modal-sm bg-surface border border-line"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="pos-modal-header border-b border-[#2d3138] pb-3 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+            <div className="pos-modal-header border-b border-line pb-3 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-ink flex items-center gap-2">
                 <UserPlus className="text-amber-500" size={20} /> Đăng ký hội viên mới
               </h3>
               <button
                 type="button"
                 onClick={() => setCreateModalOpen(false)}
-                className="text-gray-400 hover:text-white"
+                className="text-muted hover:text-ink"
               >
                 <X size={20} />
               </button>
@@ -438,7 +438,7 @@ export function CustomersView() {
 
             <form onSubmit={handleCreateSubmit} className="space-y-4 pt-4">
               <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1">
+                <label className="block text-xs font-medium text-muted mb-1">
                   Họ và tên khách hàng <span className="text-amber-500">*</span>
                 </label>
                 <input
@@ -447,12 +447,12 @@ export function CustomersView() {
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
                   placeholder="Ví dụ: Anh Nam - Bàn VIP"
-                  className="w-full bg-[#141517] border border-[#2d3138] rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-amber-500"
+                  className="w-full bg-paper border border-line rounded-xl px-3.5 py-2 text-sm text-ink focus:outline-none focus:border-amber-500"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1">
+                <label className="block text-xs font-medium text-muted mb-1">
                   Số điện thoại <span className="text-amber-500">*</span>
                 </label>
                 <input
@@ -461,23 +461,23 @@ export function CustomersView() {
                   value={formPhone}
                   onChange={(e) => setFormPhone(e.target.value)}
                   placeholder="Ví dụ: 0988123456"
-                  className="w-full bg-[#141517] border border-[#2d3138] rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-amber-500 font-mono"
+                  className="w-full bg-paper border border-line rounded-xl px-3.5 py-2 text-sm text-ink focus:outline-none focus:border-amber-500 font-mono"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1">Email</label>
+                <label className="block text-xs font-medium text-muted mb-1">Email</label>
                 <input
                   type="email"
                   value={formEmail}
                   onChange={(e) => setFormEmail(e.target.value)}
                   placeholder="Ví dụ: customer@gmail.com"
-                  className="w-full bg-[#141517] border border-[#2d3138] rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-amber-500"
+                  className="w-full bg-paper border border-line rounded-xl px-3.5 py-2 text-sm text-ink focus:outline-none focus:border-amber-500"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1">
+                <label className="block text-xs font-medium text-muted mb-1">
                   Địa chỉ thường trú / Giao hàng
                 </label>
                 <input
@@ -485,12 +485,12 @@ export function CustomersView() {
                   value={formAddress}
                   onChange={(e) => setFormAddress(e.target.value)}
                   placeholder="Ví dụ: 123 Nguyễn Thị Minh Khai, Q.1"
-                  className="w-full bg-[#141517] border border-[#2d3138] rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-amber-500"
+                  className="w-full bg-paper border border-line rounded-xl px-3.5 py-2 text-sm text-ink focus:outline-none focus:border-amber-500"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1">
+                <label className="block text-xs font-medium text-muted mb-1">
                   Điểm thưởng tặng khi mở thẻ
                 </label>
                 <input
@@ -498,13 +498,13 @@ export function CustomersView() {
                   min="0"
                   value={formInitialPoints}
                   onChange={(e) => setFormInitialPoints(Number(e.target.value))}
-                  className="w-full bg-[#141517] border border-[#2d3138] rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-amber-500"
+                  className="w-full bg-paper border border-line rounded-xl px-3.5 py-2 text-sm text-ink focus:outline-none focus:border-amber-500"
                 />
               </div>
 
               {membershipLevels.length > 0 && (
-                <div className="text-[11px] text-gray-400 bg-[#141517] p-2.5 rounded-xl border border-[#2d3138] flex flex-wrap gap-2">
-                  <span className="text-gray-500 font-medium">Hạng thẻ:</span>
+                <div className="text-[11px] text-muted bg-paper p-2.5 rounded-xl border border-line flex flex-wrap gap-2">
+                  <span className="text-subtle font-medium">Hạng thẻ:</span>
                   {membershipLevels.map((lvl) => (
                     <span key={lvl.id} className="text-amber-400/90 font-mono">
                       {lvl.name} (≥{lvl.minimumPoints}đ)
@@ -513,11 +513,11 @@ export function CustomersView() {
                 </div>
               )}
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#2d3138]">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-line">
                 <button
                   type="button"
                   onClick={() => setCreateModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-sm font-medium bg-[#141517] hover:bg-[#24272e] text-gray-300 transition-colors"
+                  className="px-4 py-2 rounded-xl text-sm font-medium bg-paper hover:bg-raised text-ink-secondary transition-colors"
                 >
                   Hủy
                 </button>
@@ -538,17 +538,17 @@ export function CustomersView() {
       {selectedCustomer && (
         <div className="pos-modal-backdrop" onClick={() => setSelectedCustomer(null)}>
           <div
-            className="pos-modal-card bg-[#1c1e22] border border-[#2d3138] max-w-xl w-full"
+            className="pos-modal-card bg-surface border border-line max-w-xl w-full"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="pos-modal-header border-b border-[#2d3138] pb-4 flex items-center justify-between">
+            <div className="pos-modal-header border-b border-line pb-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center font-bold text-white text-lg shadow-md shadow-amber-900/30">
                   {selectedCustomer.fullName.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <h3 className="text-lg font-bold text-ink flex items-center gap-2">
                     {selectedCustomer.fullName}
                   </h3>
                   <div className="flex items-center gap-2 mt-1">
@@ -556,7 +556,7 @@ export function CustomersView() {
                       selectedCustomer.membershipLevelCode,
                       selectedCustomer.membershipLevelName
                     )}
-                    <span className="text-xs text-gray-400 font-mono flex items-center gap-1">
+                    <span className="text-xs text-muted font-mono flex items-center gap-1">
                       <Phone size={12} /> {selectedCustomer.phone}
                     </span>
                   </div>
@@ -566,7 +566,7 @@ export function CustomersView() {
               <button
                 type="button"
                 onClick={() => setSelectedCustomer(null)}
-                className="text-gray-400 hover:text-white"
+                className="text-muted hover:text-ink"
               >
                 <X size={20} />
               </button>
@@ -574,20 +574,20 @@ export function CustomersView() {
 
             {/* Quick Metrics */}
             <div className="grid grid-cols-3 gap-3 my-4">
-              <div className="bg-[#141517] p-3 rounded-xl border border-[#2d3138] text-center">
-                <span className="text-xs text-gray-400 block">Điểm tích lũy</span>
+              <div className="bg-paper p-3 rounded-xl border border-line text-center">
+                <span className="text-xs text-muted block">Điểm tích lũy</span>
                 <span className="text-lg font-bold text-amber-400 mt-1 block">
                   {selectedCustomer.loyaltyPoints.toLocaleString("vi-VN")}
                 </span>
               </div>
-              <div className="bg-[#141517] p-3 rounded-xl border border-[#2d3138] text-center">
-                <span className="text-xs text-gray-400 block">Số lần ghé quán</span>
-                <span className="text-lg font-bold text-white mt-1 block">
+              <div className="bg-paper p-3 rounded-xl border border-line text-center">
+                <span className="text-xs text-muted block">Số lần ghé quán</span>
+                <span className="text-lg font-bold text-ink mt-1 block">
                   {selectedCustomer.totalOrders} đơn
                 </span>
               </div>
-              <div className="bg-[#141517] p-3 rounded-xl border border-[#2d3138] text-center">
-                <span className="text-xs text-gray-400 block">Tổng chi tiêu</span>
+              <div className="bg-paper p-3 rounded-xl border border-line text-center">
+                <span className="text-xs text-muted block">Tổng chi tiêu</span>
                 <span className="text-sm font-bold text-emerald-400 mt-1 block truncate">
                   {formatCurrency(selectedCustomer.totalSpent)}
                 </span>
@@ -595,13 +595,13 @@ export function CustomersView() {
             </div>
 
             {/* Adjust Points Box */}
-            <div className="bg-[#141517] p-4 rounded-xl border border-[#2d3138] mb-4">
+            <div className="bg-paper p-4 rounded-xl border border-line mb-4">
               <h4 className="text-xs font-semibold uppercase tracking-wider text-amber-400 mb-2.5 flex items-center gap-1.5">
                 <Sparkles size={14} /> Cộng / Trừ điểm thưởng
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1">Số điểm thay đổi (+ hoặc -)</label>
+                  <label className="block text-xs text-muted mb-1">Số điểm thay đổi (+ hoặc -)</label>
                   <div className="flex items-center gap-1">
                     <button
                       type="button"
@@ -609,7 +609,7 @@ export function CustomersView() {
                       className={`px-2 py-1.5 rounded-lg text-xs font-bold border transition-colors cursor-pointer ${
                         pointsAdjustDelta < 0
                           ? "bg-red-950/80 border-red-600 text-red-300"
-                          : "bg-[#1c1e22] border-[#2d3138] text-gray-400"
+                          : "bg-surface border-line text-muted"
                       }`}
                     >
                       <Minus size={14} />
@@ -618,7 +618,7 @@ export function CustomersView() {
                       type="number"
                       value={pointsAdjustDelta}
                       onChange={(e) => setPointsAdjustDelta(Number(e.target.value))}
-                      className="w-full bg-[#1c1e22] border border-[#2d3138] rounded-lg px-2.5 py-1.5 text-sm text-white focus:outline-none focus:border-amber-500 font-mono text-center"
+                      className="w-full bg-surface border border-line rounded-lg px-2.5 py-1.5 text-sm text-ink focus:outline-none focus:border-amber-500 font-mono text-center"
                     />
                     <button
                       type="button"
@@ -626,7 +626,7 @@ export function CustomersView() {
                       className={`px-2 py-1.5 rounded-lg text-xs font-bold border transition-colors cursor-pointer ${
                         pointsAdjustDelta > 0
                           ? "bg-emerald-950/80 border-emerald-600 text-emerald-300"
-                          : "bg-[#1c1e22] border-[#2d3138] text-gray-400"
+                          : "bg-surface border-line text-muted"
                       }`}
                     >
                       <Plus size={14} />
@@ -635,13 +635,13 @@ export function CustomersView() {
                 </div>
 
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1">Lý do điều chỉnh</label>
+                  <label className="block text-xs text-muted mb-1">Lý do điều chỉnh</label>
                   <input
                     type="text"
                     value={pointsAdjustReason}
                     onChange={(e) => setPointsAdjustReason(e.target.value)}
                     placeholder="Ví dụ: Tặng quà sinh nhật, đổi thưởng"
-                    className="w-full bg-[#1c1e22] border border-[#2d3138] rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500"
+                    className="w-full bg-surface border border-line rounded-lg px-3 py-1.5 text-xs text-ink focus:outline-none focus:border-amber-500"
                   />
                 </div>
               </div>
@@ -666,23 +666,23 @@ export function CustomersView() {
 
             {/* Point Transaction History */}
             <div>
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2 flex items-center gap-1.5">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted mb-2 flex items-center gap-1.5">
                 <History size={14} /> Lịch sử điểm thưởng gần đây
               </h4>
               <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
                 {selectedCustomer.pointTransactions.length === 0 ? (
-                  <p className="text-xs text-gray-500 italic py-2 text-center">
+                  <p className="text-xs text-subtle italic py-2 text-center">
                     Chưa có giao dịch tích điểm nào.
                   </p>
                 ) : (
                   selectedCustomer.pointTransactions.map((tx) => (
                     <div
                       key={tx.id}
-                      className="bg-[#141517] p-2.5 rounded-lg border border-[#2d3138] flex items-center justify-between text-xs"
+                      className="bg-paper p-2.5 rounded-lg border border-line flex items-center justify-between text-xs"
                     >
                       <div>
-                        <p className="font-medium text-gray-200">{tx.reason}</p>
-                        <p className="text-[11px] text-gray-500 flex items-center gap-1 mt-0.5">
+                        <p className="font-medium text-ink">{tx.reason}</p>
+                        <p className="text-[11px] text-subtle flex items-center gap-1 mt-0.5">
                           <Calendar size={10} />
                           {new Date(tx.createdAt).toLocaleDateString("vi-VN", {
                             day: "2-digit",

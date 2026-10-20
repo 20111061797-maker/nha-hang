@@ -276,19 +276,19 @@ export function InventoryView() {
       )}
 
       {/* Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-[#171a22] via-[#1c212c] to-[#171a22] p-6 rounded-3xl border border-[#2b3345] shadow-xl relative overflow-hidden">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-surface via-raised to-surface p-6 rounded-3xl border border-line-strong shadow-xl relative overflow-hidden">
         <div className="absolute top-0 right-0 -mt-8 -mr-8 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-400 border border-amber-500/30">
               Quản trị Kho &amp; Tồn kho
             </span>
-            <span className="text-xs text-gray-400 font-mono">Quán Bếp Nhậu</span>
+            <span className="text-xs text-muted font-mono">Quán Bếp Nhậu</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-white font-heading tracking-tight flex items-center gap-2">
+          <h1 className="text-2xl sm:text-3xl font-black text-ink font-heading tracking-tight flex items-center gap-2">
             <Boxes className="text-amber-500" size={30} /> Quản lý Tồn kho
           </h1>
-          <p className="text-xs sm:text-sm text-gray-400 mt-1 max-w-xl">
+          <p className="text-xs sm:text-sm text-muted mt-1 max-w-xl">
             Theo dõi nguyên vật liệu, giá trị vốn tồn kho, định mức an toàn và lịch sử biến động nhập xuất thực phẩm.
           </p>
         </div>
@@ -297,7 +297,7 @@ export function InventoryView() {
           <button
             type="button"
             onClick={refreshAll}
-            className="p-2.5 rounded-2xl bg-[#1d2330] hover:bg-[#252c3d] text-gray-300 hover:text-white border border-[#2e3748] transition-all cursor-pointer"
+            className="p-2.5 rounded-2xl bg-raised hover:bg-surface-hover text-ink-secondary hover:text-ink border border-line-strong transition-all cursor-pointer"
             title="Làm mới dữ liệu"
           >
             <RefreshCw size={16} />
@@ -309,7 +309,7 @@ export function InventoryView() {
               resetAdjustForm();
               setAdjustModalOpen(true);
             }}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[#252c3e] hover:bg-[#2e374e] text-amber-300 font-bold text-xs border border-amber-500/30 transition-all cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-surface-hover hover:bg-surface-hover text-amber-300 font-bold text-xs border border-amber-500/30 transition-all cursor-pointer"
           >
             <ArrowUpDown size={15} />
             <span>Nhập / Xuất / Kiểm kê</span>
@@ -332,9 +332,9 @@ export function InventoryView() {
       {/* KPI Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Items */}
-        <div className="bg-[#181a20] p-5 rounded-2xl border border-[#262930] shadow-sm relative overflow-hidden group hover:border-[#383d47] transition-all">
+        <div className="bg-surface p-5 rounded-2xl border border-line shadow-sm relative overflow-hidden group hover:border-line-strong transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+            <span className="text-xs font-bold text-muted uppercase tracking-wider">
               Tổng mặt hàng
             </span>
             <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
@@ -342,17 +342,17 @@ export function InventoryView() {
             </div>
           </div>
           <div className="mt-3">
-            <div className="text-2xl sm:text-3xl font-black text-white font-mono">
+            <div className="text-2xl sm:text-3xl font-black text-ink font-mono">
               {summary ? summary.totalItems : isSummaryLoading ? "..." : 0}
             </div>
-            <p className="text-[11px] text-gray-500 mt-1">Mặt hàng &amp; nguyên liệu trong kho</p>
+            <p className="text-[11px] text-subtle mt-1">Mặt hàng &amp; nguyên liệu trong kho</p>
           </div>
         </div>
 
         {/* Total Stock Value */}
-        <div className="bg-[#181a20] p-5 rounded-2xl border border-[#262930] shadow-sm relative overflow-hidden group hover:border-[#383d47] transition-all">
+        <div className="bg-surface p-5 rounded-2xl border border-line shadow-sm relative overflow-hidden group hover:border-line-strong transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+            <span className="text-xs font-bold text-muted uppercase tracking-wider">
               Tổng giá trị tồn
             </span>
             <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
@@ -363,14 +363,14 @@ export function InventoryView() {
             <div className="text-xl sm:text-2xl font-black text-emerald-400 font-mono truncate">
               {summary ? formatVnd(summary.totalInventoryValue) : isSummaryLoading ? "..." : "0 ₫"}
             </div>
-            <p className="text-[11px] text-gray-500 mt-1">Tổng vốn lưu trữ tại kho quán</p>
+            <p className="text-[11px] text-subtle mt-1">Tổng vốn lưu trữ tại kho quán</p>
           </div>
         </div>
 
         {/* Low Stock Alert */}
-        <div className="bg-[#181a20] p-5 rounded-2xl border border-[#262930] shadow-sm relative overflow-hidden group hover:border-[#383d47] transition-all">
+        <div className="bg-surface p-5 rounded-2xl border border-line shadow-sm relative overflow-hidden group hover:border-line-strong transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+            <span className="text-xs font-bold text-muted uppercase tracking-wider">
               Cảnh báo sắp hết
             </span>
             <div className="p-2.5 rounded-xl bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
@@ -381,14 +381,14 @@ export function InventoryView() {
             <div className="text-2xl sm:text-3xl font-black text-yellow-400 font-mono">
               {summary ? summary.lowStockCount : isSummaryLoading ? "..." : 0}
             </div>
-            <p className="text-[11px] text-gray-500 mt-1">Dưới định mức tồn an toàn</p>
+            <p className="text-[11px] text-subtle mt-1">Dưới định mức tồn an toàn</p>
           </div>
         </div>
 
         {/* Out of Stock */}
-        <div className="bg-[#181a20] p-5 rounded-2xl border border-[#262930] shadow-sm relative overflow-hidden group hover:border-[#383d47] transition-all">
+        <div className="bg-surface p-5 rounded-2xl border border-line shadow-sm relative overflow-hidden group hover:border-line-strong transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+            <span className="text-xs font-bold text-muted uppercase tracking-wider">
               Hết hàng trong kho
             </span>
             <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
@@ -399,22 +399,22 @@ export function InventoryView() {
             <div className="text-2xl sm:text-3xl font-black text-rose-400 font-mono">
               {summary ? summary.outOfStockCount : isSummaryLoading ? "..." : 0}
             </div>
-            <p className="text-[11px] text-gray-500 mt-1">Cần nhập hàng bổ sung ngay</p>
+            <p className="text-[11px] text-subtle mt-1">Cần nhập hàng bổ sung ngay</p>
           </div>
         </div>
       </div>
 
       {/* Main Tabs & Filters Toolbar */}
-      <div className="bg-[#181a20] p-4 rounded-3xl border border-[#262930] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-surface p-4 rounded-3xl border border-line shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         {/* Tabs */}
-        <div className="flex items-center gap-1.5 p-1 bg-[#131418] rounded-2xl border border-[#252830] shrink-0">
+        <div className="flex items-center gap-1.5 p-1 bg-well rounded-2xl border border-line shrink-0">
           <button
             type="button"
             onClick={() => setActiveTab("items")}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
               activeTab === "items"
                 ? "bg-amber-500 text-white shadow-md shadow-amber-950/30"
-                : "text-gray-400 hover:text-white"
+                : "text-muted hover:text-ink"
             }`}
           >
             <Boxes size={15} />
@@ -430,7 +430,7 @@ export function InventoryView() {
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
               activeTab === "history"
                 ? "bg-amber-500 text-white shadow-md shadow-amber-950/30"
-                : "text-gray-400 hover:text-white"
+                : "text-muted hover:text-ink"
             }`}
           >
             <History size={15} />
@@ -443,19 +443,19 @@ export function InventoryView() {
           <div className="flex flex-wrap items-center gap-3">
             {/* Search */}
             <div className="relative min-w-[240px] flex-1 sm:flex-initial">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" size={15} />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-subtle" size={15} />
               <input
                 type="text"
                 placeholder="Tìm tên mặt hàng, mã hàng..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full bg-[#131418] text-white text-xs pl-9 pr-4 py-2.5 rounded-2xl border border-[#292c35] focus:outline-none focus:border-amber-500 transition-colors"
+                className="w-full bg-well text-ink text-xs pl-9 pr-4 py-2.5 rounded-2xl border border-line focus:outline-none focus:border-amber-500 transition-colors"
               />
               {search && (
                 <button
                   type="button"
                   onClick={() => setSearch("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-ink"
                 >
                   <X size={13} />
                 </button>
@@ -466,7 +466,7 @@ export function InventoryView() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-[#131418] text-white text-xs px-3 py-2.5 rounded-2xl border border-[#292c35] focus:outline-none focus:border-amber-500 cursor-pointer"
+              className="bg-well text-ink text-xs px-3 py-2.5 rounded-2xl border border-line focus:outline-none focus:border-amber-500 cursor-pointer"
             >
               <option value="ALL">Mọi trạng thái</option>
               <option value="InStock">Còn hàng (Dồi dào)</option>
@@ -479,19 +479,19 @@ export function InventoryView() {
 
       {/* Tab 1: Danh sách tồn kho */}
       {activeTab === "items" && (
-        <div className="bg-[#181a20] rounded-3xl border border-[#262930] shadow-sm overflow-hidden">
+        <div className="bg-surface rounded-3xl border border-line shadow-sm overflow-hidden">
           {isItemsLoading ? (
-            <div className="p-12 text-center text-gray-400 flex flex-col items-center justify-center gap-3">
+            <div className="p-12 text-center text-muted flex flex-col items-center justify-center gap-3">
               <RefreshCw className="animate-spin text-amber-500" size={24} />
               <span className="text-xs">Đang tải dữ liệu tồn kho...</span>
             </div>
           ) : items.length === 0 ? (
-            <div className="p-16 text-center text-gray-500 flex flex-col items-center justify-center gap-3">
-              <div className="p-4 rounded-3xl bg-[#131418] border border-[#252830] text-gray-400">
+            <div className="p-16 text-center text-subtle flex flex-col items-center justify-center gap-3">
+              <div className="p-4 rounded-3xl bg-well border border-line text-muted">
                 <Boxes size={36} />
               </div>
-              <div className="text-sm font-bold text-gray-300">Chưa có mặt hàng nào trong kho</div>
-              <p className="text-xs text-gray-500 max-w-sm">
+              <div className="text-sm font-bold text-ink-secondary">Chưa có mặt hàng nào trong kho</div>
+              <p className="text-xs text-subtle max-w-sm">
                 Bấm nút &ldquo;Thêm mặt hàng mới&rdquo; bên trên để bắt đầu quản lý nguyên vật liệu và đồ uống của quán.
               </p>
               <button
@@ -506,7 +506,7 @@ export function InventoryView() {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-[#262930] bg-[#14151a] text-gray-400 font-bold uppercase tracking-wider text-[11px]">
+                  <tr className="border-b border-line bg-well text-muted font-bold uppercase tracking-wider text-[11px]">
                     <th className="py-4 px-5">Mã hàng</th>
                     <th className="py-4 px-5">Tên Mặt hàng / Nguyên liệu</th>
                     <th className="py-4 px-5">Đơn vị</th>
@@ -517,7 +517,7 @@ export function InventoryView() {
                     <th className="py-4 px-5 text-right">Thao tác nhanh</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#22252c]">
+                <tbody className="divide-y divide-line">
                   {paginatedItems.map((item) => {
                     const isOutOfStock = item.currentQuantity <= 0;
                     const isLowStock = !isOutOfStock && item.currentQuantity <= item.minStockThreshold;
@@ -525,21 +525,21 @@ export function InventoryView() {
                     return (
                       <tr
                         key={item.id}
-                        className="hover:bg-[#1d2028] transition-colors group"
+                        className="hover:bg-raised transition-colors group"
                       >
                         {/* SKU */}
                         <td className="py-4 px-5">
-                          <span className="font-mono font-bold px-2 py-1 rounded-md bg-[#222530] text-amber-400 border border-[#2c303f]">
+                          <span className="font-mono font-bold px-2 py-1 rounded-md bg-raised text-amber-400 border border-line">
                             {item.ingredientCode}
                           </span>
                         </td>
 
                         {/* Name */}
                         <td className="py-4 px-5">
-                          <div className="font-bold text-white text-sm">
+                          <div className="font-bold text-ink text-sm">
                             {item.ingredientName}
                           </div>
-                          <div className="text-[11px] text-gray-500 flex items-center gap-1.5 mt-0.5">
+                          <div className="text-[11px] text-subtle flex items-center gap-1.5 mt-0.5">
                             <Warehouse size={11} />
                             <span>{item.warehouseName}</span>
                           </div>
@@ -547,7 +547,7 @@ export function InventoryView() {
 
                         {/* Unit */}
                         <td className="py-4 px-5">
-                          <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#222530] text-gray-300 border border-[#2c303f]">
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-raised text-ink-secondary border border-line">
                             {item.unitName}
                           </span>
                         </td>
@@ -566,17 +566,17 @@ export function InventoryView() {
                             >
                               {item.currentQuantity.toLocaleString("vi-VN")}
                             </span>
-                            <span className="text-gray-400 text-xs">{item.unitName}</span>
+                            <span className="text-muted text-xs">{item.unitName}</span>
                           </div>
                           {item.minStockThreshold > 0 && (
-                            <div className="text-[10px] text-gray-500">
+                            <div className="text-[10px] text-subtle">
                               Định mức: {item.minStockThreshold} {item.unitName}
                             </div>
                           )}
                         </td>
 
                         {/* Average Unit Cost */}
-                        <td className="py-4 px-5 font-mono text-gray-300 font-medium">
+                        <td className="py-4 px-5 font-mono text-ink-secondary font-medium">
                           {formatVnd(item.averageUnitCost)}
                         </td>
 
@@ -631,7 +631,7 @@ export function InventoryView() {
                             <button
                               type="button"
                               onClick={() => openAdjustModalForItem(item, "COUNT")}
-                              className="p-1.5 rounded-xl bg-[#222530] hover:bg-[#2c303f] text-gray-300 hover:text-white border border-[#2e3342] text-xs font-bold transition-all cursor-pointer"
+                              className="p-1.5 rounded-xl bg-raised hover:bg-surface-hover text-ink-secondary hover:text-ink border border-line-strong text-xs font-bold transition-all cursor-pointer"
                               title="Kiểm kê thực tế"
                             >
                               <Scale size={14} />
@@ -660,17 +660,17 @@ export function InventoryView() {
 
       {/* Tab 2: Lịch sử Nhập / Xuất kho (Transactions) */}
       {activeTab === "history" && (
-        <div className="bg-[#181a20] rounded-3xl border border-[#262930] shadow-sm overflow-hidden">
+        <div className="bg-surface rounded-3xl border border-line shadow-sm overflow-hidden">
           {isTxLoading ? (
-            <div className="p-12 text-center text-gray-400 flex flex-col items-center justify-center gap-3">
+            <div className="p-12 text-center text-muted flex flex-col items-center justify-center gap-3">
               <RefreshCw className="animate-spin text-amber-500" size={24} />
               <span className="text-xs">Đang tải lịch sử kho...</span>
             </div>
           ) : transactions.length === 0 ? (
-            <div className="p-16 text-center text-gray-500 flex flex-col items-center justify-center gap-3">
+            <div className="p-16 text-center text-subtle flex flex-col items-center justify-center gap-3">
               <History size={36} />
-              <div className="text-sm font-bold text-gray-300">Chưa có biến động kho nào</div>
-              <p className="text-xs text-gray-500">
+              <div className="text-sm font-bold text-ink-secondary">Chưa có biến động kho nào</div>
+              <p className="text-xs text-subtle">
                 Các thao tác nhập hàng, xuất kho, kiểm kê sẽ được ghi lại chi tiết tại đây.
               </p>
             </div>
@@ -678,7 +678,7 @@ export function InventoryView() {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-[#262930] bg-[#14151a] text-gray-400 font-bold uppercase tracking-wider text-[11px]">
+                  <tr className="border-b border-line bg-well text-muted font-bold uppercase tracking-wider text-[11px]">
                     <th className="py-4 px-5">Thời gian</th>
                     <th className="py-4 px-5">Loại giao dịch</th>
                     <th className="py-4 px-5">Mặt hàng</th>
@@ -689,17 +689,17 @@ export function InventoryView() {
                     <th className="py-4 px-5">Lý do / Ghi chú</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#22252c]">
+                <tbody className="divide-y divide-line">
                   {paginatedHistory.map((tx) => {
                     const isReceipt = tx.transactionType.toLowerCase() === "receipt";
                     const isIssue = tx.transactionType.toLowerCase() === "issue";
                     const isCount = tx.transactionType.toLowerCase() === "count";
 
                     return (
-                      <tr key={tx.id} className="hover:bg-[#1d2028] transition-colors">
+                      <tr key={tx.id} className="hover:bg-raised transition-colors">
                         {/* Time */}
-                        <td className="py-4 px-5 font-mono text-gray-400 flex items-center gap-1.5">
-                          <Clock size={12} className="text-gray-500" />
+                        <td className="py-4 px-5 font-mono text-muted flex items-center gap-1.5">
+                          <Clock size={12} className="text-subtle" />
                           <span>{formatDate(tx.createdAt)}</span>
                         </td>
 
@@ -724,7 +724,7 @@ export function InventoryView() {
                             </span>
                           )}
                           {!isReceipt && !isIssue && !isCount && (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-gray-800 text-gray-300 border border-gray-700">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-raised text-ink-secondary border border-line-strong">
                               {tx.transactionType}
                             </span>
                           )}
@@ -732,8 +732,8 @@ export function InventoryView() {
 
                         {/* Ingredient */}
                         <td className="py-4 px-5">
-                          <span className="font-bold text-white">{tx.ingredientName}</span>
-                          <span className="text-[11px] text-gray-400 ml-1.5">({tx.unitName})</span>
+                          <span className="font-bold text-ink">{tx.ingredientName}</span>
+                          <span className="text-[11px] text-muted ml-1.5">({tx.unitName})</span>
                         </td>
 
                         {/* Delta */}
@@ -744,7 +744,7 @@ export function InventoryView() {
                                 ? "text-emerald-400"
                                 : tx.quantityDelta < 0
                                 ? "text-rose-400"
-                                : "text-gray-400"
+                                : "text-muted"
                             }
                           >
                             {tx.quantityDelta > 0 ? `+${tx.quantityDelta}` : tx.quantityDelta}{" "}
@@ -753,24 +753,24 @@ export function InventoryView() {
                         </td>
 
                         {/* Cost */}
-                        <td className="py-4 px-5 font-mono text-gray-300">
+                        <td className="py-4 px-5 font-mono text-ink-secondary">
                           {formatVnd(tx.unitCost)}
                         </td>
 
                         {/* Before -> After */}
-                        <td className="py-4 px-5 font-mono text-gray-400">
+                        <td className="py-4 px-5 font-mono text-muted">
                           <span>{tx.quantityBefore}</span>
-                          <span className="mx-1 text-gray-600">&rarr;</span>
-                          <span className="font-bold text-white">{tx.quantityAfter}</span>
+                          <span className="mx-1 text-faint">&rarr;</span>
+                          <span className="font-bold text-ink">{tx.quantityAfter}</span>
                         </td>
 
                         {/* Performed By */}
-                        <td className="py-4 px-5 text-gray-300 font-medium">
+                        <td className="py-4 px-5 text-ink-secondary font-medium">
                           {tx.performedBy}
                         </td>
 
                         {/* Reason */}
-                        <td className="py-4 px-5 text-gray-400 italic max-w-xs truncate">
+                        <td className="py-4 px-5 text-muted italic max-w-xs truncate">
                           {tx.reason || "—"}
                         </td>
                       </tr>
@@ -796,21 +796,21 @@ export function InventoryView() {
       {/* Modal 1: Thêm Mặt Hàng Mới */}
       {createModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-[#181a20] border border-[#2b303d] rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl animate-in zoom-in-95">
-            <div className="flex items-center justify-between p-6 border-b border-[#252834]">
+          <div className="bg-surface border border-line rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl animate-in zoom-in-95">
+            <div className="flex items-center justify-between p-6 border-b border-line">
               <div className="flex items-center gap-2.5">
                 <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
                   <PackagePlus size={20} />
                 </div>
                 <div>
-                  <h3 className="text-lg font-black text-white font-heading">Thêm mặt hàng tồn kho</h3>
-                  <p className="text-xs text-gray-400">Tạo mới nguyên vật liệu hoặc đồ uống quản lý kho</p>
+                  <h3 className="text-lg font-black text-ink font-heading">Thêm mặt hàng tồn kho</h3>
+                  <p className="text-xs text-muted">Tạo mới nguyên vật liệu hoặc đồ uống quản lý kho</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setCreateModalOpen(false)}
-                className="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-[#252934] transition-all cursor-pointer"
+                className="p-2 rounded-xl text-muted hover:text-ink hover:bg-surface-hover transition-all cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -818,7 +818,7 @@ export function InventoryView() {
 
             <form onSubmit={handleCreateSubmit} className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-bold text-gray-300 mb-1.5">
+                <label className="block text-xs font-bold text-ink-secondary mb-1.5">
                   Tên mặt hàng / nguyên liệu <span className="text-rose-400">*</span>
                 </label>
                 <input
@@ -827,13 +827,13 @@ export function InventoryView() {
                   placeholder="Ví dụ: Thịt bò Wagyu, Bia Tiger lon, Nước mắm..."
                   value={createName}
                   onChange={(e) => setCreateName(e.target.value)}
-                  className="w-full bg-[#131418] text-white text-xs px-4 py-3 rounded-2xl border border-[#292c35] focus:outline-none focus:border-amber-500"
+                  className="w-full bg-well text-ink text-xs px-4 py-3 rounded-2xl border border-line focus:outline-none focus:border-amber-500"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-gray-300 mb-1.5">
+                  <label className="block text-xs font-bold text-ink-secondary mb-1.5">
                     Mã hàng (SKU)
                   </label>
                   <input
@@ -841,12 +841,12 @@ export function InventoryView() {
                     placeholder="Tự sinh (NL001...)"
                     value={createCode}
                     onChange={(e) => setCreateCode(e.target.value)}
-                    className="w-full bg-[#131418] text-white text-xs px-4 py-3 rounded-2xl border border-[#292c35] focus:outline-none focus:border-amber-500 font-mono"
+                    className="w-full bg-well text-ink text-xs px-4 py-3 rounded-2xl border border-line focus:outline-none focus:border-amber-500 font-mono"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-300 mb-1.5">
+                  <label className="block text-xs font-bold text-ink-secondary mb-1.5">
                     Đơn vị tính <span className="text-rose-400">*</span>
                   </label>
                   <input
@@ -856,7 +856,7 @@ export function InventoryView() {
                     placeholder="kg, lon, chai, đĩa..."
                     value={createUnitName}
                     onChange={(e) => setCreateUnitName(e.target.value)}
-                    className="w-full bg-[#131418] text-white text-xs px-4 py-3 rounded-2xl border border-[#292c35] focus:outline-none focus:border-amber-500"
+                    className="w-full bg-well text-ink text-xs px-4 py-3 rounded-2xl border border-line focus:outline-none focus:border-amber-500"
                   />
                   <datalist id="common-units">
                     {commonUnits.map((u) => (
@@ -868,7 +868,7 @@ export function InventoryView() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-gray-300 mb-1.5">
+                  <label className="block text-xs font-bold text-ink-secondary mb-1.5">
                     Số lượng khởi tạo ban đầu
                   </label>
                   <input
@@ -877,12 +877,12 @@ export function InventoryView() {
                     step="any"
                     value={createInitialQty}
                     onChange={(e) => setCreateInitialQty(e.target.value)}
-                    className="w-full bg-[#131418] text-white text-xs px-4 py-3 rounded-2xl border border-[#292c35] focus:outline-none focus:border-amber-500 font-mono"
+                    className="w-full bg-well text-ink text-xs px-4 py-3 rounded-2xl border border-line focus:outline-none focus:border-amber-500 font-mono"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-300 mb-1.5">
+                  <label className="block text-xs font-bold text-ink-secondary mb-1.5">
                     Đơn giá vốn ban đầu (₫)
                   </label>
                   <input
@@ -892,13 +892,13 @@ export function InventoryView() {
                     placeholder="0"
                     value={createInitialCost}
                     onChange={(e) => setCreateInitialCost(e.target.value)}
-                    className="w-full bg-[#131418] text-white text-xs px-4 py-3 rounded-2xl border border-[#292c35] focus:outline-none focus:border-amber-500 font-mono"
+                    className="w-full bg-well text-ink text-xs px-4 py-3 rounded-2xl border border-line focus:outline-none focus:border-amber-500 font-mono"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-300 mb-1.5">
+                <label className="block text-xs font-bold text-ink-secondary mb-1.5">
                   Định mức tồn tối thiểu cảnh báo
                 </label>
                 <input
@@ -907,18 +907,18 @@ export function InventoryView() {
                   step="any"
                   value={createMinThreshold}
                   onChange={(e) => setCreateMinThreshold(e.target.value)}
-                  className="w-full bg-[#131418] text-white text-xs px-4 py-3 rounded-2xl border border-[#292c35] focus:outline-none focus:border-amber-500 font-mono"
+                  className="w-full bg-well text-ink text-xs px-4 py-3 rounded-2xl border border-line focus:outline-none focus:border-amber-500 font-mono"
                 />
-                <p className="text-[11px] text-gray-500 mt-1">
+                <p className="text-[11px] text-subtle mt-1">
                   Khi tồn kho giảm dưới mức này, hệ thống sẽ tự động hiển thị cảnh báo màu vàng.
                 </p>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#252834]">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-line">
                 <button
                   type="button"
                   onClick={() => setCreateModalOpen(false)}
-                  className="px-5 py-2.5 rounded-2xl bg-[#222530] text-gray-300 hover:text-white text-xs font-bold transition-all cursor-pointer"
+                  className="px-5 py-2.5 rounded-2xl bg-raised text-ink-secondary hover:text-ink text-xs font-bold transition-all cursor-pointer"
                 >
                   Hủy
                 </button>
@@ -943,21 +943,21 @@ export function InventoryView() {
       {/* Modal 2: Nhập / Xuất / Cân chỉnh Kiểm kê Kho */}
       {adjustModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-[#181a20] border border-[#2b303d] rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl animate-in zoom-in-95">
-            <div className="flex items-center justify-between p-6 border-b border-[#252834]">
+          <div className="bg-surface border border-line rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl animate-in zoom-in-95">
+            <div className="flex items-center justify-between p-6 border-b border-line">
               <div className="flex items-center gap-2.5">
                 <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
                   <ArrowUpDown size={20} />
                 </div>
                 <div>
-                  <h3 className="text-lg font-black text-white font-heading">Điều chỉnh kho</h3>
-                  <p className="text-xs text-gray-400">Nhập hàng mới, xuất hao hụt hoặc kiểm kê cân chỉnh</p>
+                  <h3 className="text-lg font-black text-ink font-heading">Điều chỉnh kho</h3>
+                  <p className="text-xs text-muted">Nhập hàng mới, xuất hao hụt hoặc kiểm kê cân chỉnh</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setAdjustModalOpen(false)}
-                className="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-[#252934] transition-all cursor-pointer"
+                className="p-2 rounded-xl text-muted hover:text-ink hover:bg-surface-hover transition-all cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -966,10 +966,10 @@ export function InventoryView() {
             <form onSubmit={handleAdjustSubmit} className="p-6 space-y-4">
               {/* Type Switcher */}
               <div>
-                <label className="block text-xs font-bold text-gray-300 mb-1.5">
+                <label className="block text-xs font-bold text-ink-secondary mb-1.5">
                   Loại thao tác <span className="text-rose-400">*</span>
                 </label>
-                <div className="grid grid-cols-3 gap-2 p-1 bg-[#131418] rounded-2xl border border-[#252830]">
+                <div className="grid grid-cols-3 gap-2 p-1 bg-well rounded-2xl border border-line">
                   <button
                     type="button"
                     onClick={() => {
@@ -979,7 +979,7 @@ export function InventoryView() {
                     className={`py-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                       adjustType === "RECEIPT"
                         ? "bg-emerald-500 text-white shadow-md shadow-emerald-950/40"
-                        : "text-gray-400 hover:text-white"
+                        : "text-muted hover:text-ink"
                     }`}
                   >
                     <Plus size={13} />
@@ -995,7 +995,7 @@ export function InventoryView() {
                     className={`py-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                       adjustType === "ISSUE"
                         ? "bg-rose-500 text-white shadow-md shadow-rose-950/40"
-                        : "text-gray-400 hover:text-white"
+                        : "text-muted hover:text-ink"
                     }`}
                   >
                     <Minus size={13} />
@@ -1011,7 +1011,7 @@ export function InventoryView() {
                     className={`py-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                       adjustType === "COUNT"
                         ? "bg-sky-500 text-white shadow-md shadow-sky-950/40"
-                        : "text-gray-400 hover:text-white"
+                        : "text-muted hover:text-ink"
                     }`}
                   >
                     <Scale size={13} />
@@ -1022,7 +1022,7 @@ export function InventoryView() {
 
               {/* Item Select */}
               <div>
-                <label className="block text-xs font-bold text-gray-300 mb-1.5">
+                <label className="block text-xs font-bold text-ink-secondary mb-1.5">
                   Mặt hàng / nguyên liệu <span className="text-rose-400">*</span>
                 </label>
                 <select
@@ -1041,7 +1041,7 @@ export function InventoryView() {
                       }
                     }
                   }}
-                  className="w-full bg-[#131418] text-white text-xs px-4 py-3 rounded-2xl border border-[#292c35] focus:outline-none focus:border-amber-500 cursor-pointer"
+                  className="w-full bg-well text-ink text-xs px-4 py-3 rounded-2xl border border-line focus:outline-none focus:border-amber-500 cursor-pointer"
                 >
                   <option value="">-- Chọn mặt hàng --</option>
                   {items.map((it) => (
@@ -1054,10 +1054,10 @@ export function InventoryView() {
               </div>
 
               {selectedItemForAdjust && (
-                <div className="p-3 bg-[#131418] rounded-2xl border border-[#262934] text-xs flex items-center justify-between text-gray-400">
+                <div className="p-3 bg-well rounded-2xl border border-line text-xs flex items-center justify-between text-muted">
                   <span>
                     Hiện có:{" "}
-                    <strong className="text-white font-mono">
+                    <strong className="text-ink font-mono">
                       {selectedItemForAdjust.currentQuantity} {selectedItemForAdjust.unitName}
                     </strong>
                   </span>
@@ -1073,7 +1073,7 @@ export function InventoryView() {
               {/* Quantity */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-gray-300 mb-1.5">
+                  <label className="block text-xs font-bold text-ink-secondary mb-1.5">
                     {adjustType === "RECEIPT"
                       ? "Số lượng nhập thêm"
                       : adjustType === "ISSUE"
@@ -1088,13 +1088,13 @@ export function InventoryView() {
                     required
                     value={adjustQty}
                     onChange={(e) => setAdjustQty(e.target.value)}
-                    className="w-full bg-[#131418] text-white text-xs px-4 py-3 rounded-2xl border border-[#292c35] focus:outline-none focus:border-amber-500 font-mono"
+                    className="w-full bg-well text-ink text-xs px-4 py-3 rounded-2xl border border-line focus:outline-none focus:border-amber-500 font-mono"
                   />
                 </div>
 
                 {adjustType === "RECEIPT" ? (
                   <div>
-                    <label className="block text-xs font-bold text-gray-300 mb-1.5">
+                    <label className="block text-xs font-bold text-ink-secondary mb-1.5">
                       Đơn giá nhập mới (₫)
                     </label>
                     <input
@@ -1104,15 +1104,15 @@ export function InventoryView() {
                       placeholder="Tự động theo giá cũ"
                       value={adjustUnitCost}
                       onChange={(e) => setAdjustUnitCost(e.target.value)}
-                      className="w-full bg-[#131418] text-white text-xs px-4 py-3 rounded-2xl border border-[#292c35] focus:outline-none focus:border-amber-500 font-mono"
+                      className="w-full bg-well text-ink text-xs px-4 py-3 rounded-2xl border border-line focus:outline-none focus:border-amber-500 font-mono"
                     />
                   </div>
                 ) : (
                   <div>
-                    <label className="block text-xs font-bold text-gray-300 mb-1.5">
+                    <label className="block text-xs font-bold text-ink-secondary mb-1.5">
                       Tồn dự kiến sau khi lưu
                     </label>
-                    <div className="w-full bg-[#131418] text-gray-400 text-xs px-4 py-3 rounded-2xl border border-[#292c35] font-mono">
+                    <div className="w-full bg-well text-muted text-xs px-4 py-3 rounded-2xl border border-line font-mono">
                       {selectedItemForAdjust
                         ? adjustType === "ISSUE"
                           ? Math.max(
@@ -1128,7 +1128,7 @@ export function InventoryView() {
 
               {/* Reason */}
               <div>
-                <label className="block text-xs font-bold text-gray-300 mb-1.5">
+                <label className="block text-xs font-bold text-ink-secondary mb-1.5">
                   Lý do / Ghi chú
                 </label>
                 <input
@@ -1136,15 +1136,15 @@ export function InventoryView() {
                   placeholder="Ghi chú lý do thao tác kho..."
                   value={adjustReason}
                   onChange={(e) => setAdjustReason(e.target.value)}
-                  className="w-full bg-[#131418] text-white text-xs px-4 py-3 rounded-2xl border border-[#292c35] focus:outline-none focus:border-amber-500"
+                  className="w-full bg-well text-ink text-xs px-4 py-3 rounded-2xl border border-line focus:outline-none focus:border-amber-500"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#252834]">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-line">
                 <button
                   type="button"
                   onClick={() => setAdjustModalOpen(false)}
-                  className="px-5 py-2.5 rounded-2xl bg-[#222530] text-gray-300 hover:text-white text-xs font-bold transition-all cursor-pointer"
+                  className="px-5 py-2.5 rounded-2xl bg-raised text-ink-secondary hover:text-ink text-xs font-bold transition-all cursor-pointer"
                 >
                   Hủy
                 </button>

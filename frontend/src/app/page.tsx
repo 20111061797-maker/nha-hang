@@ -37,7 +37,7 @@ function percentChange(current: number, previous: number): number | null {
 
 function EmptyState({ text }: { text: string }) {
   return (
-    <div className="flex-1 flex items-center justify-center text-center text-xs text-gray-500 py-6">
+    <div className="flex-1 flex items-center justify-center text-center text-xs text-subtle py-6">
       {text}
     </div>
   );
@@ -124,16 +124,16 @@ export default function DashboardPage() {
     <AppShell>
       <div className="flex flex-col gap-6 selection:bg-amber-500 selection:text-black">
         {/* Sub-Header Toolbar with Filter & Live Clock */}
-        <div className="flex flex-wrap items-center justify-between gap-3 bg-[#1a1c1e] border border-[#2d3035] p-3 sm:px-5 sm:py-3.5 rounded-2xl shadow-lg">
+        <div className="flex flex-wrap items-center justify-between gap-3 bg-surface border border-line p-3 sm:px-5 sm:py-3.5 rounded-2xl shadow-lg">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-lg sm:text-xl shadow-inner shrink-0">
               📊
             </div>
             <div>
-              <h1 className="text-sm sm:text-base md:text-lg font-black uppercase tracking-wide text-white font-heading">
+              <h1 className="text-sm sm:text-base md:text-lg font-black uppercase tracking-wide text-ink font-heading">
                 BẢNG ĐIỀU KHIỂN QUẢN LÝ
               </h1>
-              <div className="flex items-center gap-2 text-[11px] sm:text-xs text-gray-400">
+              <div className="flex items-center gap-2 text-[11px] sm:text-xs text-muted">
                 <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 <span>Dữ liệu thực • cập nhật mỗi 15 giây • {currentTime}</span>
               </div>
@@ -142,20 +142,20 @@ export default function DashboardPage() {
 
           <div className="flex items-center gap-3">
             <div className="relative">
-              <div className="flex items-center gap-2 text-xs text-gray-400">
+              <div className="flex items-center gap-2 text-xs text-muted">
                 <span className="hidden sm:inline">Thời gian:</span>
                 <button
                   type="button"
                   onClick={() => setDropdownOpen(!dropdownOpen)}
-                  className="flex items-center gap-2 bg-[#22252a] hover:bg-[#2c3037] border border-[#383d47] px-3.5 py-2 rounded-xl text-xs font-bold text-gray-200 transition-colors shadow-sm"
+                  className="flex items-center gap-2 bg-raised hover:bg-surface-hover border border-line-strong px-3.5 py-2 rounded-xl text-xs font-bold text-ink transition-colors shadow-sm"
                 >
                   <span>{rangeLabel}</span>
-                  <ChevronDown size={14} className="text-gray-400" />
+                  <ChevronDown size={14} className="text-muted" />
                 </button>
               </div>
 
               {dropdownOpen && (
-                <div className="absolute right-0 mt-2 w-36 bg-[#22252a] border border-[#383d47] rounded-xl shadow-xl py-1.5 z-50 text-xs">
+                <div className="absolute right-0 mt-2 w-36 bg-raised border border-line-strong rounded-xl shadow-xl py-1.5 z-50 text-xs">
                   {RANGES.map((r) => (
                     <button
                       key={r.key}
@@ -164,8 +164,8 @@ export default function DashboardPage() {
                         setRange(r.key);
                         setDropdownOpen(false);
                       }}
-                      className={`w-full text-left px-3.5 py-2 hover:bg-[#2d323b] transition-colors ${
-                        range === r.key ? "text-amber-400 font-bold bg-[#2d323b]/50" : "text-gray-300"
+                      className={`w-full text-left px-3.5 py-2 hover:bg-surface-hover transition-colors ${
+                        range === r.key ? "text-amber-400 font-bold bg-surface-hover/50" : "text-ink-secondary"
                       }`}
                     >
                       {r.label}
@@ -175,9 +175,9 @@ export default function DashboardPage() {
               )}
             </div>
 
-            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#22252a] border border-[#383d47] text-gray-300 text-xs">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-raised border border-line-strong text-ink-secondary text-xs">
               <Bell size={15} className="text-amber-400" />
-              <span className="hidden md:inline text-gray-300">Cảnh báo</span>
+              <span className="hidden md:inline text-ink-secondary">Cảnh báo</span>
               <span
                 className={`w-5 h-5 rounded-full text-white font-black text-[10px] flex items-center justify-center ${
                   stockAlertTotal > 0 ? "bg-rose-600" : "bg-emerald-600"
@@ -198,11 +198,11 @@ export default function DashboardPage() {
 
         {/* ROW 1: metric cards */}
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-[#241e1b] border border-[#443329] rounded-2xl p-4 md:p-5 flex justify-between items-start shadow-lg relative overflow-hidden group hover:border-[#6a4f3e] transition-all">
+          <div className="bg-warm-surface border border-warm-line rounded-2xl p-4 md:p-5 flex justify-between items-start shadow-lg relative overflow-hidden group hover:border-warm-line transition-all">
             <div className="flex flex-col gap-1 z-10">
-              <span className="text-xs text-[#a99182] font-semibold">Doanh thu {rangeLabel.toLowerCase()}</span>
+              <span className="text-xs text-warm-muted font-semibold">Doanh thu {rangeLabel.toLowerCase()}</span>
               <div className="flex items-baseline gap-1 mt-0.5">
-                <span className="text-2xl md:text-3xl font-black text-[#fef3c7] font-mono tracking-tight">
+                <span className="text-2xl md:text-3xl font-black text-amber-soft font-mono tracking-tight">
                   {isLoading ? "…" : vnd(data?.revenueRange ?? 0)}
                 </span>
                 <span className="text-xs font-bold text-amber-400">VNĐ</span>
@@ -211,7 +211,7 @@ export default function DashboardPage() {
                 <span
                   className={`text-xs font-bold mt-1 flex items-center gap-1 ${
                     revenueChange === null
-                      ? "text-gray-500"
+                      ? "text-subtle"
                       : revenueChange >= 0
                         ? "text-emerald-400"
                         : "text-rose-400"
@@ -226,29 +226,29 @@ export default function DashboardPage() {
                 </span>
               )}
             </div>
-            <div className="w-14 h-14 rounded-2xl bg-[#382b24] border border-[#533f34] flex items-center justify-center text-3xl shadow-inner group-hover:scale-105 transition-transform">
+            <div className="w-14 h-14 rounded-2xl bg-danger-soft border border-warm-line flex items-center justify-center text-3xl shadow-inner group-hover:scale-105 transition-transform">
               💵
             </div>
             <div className="absolute -bottom-6 -right-6 w-28 h-28 bg-amber-600/10 rounded-full blur-xl pointer-events-none" />
           </div>
 
-          <div className="bg-[#241e1b] border border-[#443329] rounded-2xl p-4 md:p-5 flex justify-between items-start shadow-lg relative overflow-hidden group hover:border-[#6a4f3e] transition-all">
+          <div className="bg-warm-surface border border-warm-line rounded-2xl p-4 md:p-5 flex justify-between items-start shadow-lg relative overflow-hidden group hover:border-warm-line transition-all">
             <div className="flex flex-col gap-1 z-10">
-              <span className="text-xs text-[#a99182] font-semibold">Số bàn đang phục vụ</span>
+              <span className="text-xs text-warm-muted font-semibold">Số bàn đang phục vụ</span>
               <div className="flex items-baseline gap-1 mt-0.5">
-                <span className="text-2xl md:text-3xl font-black text-white font-mono tracking-tight">
+                <span className="text-2xl md:text-3xl font-black text-ink font-mono tracking-tight">
                   {data?.tablesOccupied ?? 0}
-                  <span className="text-lg text-gray-500">/{data?.tablesTotal ?? 0}</span>
+                  <span className="text-lg text-subtle">/{data?.tablesTotal ?? 0}</span>
                 </span>
               </div>
-              <span className="text-xs font-semibold text-gray-400 mt-1">
+              <span className="text-xs font-semibold text-muted mt-1">
                 Còn trống:{" "}
                 <strong className="text-emerald-400">
                   {Math.max((data?.tablesTotal ?? 0) - (data?.tablesOccupied ?? 0), 0)} bàn
                 </strong>
               </span>
             </div>
-            <div className="w-14 h-14 rounded-2xl bg-[#382b24] border border-[#533f34] p-2 flex flex-col justify-between shadow-inner group-hover:scale-105 transition-transform">
+            <div className="w-14 h-14 rounded-2xl bg-danger-soft border border-warm-line p-2 flex flex-col justify-between shadow-inner group-hover:scale-105 transition-transform">
               <div className="grid grid-cols-3 gap-1">
                 {Array.from({ length: 9 }).map((_, i) => {
                   const total = data?.tablesTotal ?? 0;
@@ -257,7 +257,7 @@ export default function DashboardPage() {
                   return (
                     <span
                       key={i}
-                      className={`w-2.5 h-2.5 rounded-sm ${i < filled ? "bg-amber-500" : "bg-[#524137]"}`}
+                      className={`w-2.5 h-2.5 rounded-sm ${i < filled ? "bg-amber-500" : "bg-warm-raised"}`}
                     />
                   );
                 })}
@@ -266,14 +266,14 @@ export default function DashboardPage() {
             <div className="absolute -bottom-6 -right-6 w-28 h-28 bg-orange-600/10 rounded-full blur-xl pointer-events-none" />
           </div>
 
-          <div className="bg-[#241e1b] border border-[#443329] rounded-2xl p-4 md:p-5 flex justify-between items-start shadow-lg relative overflow-hidden group hover:border-[#6a4f3e] transition-all">
+          <div className="bg-warm-surface border border-warm-line rounded-2xl p-4 md:p-5 flex justify-between items-start shadow-lg relative overflow-hidden group hover:border-warm-line transition-all">
             <div className="flex flex-col gap-1 z-10">
-              <span className="text-xs text-[#a99182] font-semibold">Số đơn hàng {rangeLabel.toLowerCase()}</span>
+              <span className="text-xs text-warm-muted font-semibold">Số đơn hàng {rangeLabel.toLowerCase()}</span>
               <div className="flex items-baseline gap-1 mt-0.5">
-                <span className="text-2xl md:text-3xl font-black text-white font-mono tracking-tight">
+                <span className="text-2xl md:text-3xl font-black text-ink font-mono tracking-tight">
                   {isLoading ? "…" : (data?.orderCountRange ?? 0)}
                 </span>
-                <span className="text-xs text-gray-400">hóa đơn</span>
+                <span className="text-xs text-muted">hóa đơn</span>
               </div>
               <span className="text-xs font-semibold text-amber-400 mt-1 flex items-center gap-1">
                 {(data?.waitingKitchenCount ?? 0) > 0 && (
@@ -282,31 +282,31 @@ export default function DashboardPage() {
                 <span>{data?.waitingKitchenCount ?? 0} đơn đang chờ bếp</span>
               </span>
             </div>
-            <div className="w-14 h-14 rounded-2xl bg-[#382b24] border border-[#533f34] flex items-center justify-center text-3xl shadow-inner group-hover:scale-105 transition-transform">
+            <div className="w-14 h-14 rounded-2xl bg-danger-soft border border-warm-line flex items-center justify-center text-3xl shadow-inner group-hover:scale-105 transition-transform">
               👨‍🍳
             </div>
             <div className="absolute -bottom-6 -right-6 w-28 h-28 bg-amber-600/10 rounded-full blur-xl pointer-events-none" />
           </div>
 
-          <div className="bg-[#241e1b] border border-[#443329] rounded-2xl p-4 md:p-5 flex justify-between items-start shadow-lg relative overflow-hidden group hover:border-[#6a4f3e] transition-all">
+          <div className="bg-warm-surface border border-warm-line rounded-2xl p-4 md:p-5 flex justify-between items-start shadow-lg relative overflow-hidden group hover:border-warm-line transition-all">
             <div className="flex flex-col gap-1 z-10 min-w-0">
-              <span className="text-xs text-[#a99182] font-semibold">Món bán chạy nhất</span>
+              <span className="text-xs text-warm-muted font-semibold">Món bán chạy nhất</span>
               <div className="flex items-baseline gap-1 mt-0.5">
                 <span className="text-xl md:text-2xl font-black text-amber-300 font-heading tracking-tight truncate">
                   {data?.topProducts?.[0]?.name ?? "—"}
                 </span>
               </div>
-              <span className="text-xs text-gray-400 mt-1">
+              <span className="text-xs text-muted mt-1">
                 {data?.topProducts?.[0] ? (
                   <>
-                    Đã bán: <strong className="text-white font-mono">{data.topProducts[0].quantity}</strong> phần
+                    Đã bán: <strong className="text-ink font-mono">{data.topProducts[0].quantity}</strong> phần
                   </>
                 ) : (
                   "Chưa có đơn trong khoảng này"
                 )}
               </span>
             </div>
-            <div className="w-14 h-14 shrink-0 rounded-2xl bg-[#382b24] border border-[#533f34] flex items-center justify-center text-3xl shadow-inner group-hover:scale-105 transition-transform">
+            <div className="w-14 h-14 shrink-0 rounded-2xl bg-danger-soft border border-warm-line flex items-center justify-center text-3xl shadow-inner group-hover:scale-105 transition-transform">
               🍽️
             </div>
             <div className="absolute -bottom-6 -right-6 w-28 h-28 bg-yellow-600/10 rounded-full blur-xl pointer-events-none" />
@@ -315,14 +315,14 @@ export default function DashboardPage() {
 
         {/* ROW 2: revenue chart + recent orders */}
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-          <div className="lg:col-span-7 bg-[#1c1e22] border border-[#2d3138] rounded-2xl p-5 shadow-lg flex flex-col justify-between">
+          <div className="lg:col-span-7 bg-surface border border-line rounded-2xl p-5 shadow-lg flex flex-col justify-between">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-sm md:text-base font-extrabold uppercase tracking-wide text-white flex items-center gap-2">
+                <h2 className="text-sm md:text-base font-extrabold uppercase tracking-wide text-ink flex items-center gap-2">
                   <span>DOANH THU THEO GIỜ HÔM NAY</span>
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 </h2>
-                <span className="text-xs text-gray-400">Đơn vị: VNĐ (đơn đã thanh toán)</span>
+                <span className="text-xs text-muted">Đơn vị: VNĐ (đơn đã thanh toán)</span>
               </div>
               {chart.peak && chart.peak.revenue > 0 && (
                 <span className="text-xs font-mono text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 px-2.5 py-1 rounded-md font-bold">
@@ -373,7 +373,7 @@ export default function DashboardPage() {
               </svg>
             </div>
 
-            <div className="flex justify-between text-[11px] text-gray-500 font-mono px-4 mt-1 border-t border-[#2d3138] pt-2">
+            <div className="flex justify-between text-[11px] text-subtle font-mono px-4 mt-1 border-t border-line pt-2">
               {chart.coords
                 .filter((_, i, arr) => arr.length <= 9 || i % Math.ceil(arr.length / 9) === 0)
                 .map((c) => (
@@ -381,8 +381,8 @@ export default function DashboardPage() {
                 ))}
             </div>
 
-            <div className="mt-4 pt-3 border-t border-[#2d3138] flex justify-center">
-              <div className="inline-flex items-center gap-2 bg-[#252830] border border-[#383d47] px-4 py-1.5 rounded-full text-xs font-semibold text-gray-300">
+            <div className="mt-4 pt-3 border-t border-line flex justify-center">
+              <div className="inline-flex items-center gap-2 bg-raised border border-line-strong px-4 py-1.5 rounded-full text-xs font-semibold text-ink-secondary">
                 <span>Tổng tháng này:</span>
                 <strong className="text-amber-400 font-mono text-sm">{vnd(data?.revenueMonth ?? 0)} VNĐ</strong>
                 {monthChange !== null && (
@@ -395,9 +395,9 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="lg:col-span-5 bg-[#1c1e22] border border-[#2d3138] rounded-2xl p-5 shadow-lg flex flex-col justify-between">
+          <div className="lg:col-span-5 bg-surface border border-line rounded-2xl p-5 shadow-lg flex flex-col justify-between">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm md:text-base font-extrabold uppercase tracking-wide text-white">
+              <h2 className="text-sm md:text-base font-extrabold uppercase tracking-wide text-ink">
                 DANH SÁCH ĐƠN HÀNG GẦN ĐÂY
               </h2>
             </div>
@@ -410,12 +410,12 @@ export default function DashboardPage() {
                 return (
                   <div
                     key={o.id}
-                    className="bg-[#24272e] border border-[#323640] rounded-xl p-3 flex flex-col gap-1.5 hover:border-amber-500/50 transition-colors"
+                    className="bg-raised border border-line-strong rounded-xl p-3 flex flex-col gap-1.5 hover:border-amber-500/50 transition-colors"
                   >
                     <div className="flex justify-between items-center text-xs">
                       <div className="flex items-center gap-2">
-                        <strong className="text-white font-mono">ĐƠN #{o.orderNumber}</strong>
-                        <span className="text-gray-400">
+                        <strong className="text-ink font-mono">ĐƠN #{o.orderNumber}</strong>
+                        <span className="text-muted">
                           {String(time.getHours()).padStart(2, "0")}:{String(time.getMinutes()).padStart(2, "0")}
                         </span>
                         {o.tableNumber && (
@@ -437,13 +437,13 @@ export default function DashboardPage() {
                         </span>
                       </div>
                     </div>
-                    <p className="text-xs text-gray-400 line-clamp-1 m-0">{o.summary || "—"}</p>
+                    <p className="text-xs text-muted line-clamp-1 m-0">{o.summary || "—"}</p>
                   </div>
                 );
               })}
             </div>
 
-            <div className="mt-3 pt-3 border-t border-[#2d3138] flex justify-between items-center text-xs text-gray-400">
+            <div className="mt-3 pt-3 border-t border-line flex justify-between items-center text-xs text-muted">
               <span>Tự động làm mới dữ liệu</span>
               <Link href="/orders" className="text-amber-400 hover:underline font-bold">
                 Xem tất cả đơn hàng →
@@ -455,12 +455,12 @@ export default function DashboardPage() {
         {/* ROW 3 */}
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Top món bán chạy */}
-          <div className="bg-[#1c1e22] border border-[#2d3138] rounded-2xl p-4 shadow-lg flex flex-col justify-between">
-            <h3 className="text-xs font-extrabold uppercase tracking-wide text-gray-200 mb-3">Top Món Bán Chạy</h3>
+          <div className="bg-surface border border-line rounded-2xl p-4 shadow-lg flex flex-col justify-between">
+            <h3 className="text-xs font-extrabold uppercase tracking-wide text-ink mb-3">Top Món Bán Chạy</h3>
             {(data?.topProducts ?? []).length === 0 ? (
               <EmptyState text="Chưa có dữ liệu bán hàng." />
             ) : (
-              <div className="h-40 flex items-end justify-between gap-2 px-2 pb-2 border-b border-[#2d3138]">
+              <div className="h-40 flex items-end justify-between gap-2 px-2 pb-2 border-b border-line">
                 {data!.topProducts.map((p) => (
                   <div key={p.name} className="flex-1 flex flex-col items-center gap-1 group justify-end h-full">
                     <span className="text-[10px] font-mono text-amber-300 font-bold">{p.quantity}</span>
@@ -468,17 +468,17 @@ export default function DashboardPage() {
                       className="w-full bg-gradient-to-t from-[#c25e2e] to-[#f97316] rounded-t-md group-hover:brightness-110 transition-all"
                       style={{ height: `${Math.max((p.quantity / maxQty) * 100, 8)}px` }}
                     />
-                    <span className="text-[9px] text-gray-400 text-center leading-tight line-clamp-2 mt-1">{p.name}</span>
+                    <span className="text-[9px] text-muted text-center leading-tight line-clamp-2 mt-1">{p.name}</span>
                   </div>
                 ))}
               </div>
             )}
-            <span className="text-[10px] text-gray-500 text-center mt-2">Tính theo số lượng bán ra • {rangeLabel}</span>
+            <span className="text-[10px] text-subtle text-center mt-2">Tính theo số lượng bán ra • {rangeLabel}</span>
           </div>
 
           {/* Top theo doanh thu (donut) */}
-          <div className="bg-[#1c1e22] border border-[#2d3138] rounded-2xl p-4 shadow-lg flex flex-col justify-between">
-            <h3 className="text-xs font-extrabold uppercase tracking-wide text-gray-200 mb-2">Cơ Cấu Doanh Thu Theo Món</h3>
+          <div className="bg-surface border border-line rounded-2xl p-4 shadow-lg flex flex-col justify-between">
+            <h3 className="text-xs font-extrabold uppercase tracking-wide text-ink mb-2">Cơ Cấu Doanh Thu Theo Món</h3>
             {donutTotal <= 0 ? (
               <EmptyState text="Chưa có dữ liệu doanh thu." />
             ) : (
@@ -512,8 +512,8 @@ export default function DashboardPage() {
                     })()}
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                    <span className="text-sm font-black text-white font-mono leading-none">{compactMoney(donutTotal)}</span>
-                    <span className="text-[9px] text-gray-400 mt-0.5">VNĐ</span>
+                    <span className="text-sm font-black text-ink font-mono leading-none">{compactMoney(donutTotal)}</span>
+                    <span className="text-[9px] text-muted mt-0.5">VNĐ</span>
                   </div>
                 </div>
                 <div className="flex flex-col gap-2 text-xs min-w-0">
@@ -523,7 +523,7 @@ export default function DashboardPage() {
                         className="w-2.5 h-2.5 rounded-full shrink-0"
                         style={{ backgroundColor: DONUT_COLORS[i % DONUT_COLORS.length] }}
                       />
-                      <span className="text-gray-300 font-semibold truncate">
+                      <span className="text-ink-secondary font-semibold truncate">
                         {p.name} ({Math.round((p.revenue / donutTotal) * 100)}%)
                       </span>
                     </div>
@@ -531,12 +531,12 @@ export default function DashboardPage() {
                 </div>
               </div>
             )}
-            <span className="text-[10px] text-gray-500 text-center mt-2">Top 4 món theo doanh thu • {rangeLabel}</span>
+            <span className="text-[10px] text-subtle text-center mt-2">Top 4 món theo doanh thu • {rangeLabel}</span>
           </div>
 
           {/* Cảnh báo tồn kho */}
-          <div className="bg-[#1c1e22] border border-[#2d3138] rounded-2xl p-4 shadow-lg flex flex-col justify-between">
-            <h3 className="text-xs font-extrabold uppercase tracking-wide text-gray-200 mb-3 flex items-center justify-between">
+          <div className="bg-surface border border-line rounded-2xl p-4 shadow-lg flex flex-col justify-between">
+            <h3 className="text-xs font-extrabold uppercase tracking-wide text-ink mb-3 flex items-center justify-between">
               <span>CẢNH BÁO TỒN KHO</span>
               <span
                 className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${
@@ -556,7 +556,7 @@ export default function DashboardPage() {
                   <div
                     key={i.id}
                     className={`rounded-lg px-3 py-2 flex items-center gap-2 text-xs border ${
-                      out ? "bg-[#381d1d] border-rose-800/60" : "bg-[#382b1d] border-amber-800/60"
+                      out ? "bg-danger-soft border-rose-800/60" : "bg-warm-surface border-amber-800/60"
                     }`}
                   >
                     <span
@@ -579,16 +579,16 @@ export default function DashboardPage() {
           </div>
 
           {/* Đơn hàng trong bếp */}
-          <div className="bg-[#1c1e22] border border-[#2d3138] rounded-2xl p-4 shadow-lg flex flex-col justify-between">
+          <div className="bg-surface border border-line rounded-2xl p-4 shadow-lg flex flex-col justify-between">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-xs font-extrabold uppercase tracking-wide text-gray-200">ĐƠN HÀNG TRONG BẾP</h3>
+              <h3 className="text-xs font-extrabold uppercase tracking-wide text-ink">ĐƠN HÀNG TRONG BẾP</h3>
               <Link href="/kitchen" className="text-xs text-amber-400 font-bold hover:underline">
                 Vào KDS →
               </Link>
             </div>
             <div className="mb-2">
               <span className="text-sm font-black text-amber-300">
-                Tổng: <span className="font-mono text-base text-white">{data?.kitchenOrderCount ?? 0} đơn</span> trong bếp
+                Tổng: <span className="font-mono text-base text-ink">{data?.kitchenOrderCount ?? 0} đơn</span> trong bếp
               </span>
             </div>
             <div className="flex flex-col gap-2">
@@ -599,9 +599,9 @@ export default function DashboardPage() {
                 return (
                   <div
                     key={k.id}
-                    className="bg-[#24272e] border border-[#383d47] rounded-lg px-3 py-2 flex items-center justify-between text-xs"
+                    className="bg-raised border border-line-strong rounded-lg px-3 py-2 flex items-center justify-between text-xs"
                   >
-                    <span className="text-gray-200 font-medium">
+                    <span className="text-ink font-medium">
                       ĐƠN #{k.orderNumber} | {String(time.getHours()).padStart(2, "0")}:
                       {String(time.getMinutes()).padStart(2, "0")}
                       {k.tableNumber ? ` | Bàn ${k.tableNumber}` : ""}{" "}
@@ -616,7 +616,7 @@ export default function DashboardPage() {
                 );
               })}
             </div>
-            <span className="text-[10px] text-gray-500 text-center mt-2">Đồng bộ trực tiếp từ màn hình bếp</span>
+            <span className="text-[10px] text-subtle text-center mt-2">Đồng bộ trực tiếp từ màn hình bếp</span>
           </div>
         </section>
       </div>

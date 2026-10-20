@@ -435,7 +435,7 @@ export function KitchenView() {
             <span
               className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
                 selectedStationId === "all"
-                  ? "bg-white/25 text-white"
+                  ? "bg-white/25 text-ink"
                   : "bg-slate-200 text-slate-700 dark:bg-white/10 dark:text-gray-300"
               }`}
             >
@@ -462,7 +462,7 @@ export function KitchenView() {
                   <span
                     className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
                       isSelected
-                        ? "bg-white/25 text-white"
+                        ? "bg-white/25 text-ink"
                         : "bg-orange-100 text-orange-700 border border-orange-300 dark:bg-orange-500/20 dark:text-orange-400 dark:border-orange-500/30"
                     }`}
                   >

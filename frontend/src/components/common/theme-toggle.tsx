@@ -25,7 +25,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
       className={`relative inline-flex items-center justify-center p-2 rounded-xl transition-all duration-300 border cursor-pointer select-none group shadow-sm ${
         isLight
           ? "bg-amber-50 hover:bg-amber-100/80 border-amber-200/80 text-amber-700 shadow-amber-900/5"
-          : "bg-[#20232a] hover:bg-[#282c35] border-[#383d47] text-amber-400 hover:text-amber-300 shadow-black/20"
+          : "bg-raised hover:bg-surface-hover border-line-strong text-amber-400 hover:text-amber-300 shadow-black/20"
       } ${className}`}
     >
       <div className="relative w-5 h-5 flex items-center justify-center">

@@ -225,13 +225,13 @@ export function WaiterNotifications() {
           className={`relative flex items-center justify-center w-13 h-13 rounded-full shadow-2xl transition-all cursor-pointer active:scale-95 ${
             unservedCount > 0
               ? "bg-gradient-to-r from-amber-500 to-orange-600 text-white animate-pulse shadow-amber-900/50"
-              : "bg-[#1c1e22] text-gray-300 border border-[#2d3138] hover:text-white"
+              : "bg-surface text-ink-secondary border border-line hover:text-ink"
           }`}
           title="Thông báo phục vụ bàn"
         >
           <Bell size={22} />
           {unservedCount > 0 && (
-            <span className="absolute -top-1 -right-1 bg-red-600 text-white font-black text-[11px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-[#141517]">
+            <span className="absolute -top-1 -right-1 bg-red-600 text-white font-black text-[11px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-paper">
               {unservedCount}
             </span>
           )}
@@ -242,17 +242,17 @@ export function WaiterNotifications() {
       {drawerOpen && (
         <div className="pos-modal-backdrop" onClick={() => setDrawerOpen(false)}>
           <div
-            className="fixed top-0 right-0 bottom-0 w-full max-w-sm bg-[#1c1e22] border-l border-[#2d3138] p-5 shadow-2xl flex flex-col z-50 animate-slide-left"
+            className="fixed top-0 right-0 bottom-0 w-full max-w-sm bg-surface border-l border-line p-5 shadow-2xl flex flex-col z-50 animate-slide-left"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-[#2d3138] pb-4">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
+            <div className="flex items-center justify-between border-b border-line pb-4">
+              <h3 className="text-base font-bold text-ink flex items-center gap-2">
                 <Flame className="text-amber-500" size={20} /> Món chờ phục vụ ({unservedCount})
               </h3>
               <button
                 type="button"
                 onClick={() => setDrawerOpen(false)}
-                className="text-gray-400 hover:text-white"
+                className="text-muted hover:text-ink"
               >
                 <X size={20} />
               </button>
@@ -260,8 +260,8 @@ export function WaiterNotifications() {
 
             <div className="flex-1 overflow-y-auto py-4 space-y-3">
               {notifications.length === 0 ? (
-                <div className="text-center py-12 text-gray-500 space-y-2">
-                  <Utensils size={36} className="mx-auto text-gray-600" />
+                <div className="text-center py-12 text-subtle space-y-2">
+                  <Utensils size={36} className="mx-auto text-faint" />
                   <p className="text-sm">Chưa có món nào báo hoàn tất.</p>
                 </div>
               ) : (
@@ -270,25 +270,25 @@ export function WaiterNotifications() {
                     key={item.id}
                     className={`p-3.5 rounded-xl border transition-all ${
                       item.dismissed
-                        ? "bg-[#141517]/50 border-[#2d3138] opacity-60"
-                        : "bg-[#141517] border-amber-500/50 shadow-md shadow-amber-900/10"
+                        ? "bg-paper/50 border-line opacity-60"
+                        : "bg-paper border-amber-500/50 shadow-md shadow-amber-900/10"
                     }`}
                   >
                     <div className="flex items-center justify-between text-xs">
                       <span className="font-bold text-amber-400 text-sm">
                         Bàn {item.tableNumber}
                       </span>
-                      <span className="text-[11px] text-gray-400 font-mono">
+                      <span className="text-[11px] text-muted font-mono">
                         {item.stationName}
                       </span>
                     </div>
 
-                    <p className="text-xs font-medium text-gray-200 mt-1">
+                    <p className="text-xs font-medium text-ink mt-1">
                       {item.itemSummary}
                     </p>
 
-                    <div className="flex items-center justify-between mt-3 pt-2 border-t border-[#2d3138]">
-                      <span className="text-[10px] text-gray-500">
+                    <div className="flex items-center justify-between mt-3 pt-2 border-t border-line">
+                      <span className="text-[10px] text-subtle">
                         {new Date(item.readyAt).toLocaleTimeString("vi-VN", {
                           hour: "2-digit",
                           minute: "2-digit",
@@ -305,7 +305,7 @@ export function WaiterNotifications() {
                           <Check size={12} /> Đã bưng
                         </button>
                       ) : (
-                        <span className="text-[11px] text-gray-500 flex items-center gap-1 italic">
+                        <span className="text-[11px] text-subtle flex items-center gap-1 italic">
                           <Check size={12} /> Đã phục vụ
                         </span>
                       )}

@@ -390,30 +390,30 @@ export function QrMenuView({ tableIdentifier }: Props) {
 
   if (tableLoading || menuLoading) {
     return (
-      <div className="min-h-screen bg-[#101216] flex flex-col items-center justify-center text-gray-400 p-6">
+      <div className="min-h-screen bg-well flex flex-col items-center justify-center text-muted p-6">
         <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500/20 to-amber-500/10 border border-orange-500/30 flex items-center justify-center mb-4 shadow-xl">
           <Beer className="text-orange-400 animate-spin" size={32} />
         </div>
-        <p className="text-base font-bold text-gray-100">Đang tải thực đơn Quán Bếp Nhậu...</p>
-        <p className="text-xs text-gray-500 mt-1">Chuẩn bị không gian gọi món cho quý khách</p>
+        <p className="text-base font-bold text-ink">Đang tải thực đơn Quán Bếp Nhậu...</p>
+        <p className="text-xs text-subtle mt-1">Chuẩn bị không gian gọi món cho quý khách</p>
       </div>
     );
   }
 
   if (tableError || !tableInfo) {
     return (
-      <div className="min-h-screen bg-[#101216] flex flex-col items-center justify-center text-center p-6">
+      <div className="min-h-screen bg-well flex flex-col items-center justify-center text-center p-6">
         <div className="w-20 h-20 rounded-3xl bg-red-950/60 border border-red-500/40 text-rose-400 flex items-center justify-center mb-4 shadow-2xl">
           <AlertCircle size={38} />
         </div>
-        <h2 className="text-xl font-black text-white">Mã QR không hợp lệ</h2>
-        <p className="text-xs text-gray-400 mt-2 max-w-sm">
+        <h2 className="text-xl font-black text-ink">Mã QR không hợp lệ</h2>
+        <p className="text-xs text-muted mt-2 max-w-sm">
           Không tìm thấy bàn ăn tương ứng hoặc bàn đã được tắt hoạt động. Vui lòng liên hệ nhân viên phục vụ tại quán.
         </p>
         <button
           type="button"
           onClick={() => window.location.reload()}
-          className="mt-6 px-6 py-2.5 rounded-xl bg-[#202532] hover:bg-[#2b3243] text-gray-200 text-xs font-bold border border-white/10 transition-colors cursor-pointer"
+          className="mt-6 px-6 py-2.5 rounded-xl bg-raised hover:bg-surface-hover text-ink text-xs font-bold border border-ink/10 transition-colors cursor-pointer"
         >
           Tải lại trang
         </button>
@@ -424,7 +424,7 @@ export function QrMenuView({ tableIdentifier }: Props) {
   // Success view
   if (placedOrder) {
     return (
-      <div className="min-h-screen bg-[#101216] flex flex-col items-center justify-center p-6 text-center">
+      <div className="min-h-screen bg-well flex flex-col items-center justify-center p-6 text-center">
         <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-emerald-600 to-green-400 flex items-center justify-center text-white shadow-2xl shadow-emerald-950/60 mb-5 animate-in zoom-in-75">
           <CheckCircle2 size={44} className="stroke-[2.5]" />
         </div>
@@ -433,29 +433,29 @@ export function QrMenuView({ tableIdentifier }: Props) {
           Bàn {placedOrder.tableNumber}
         </span>
 
-        <h1 className="text-2xl sm:text-3xl font-black text-white mt-3 font-heading">
+        <h1 className="text-2xl sm:text-3xl font-black text-ink mt-3 font-heading">
           Đã gửi đơn vào Bếp!
         </h1>
 
-        <p className="text-xs sm:text-sm text-gray-300 mt-2 max-w-sm leading-relaxed">
+        <p className="text-xs sm:text-sm text-ink-secondary mt-2 max-w-sm leading-relaxed">
           Đơn gọi món của bạn đã chuyển tới màn hình Bếp KDS. Các đầu bếp đang khẩn trương chuẩn bị món ngon nóng hổi!
         </p>
 
-        <div className="bg-[#181c25] border border-[#2a3140] rounded-2xl p-4.5 w-full max-w-sm my-6 text-left space-y-2.5 shadow-2xl">
-          <div className="flex justify-between items-center text-xs text-gray-400">
+        <div className="bg-surface border border-line rounded-2xl p-4.5 w-full max-w-sm my-6 text-left space-y-2.5 shadow-2xl">
+          <div className="flex justify-between items-center text-xs text-muted">
             <span>Mã đơn hàng:</span>
             <span className="font-mono text-amber-300 font-bold">{placedOrder.orderNumber}</span>
           </div>
-          <div className="flex justify-between items-center text-xs text-gray-400">
+          <div className="flex justify-between items-center text-xs text-muted">
             <span>Thời gian đặt:</span>
-            <span className="text-gray-200 font-mono">
+            <span className="text-ink font-mono">
               {new Date(placedOrder.createdAt).toLocaleTimeString("vi-VN", {
                 hour: "2-digit",
                 minute: "2-digit",
               })}
             </span>
           </div>
-          <div className="flex justify-between items-center text-sm font-extrabold text-white pt-2.5 border-t border-[#282f3e]">
+          <div className="flex justify-between items-center text-sm font-extrabold text-ink pt-2.5 border-t border-line">
             <div>
               <span>Tổng hóa đơn bàn hiện tại:</span>
               <span className="block text-[10px] text-emerald-400 font-normal">Đã tự động cộng dồn tất cả các món</span>
@@ -466,12 +466,12 @@ export function QrMenuView({ tableIdentifier }: Props) {
           </div>
 
           {placedOrder.pointsEarned ? (
-            <div className="pt-2.5 border-t border-[#282f3e] flex items-center justify-between bg-amber-500/10 -mx-4.5 -mb-4.5 p-3 rounded-b-2xl border-t border-amber-500/20">
+            <div className="pt-2.5 border-t border-line flex items-center justify-between bg-amber-500/10 -mx-4.5 -mb-4.5 p-3 rounded-b-2xl border-t border-amber-500/20">
               <div className="flex items-center gap-2">
                 <Sparkles size={18} className="text-amber-400 shrink-0 animate-pulse" />
                 <div>
                   <span className="text-xs font-bold text-amber-300">Tích lũy điểm thành công!</span>
-                  <span className="block text-[10px] text-gray-400">
+                  <span className="block text-[10px] text-muted">
                     {placedOrder.customerName ? `Khách: ${placedOrder.customerName}` : "Thành viên"}
                     {placedOrder.membershipLevelName ? ` • ${placedOrder.membershipLevelName}` : ""}
                   </span>
@@ -524,7 +524,7 @@ export function QrMenuView({ tableIdentifier }: Props) {
               setPlacedOrder(null);
               refetchBill();
             }}
-            className="flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-[#202636] hover:bg-[#2b3346] text-white font-bold text-xs transition-colors cursor-pointer"
+            className="flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-raised hover:bg-surface-hover text-ink font-bold text-xs transition-colors cursor-pointer"
           >
             <span>Xem thực đơn &amp; Gọi thêm món</span>
             <ArrowRight size={16} />
@@ -535,7 +535,7 @@ export function QrMenuView({ tableIdentifier }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-[#0f1115] text-gray-100 pb-32">
+    <div className="min-h-screen bg-well text-ink pb-32">
       {/* Toast Messages */}
       {toastError && (
         <div className="fixed top-4 left-4 right-4 z-50 max-w-md mx-auto p-3.5 rounded-2xl bg-rose-950/90 border border-rose-500/50 text-rose-200 text-xs font-bold shadow-2xl flex items-center gap-2.5 backdrop-blur-md animate-in slide-in-from-top-4">
@@ -551,23 +551,23 @@ export function QrMenuView({ tableIdentifier }: Props) {
       )}
 
       {/* Hero Brand Header */}
-      <header className="sticky top-0 z-30 bg-[#141720]/95 backdrop-blur-xl border-b border-[#252b3a] px-4 py-3 shadow-lg shadow-black/30">
+      <header className="sticky top-0 z-30 bg-surface/95 backdrop-blur-xl border-b border-line px-4 py-3 shadow-lg shadow-black/30">
         <div className="max-w-3xl mx-auto flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <div className="relative w-11 h-11 shrink-0 rounded-2xl bg-gradient-to-br from-amber-500 via-orange-600 to-rose-600 flex items-center justify-center text-white shadow-lg shadow-orange-950/50 border border-white/20">
               <Flame size={22} className="fill-white/20 stroke-[2.5]" />
-              <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-[#141720]" />
+              <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-paper" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-base font-black text-white tracking-tight truncate font-heading">
+                <h1 className="text-base font-black text-ink tracking-tight truncate font-heading">
                   {tableInfo.branchName}
                 </h1>
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black font-mono bg-gradient-to-r from-amber-400 to-orange-500 text-black shadow-sm">
                   BÀN {tableInfo.tableNumber}
                 </span>
               </div>
-              <p className="text-[11px] text-gray-400 truncate mt-0.5 flex items-center gap-1.5">
+              <p className="text-[11px] text-muted truncate mt-0.5 flex items-center gap-1.5">
                 <span className="text-amber-400 font-semibold">{tableInfo.areaName}</span>
                 <span>•</span>
                 <span>Quét mã gọi món trực tiếp</span>
@@ -589,7 +589,7 @@ export function QrMenuView({ tableIdentifier }: Props) {
       <main className="max-w-3xl mx-auto px-4 pt-4 space-y-4">
         {/* Active Running Bill for this table */}
         {activeBill?.hasActiveOrder && (
-          <div className="bg-gradient-to-r from-amber-950/70 via-[#1b202c] to-[#141720] border border-amber-500/40 rounded-2xl p-3.5 flex items-center justify-between gap-3 shadow-xl">
+          <div className="bg-gradient-to-r from-amber-950/70 via-raised to-surface border border-amber-500/40 rounded-2xl p-3.5 flex items-center justify-between gap-3 shadow-xl">
             <div className="flex items-center gap-3 min-w-0">
               <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 shrink-0">
                 <Receipt size={20} />
@@ -603,7 +603,7 @@ export function QrMenuView({ tableIdentifier }: Props) {
                     {activeBill.items.reduce((s, i) => s + i.quantity, 0)} món đã gọi
                   </span>
                 </div>
-                <div className="text-base font-black text-white font-mono mt-0.5">
+                <div className="text-base font-black text-ink font-mono mt-0.5">
                   {formatCurrency(activeBill.totalAmount)}
                 </div>
               </div>
@@ -620,19 +620,19 @@ export function QrMenuView({ tableIdentifier }: Props) {
 
         {/* Search Input with modern styling */}
         <div className="relative">
-          <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Tìm món nhậu, lẩu, nướng, bia mát lạnh..."
-            className="w-full bg-[#181c25] border border-[#2a3140] rounded-2xl pl-10 pr-10 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/50 transition-all shadow-inner"
+            className="w-full bg-surface border border-line rounded-2xl pl-10 pr-10 py-3 text-sm text-ink placeholder-subtle focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/50 transition-all shadow-inner"
           />
           {search && (
             <button
               type="button"
               onClick={() => setSearch("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white p-1 rounded-full hover:bg-white/10"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-ink p-1 rounded-full hover:bg-ink/10"
             >
               <X size={15} />
             </button>
@@ -647,13 +647,13 @@ export function QrMenuView({ tableIdentifier }: Props) {
             className={`shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
               selectedCategoryId === "all"
                 ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white border-orange-400/60 shadow-lg shadow-orange-500/25 scale-[1.02]"
-                : "bg-[#181c25] text-gray-300 hover:text-white hover:bg-[#202634] border-[#293040]"
+                : "bg-surface text-ink-secondary hover:text-ink hover:bg-raised border-line"
             }`}
           >
             <span>Tất cả món</span>
             <span
               className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
-                selectedCategoryId === "all" ? "bg-black/30 text-white" : "bg-white/10 text-gray-400"
+                selectedCategoryId === "all" ? "bg-black/30 text-white" : "bg-ink/10 text-gray-400"
               }`}
             >
               {categories.flatMap((c) => c.products).length}
@@ -669,13 +669,13 @@ export function QrMenuView({ tableIdentifier }: Props) {
                 className={`shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
                   isSelected
                     ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white border-orange-400/60 shadow-lg shadow-orange-500/25 scale-[1.02]"
-                    : "bg-[#181c25] text-gray-300 hover:text-white hover:bg-[#202634] border-[#293040]"
+                    : "bg-surface text-ink-secondary hover:text-ink hover:bg-raised border-line"
                 }`}
               >
                 <span>{cat.name}</span>
                 <span
                   className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
-                    isSelected ? "bg-black/30 text-white" : "bg-white/10 text-gray-400"
+                    isSelected ? "bg-black/30 text-white" : "bg-ink/10 text-gray-400"
                   }`}
                 >
                   {cat.products.length}
@@ -688,10 +688,10 @@ export function QrMenuView({ tableIdentifier }: Props) {
         {/* Products Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {filteredProducts.length === 0 ? (
-            <div className="col-span-full py-16 text-center text-gray-500 flex flex-col items-center gap-3 bg-[#141720] rounded-3xl border border-[#232836] p-8">
-              <UtensilsCrossed size={40} className="text-gray-600" />
-              <p className="text-base font-bold text-gray-300">Không tìm thấy món ăn nào phù hợp</p>
-              <p className="text-xs text-gray-500 max-w-xs">
+            <div className="col-span-full py-16 text-center text-subtle flex flex-col items-center gap-3 bg-surface rounded-3xl border border-line p-8">
+              <UtensilsCrossed size={40} className="text-faint" />
+              <p className="text-base font-bold text-ink-secondary">Không tìm thấy món ăn nào phù hợp</p>
+              <p className="text-xs text-subtle max-w-xs">
                 Quý khách vui lòng thử tìm với từ khóa khác hoặc chọn danh mục khác.
               </p>
             </div>
@@ -705,11 +705,11 @@ export function QrMenuView({ tableIdentifier }: Props) {
               return (
                 <div
                   key={product.id}
-                  className="group relative flex flex-col justify-between rounded-2xl bg-[#181c25] border border-[#282f3e] hover:border-orange-500/50 shadow-lg hover:shadow-2xl hover:shadow-orange-950/20 transition-all duration-300 overflow-hidden"
+                  className="group relative flex flex-col justify-between rounded-2xl bg-surface border border-line hover:border-orange-500/50 shadow-lg hover:shadow-2xl hover:shadow-orange-950/20 transition-all duration-300 overflow-hidden"
                 >
                   {/* Product Image Banner */}
                   <div
-                    className="relative w-full h-44 bg-[#111318] overflow-hidden cursor-pointer"
+                    className="relative w-full h-44 bg-well overflow-hidden cursor-pointer"
                     onClick={() => handleOpenProduct(product)}
                   >
                     {product.imageUrl ? (
@@ -722,17 +722,17 @@ export function QrMenuView({ tableIdentifier }: Props) {
                         }}
                       />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-[#1a1f2b] to-[#12151d] flex flex-col items-center justify-center gap-1.5 text-gray-500">
-                        <ChefHat size={32} className="text-gray-600" />
-                        <span className="text-[11px] text-gray-500 font-medium">Quán Bếp Nhậu</span>
+                      <div className="w-full h-full bg-gradient-to-br from-raised to-well flex flex-col items-center justify-center gap-1.5 text-subtle">
+                        <ChefHat size={32} className="text-faint" />
+                        <span className="text-[11px] text-subtle font-medium">Quán Bếp Nhậu</span>
                       </div>
                     )}
 
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#181c25] via-transparent to-black/30" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-black/30" />
 
                     {/* Badges on top */}
                     <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between gap-1 pointer-events-none">
-                      <span className="text-[10px] font-mono font-bold text-gray-200 bg-black/70 backdrop-blur-md px-2 py-0.5 rounded-lg border border-white/10">
+                      <span className="text-[10px] font-mono font-bold text-ink bg-black/70 backdrop-blur-md px-2 py-0.5 rounded-lg border border-ink/10">
                         {product.categoryName}
                       </span>
 
@@ -758,16 +758,16 @@ export function QrMenuView({ tableIdentifier }: Props) {
                     onClick={() => handleOpenProduct(product)}
                   >
                     <div>
-                      <h3 className="font-bold text-white text-base group-hover:text-amber-300 transition-colors line-clamp-1 leading-snug">
+                      <h3 className="font-bold text-ink text-base group-hover:text-amber-300 transition-colors line-clamp-1 leading-snug">
                         {product.name}
                       </h3>
 
                       {product.description ? (
-                        <p className="text-xs text-gray-400 mt-1 line-clamp-2 leading-relaxed min-h-[32px]">
+                        <p className="text-xs text-muted mt-1 line-clamp-2 leading-relaxed min-h-[32px]">
                           {product.description}
                         </p>
                       ) : (
-                        <p className="text-xs text-gray-600 italic mt-1 line-clamp-2 min-h-[32px]">
+                        <p className="text-xs text-faint italic mt-1 line-clamp-2 min-h-[32px]">
                           Món ngon đặc sắc tại Quán Bếp Nhậu.
                         </p>
                       )}
@@ -775,11 +775,11 @@ export function QrMenuView({ tableIdentifier }: Props) {
 
                     {/* Price & Action Button */}
                     <div
-                      className="mt-3.5 pt-3 border-t border-[#262c39] flex items-center justify-between gap-2"
+                      className="mt-3.5 pt-3 border-t border-line flex items-center justify-between gap-2"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <div>
-                        <span className="text-[10px] text-gray-500 uppercase tracking-wider block font-semibold">
+                        <span className="text-[10px] text-subtle uppercase tracking-wider block font-semibold">
                           Giá món
                         </span>
                         <span className="text-lg font-black font-mono text-amber-400 tracking-tight">
@@ -789,11 +789,11 @@ export function QrMenuView({ tableIdentifier }: Props) {
 
                       {/* Direct In-card Stepper or Add button */}
                       {inCartQty > 0 && !hasModifiers ? (
-                        <div className="flex items-center gap-2 bg-[#12151d] p-1 rounded-xl border border-[#2e3646]">
+                        <div className="flex items-center gap-2 bg-well p-1 rounded-xl border border-line-strong">
                           <button
                             type="button"
                             onClick={() => handleQuickMinus(product)}
-                            className="w-8 h-8 rounded-lg bg-[#202533] hover:bg-[#2a3142] text-white flex items-center justify-center active:scale-90 transition-all cursor-pointer"
+                            className="w-8 h-8 rounded-lg bg-raised hover:bg-surface-hover text-ink flex items-center justify-center active:scale-90 transition-all cursor-pointer"
                           >
                             {inCartQty === 1 ? (
                               <Trash2 size={14} className="text-rose-400" />
@@ -801,7 +801,7 @@ export function QrMenuView({ tableIdentifier }: Props) {
                               <Minus size={14} />
                             )}
                           </button>
-                          <span className="w-6 text-center font-mono font-black text-sm text-white">
+                          <span className="w-6 text-center font-mono font-black text-sm text-ink">
                             {inCartQty}
                           </span>
                           <button
@@ -845,7 +845,7 @@ export function QrMenuView({ tableIdentifier }: Props) {
             className="bg-gradient-to-r from-orange-600 via-amber-600 to-orange-500 text-white p-3.5 rounded-2xl shadow-2xl shadow-black/60 flex items-center justify-between cursor-pointer active:scale-[0.98] transition-all border border-orange-400/40 backdrop-blur-md"
           >
             <div className="flex items-center gap-3">
-              <div className="relative w-11 h-11 rounded-xl bg-black/25 backdrop-blur-sm flex items-center justify-center font-bold text-white border border-white/10">
+              <div className="relative w-11 h-11 rounded-xl bg-black/25 backdrop-blur-sm flex items-center justify-center font-bold text-white border border-ink/10">
                 <ShoppingBag size={22} />
                 <span className="absolute -top-1.5 -right-1.5 bg-white text-orange-950 text-xs font-black w-5 h-5 rounded-full flex items-center justify-center shadow-md">
                   {totalItemsCount}
@@ -866,7 +866,7 @@ export function QrMenuView({ tableIdentifier }: Props) {
 
             <button
               type="button"
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-black/80 hover:bg-black text-white font-extrabold text-xs transition-colors shadow-md border border-white/10"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-black/80 hover:bg-black text-white font-extrabold text-xs transition-colors shadow-md border border-ink/10"
             >
               <span>Xem giỏ &amp; Đặt món</span>
               <ArrowRight size={15} />
@@ -882,11 +882,11 @@ export function QrMenuView({ tableIdentifier }: Props) {
           onClick={() => setProductModal(null)}
         >
           <div
-            className="bg-[#181c25] border border-[#2d3546] w-full max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col animate-in slide-in-from-bottom-6 sm:zoom-in-95"
+            className="bg-surface border border-line-strong w-full max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col animate-in slide-in-from-bottom-6 sm:zoom-in-95"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header image banner */}
-            <div className="relative w-full h-48 bg-[#111318] shrink-0 overflow-hidden">
+            <div className="relative w-full h-48 bg-well shrink-0 overflow-hidden">
               {productModal.imageUrl ? (
                 <img
                   src={productModal.imageUrl}
@@ -894,26 +894,26 @@ export function QrMenuView({ tableIdentifier }: Props) {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-[#1a1f2b] to-[#12151d] flex flex-col items-center justify-center text-gray-600 gap-1">
-                  <ChefHat size={36} className="text-gray-600" />
-                  <span className="text-xs text-gray-500 font-medium">Quán Bếp Nhậu</span>
+                <div className="w-full h-full bg-gradient-to-br from-raised to-well flex flex-col items-center justify-center text-faint gap-1">
+                  <ChefHat size={36} className="text-faint" />
+                  <span className="text-xs text-subtle font-medium">Quán Bếp Nhậu</span>
                 </div>
               )}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#181c25] via-transparent to-black/40" />
+              <div className="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-black/40" />
 
               <button
                 type="button"
                 onClick={() => setProductModal(null)}
-                className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 backdrop-blur-md text-white flex items-center justify-center hover:bg-black/80 transition-colors cursor-pointer"
+                className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 backdrop-blur-md text-ink flex items-center justify-center hover:bg-black/80 transition-colors cursor-pointer"
               >
                 <X size={18} />
               </button>
 
               <div className="absolute bottom-3 left-4 right-4">
-                <span className="text-[10px] font-mono font-bold text-amber-300 bg-black/70 backdrop-blur-md px-2 py-0.5 rounded-md border border-white/10">
+                <span className="text-[10px] font-mono font-bold text-amber-300 bg-black/70 backdrop-blur-md px-2 py-0.5 rounded-md border border-ink/10">
                   {productModal.sku}
                 </span>
-                <h3 className="text-lg font-black text-white leading-tight mt-1">
+                <h3 className="text-lg font-black text-ink leading-tight mt-1">
                   {productModal.name}
                 </h3>
               </div>
@@ -922,7 +922,7 @@ export function QrMenuView({ tableIdentifier }: Props) {
             {/* Modal Body */}
             <div className="p-4 space-y-4 overflow-y-auto flex-1">
               {productModal.description && (
-                <p className="text-xs text-gray-300 leading-relaxed bg-[#12151d] p-3 rounded-xl border border-[#252b39]">
+                <p className="text-xs text-ink-secondary leading-relaxed bg-well p-3 rounded-xl border border-line">
                   {productModal.description}
                 </p>
               )}
@@ -932,7 +932,7 @@ export function QrMenuView({ tableIdentifier }: Props) {
                 <div className="space-y-3">
                   {productModal.modifierGroups.map((group) => (
                     <div key={group.id} className="space-y-2">
-                      <span className="text-xs font-bold text-gray-300 block uppercase tracking-wider">
+                      <span className="text-xs font-bold text-ink-secondary block uppercase tracking-wider">
                         {group.name} {group.isRequired && <span className="text-rose-400">*</span>}
                       </span>
                       <div className="grid grid-cols-1 gap-2">
@@ -945,8 +945,8 @@ export function QrMenuView({ tableIdentifier }: Props) {
                               onClick={() => handleToggleModifier(mod)}
                               className={`p-3 rounded-xl border text-left flex items-center justify-between text-xs transition-all cursor-pointer ${
                                 isSelected
-                                  ? "bg-amber-500/20 border-amber-500 text-white font-bold"
-                                  : "bg-[#12151d] border-[#262c3b] text-gray-300 hover:bg-[#1a1f2b]"
+                                  ? "bg-amber-500/20 border-amber-500 text-ink font-bold"
+                                  : "bg-well border-line text-ink-secondary hover:bg-raised"
                               }`}
                             >
                               <span>{mod.name}</span>
@@ -964,7 +964,7 @@ export function QrMenuView({ tableIdentifier }: Props) {
 
               {/* Notes & Quick suggestions */}
               <div className="space-y-2">
-                <label className="block text-xs font-bold text-gray-300 flex items-center gap-1.5">
+                <label className="block text-xs font-bold text-ink-secondary flex items-center gap-1.5">
                   <MessageSquare size={13} className="text-amber-400" />
                   <span>Ghi chú riêng cho món này</span>
                 </label>
@@ -973,7 +973,7 @@ export function QrMenuView({ tableIdentifier }: Props) {
                   value={modalNotes}
                   onChange={(e) => setModalNotes(e.target.value)}
                   placeholder="Ví dụ: Ít cay, không hành, làm giòn..."
-                  className="w-full bg-[#12151d] border border-[#262c3b] rounded-xl px-3 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-orange-500"
+                  className="w-full bg-well border border-line rounded-xl px-3 py-2.5 text-xs text-ink placeholder-subtle focus:outline-none focus:border-orange-500"
                 />
                 <div className="flex flex-wrap gap-1.5 pt-0.5">
                   {QUICK_NOTES.map((qn) => (
@@ -981,7 +981,7 @@ export function QrMenuView({ tableIdentifier }: Props) {
                       key={qn}
                       type="button"
                       onClick={() => addQuickNote(qn)}
-                      className="text-[10px] px-2.5 py-1 rounded-lg bg-[#202532] text-gray-300 hover:text-white border border-[#2e3648] hover:border-amber-400 transition-colors cursor-pointer"
+                      className="text-[10px] px-2.5 py-1 rounded-lg bg-raised text-ink-secondary hover:text-ink border border-line-strong hover:border-amber-400 transition-colors cursor-pointer"
                     >
                       + {qn}
                     </button>
@@ -990,17 +990,17 @@ export function QrMenuView({ tableIdentifier }: Props) {
               </div>
 
               {/* Quantity Selector */}
-              <div className="flex items-center justify-between pt-3 border-t border-[#262c3a]">
-                <span className="text-xs font-bold text-gray-300">Số lượng phần ăn:</span>
-                <div className="flex items-center gap-3 bg-[#12151d] p-1 rounded-xl border border-[#262c3b]">
+              <div className="flex items-center justify-between pt-3 border-t border-line">
+                <span className="text-xs font-bold text-ink-secondary">Số lượng phần ăn:</span>
+                <div className="flex items-center gap-3 bg-well p-1 rounded-xl border border-line">
                   <button
                     type="button"
                     onClick={() => setModalQty((q) => Math.max(1, q - 1))}
-                    className="w-8 h-8 rounded-lg bg-[#202532] hover:bg-[#2c3345] text-white flex items-center justify-center font-bold cursor-pointer"
+                    className="w-8 h-8 rounded-lg bg-raised hover:bg-surface-hover text-ink flex items-center justify-center font-bold cursor-pointer"
                   >
                     <Minus size={14} />
                   </button>
-                  <span className="text-base font-black text-white w-6 text-center font-mono">
+                  <span className="text-base font-black text-ink w-6 text-center font-mono">
                     {modalQty}
                   </span>
                   <button
@@ -1015,9 +1015,9 @@ export function QrMenuView({ tableIdentifier }: Props) {
             </div>
 
             {/* Bottom Modal CTA */}
-            <div className="p-4 bg-[#141720] border-t border-[#262c3a] flex items-center justify-between gap-3">
+            <div className="p-4 bg-surface border-t border-line flex items-center justify-between gap-3">
               <div>
-                <span className="text-[10px] text-gray-500 uppercase tracking-wider block font-semibold">
+                <span className="text-[10px] text-subtle uppercase tracking-wider block font-semibold">
                   Tạm tính ({modalQty} phần)
                 </span>
                 <span className="text-base font-black text-amber-400 font-mono">
@@ -1048,24 +1048,24 @@ export function QrMenuView({ tableIdentifier }: Props) {
           onClick={() => setCartOpen(false)}
         >
           <div
-            className="bg-[#181c25] border border-[#2d3546] w-full max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[88vh] flex flex-col animate-in slide-in-from-bottom-6 sm:zoom-in-95 overflow-hidden"
+            className="bg-surface border border-line-strong w-full max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[88vh] flex flex-col animate-in slide-in-from-bottom-6 sm:zoom-in-95 overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="p-4 border-b border-[#262c3a] flex items-center justify-between bg-[#141720]">
+            <div className="p-4 border-b border-line flex items-center justify-between bg-surface">
               <div>
-                <h3 className="text-base font-black text-white flex items-center gap-2 font-heading">
+                <h3 className="text-base font-black text-ink flex items-center gap-2 font-heading">
                   <ShoppingBag size={18} className="text-orange-400" />
                   <span>Giỏ hàng Bàn {tableInfo.tableNumber}</span>
                 </h3>
-                <span className="text-[11px] text-gray-400 font-mono">
+                <span className="text-[11px] text-muted font-mono">
                   {tableInfo.branchName} • {totalItemsCount} món ăn
                 </span>
               </div>
               <button
                 type="button"
                 onClick={() => setCartOpen(false)}
-                className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-full bg-ink/5 hover:bg-ink/10 text-ink-secondary hover:text-ink flex items-center justify-center transition-colors cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -1076,10 +1076,10 @@ export function QrMenuView({ tableIdentifier }: Props) {
               {cart.map((item) => (
                 <div
                   key={item.cartItemId}
-                  className="bg-[#12151d] p-3 rounded-2xl border border-[#262c3b] flex items-center justify-between gap-3 shadow-md"
+                  className="bg-well p-3 rounded-2xl border border-line flex items-center justify-between gap-3 shadow-md"
                 >
                   {/* Thumbnail */}
-                  <div className="w-14 h-14 shrink-0 rounded-xl overflow-hidden bg-[#0d0f14] border border-[#2a3040]">
+                  <div className="w-14 h-14 shrink-0 rounded-xl overflow-hidden bg-sunken border border-line">
                     {item.imageUrl ? (
                       <img
                         src={item.imageUrl}
@@ -1087,7 +1087,7 @@ export function QrMenuView({ tableIdentifier }: Props) {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-600">
+                      <div className="w-full h-full flex items-center justify-center text-faint">
                         <ChefHat size={18} />
                       </div>
                     )}
@@ -1095,7 +1095,7 @@ export function QrMenuView({ tableIdentifier }: Props) {
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-sm font-bold text-white truncate">
+                    <h4 className="text-sm font-bold text-ink truncate">
                       {item.productName}
                     </h4>
                     {item.selectedModifiers.length > 0 && (
@@ -1104,7 +1104,7 @@ export function QrMenuView({ tableIdentifier }: Props) {
                       </p>
                     )}
                     {item.notes && (
-                      <p className="text-[11px] text-gray-400 italic truncate">
+                      <p className="text-[11px] text-muted italic truncate">
                         Ghi chú: {item.notes}
                       </p>
                     )}
@@ -1114,11 +1114,11 @@ export function QrMenuView({ tableIdentifier }: Props) {
                   </div>
 
                   {/* Controls */}
-                  <div className="flex items-center gap-1.5 shrink-0 bg-[#0d0f14] p-1 rounded-xl border border-[#222735]">
+                  <div className="flex items-center gap-1.5 shrink-0 bg-sunken p-1 rounded-xl border border-line">
                     <button
                       type="button"
                       onClick={() => handleUpdateQty(item.cartItemId, -1)}
-                      className="w-7 h-7 rounded-lg bg-[#181c26] text-white flex items-center justify-center hover:bg-[#232838] active:scale-90 transition-all cursor-pointer"
+                      className="w-7 h-7 rounded-lg bg-surface text-ink flex items-center justify-center hover:bg-surface-hover active:scale-90 transition-all cursor-pointer"
                     >
                       {item.quantity === 1 ? (
                         <Trash2 size={13} className="text-rose-400" />
@@ -1126,7 +1126,7 @@ export function QrMenuView({ tableIdentifier }: Props) {
                         <Minus size={13} />
                       )}
                     </button>
-                    <span className="text-sm font-black text-white w-5 text-center font-mono">
+                    <span className="text-sm font-black text-ink w-5 text-center font-mono">
                       {item.quantity}
                     </span>
                     <button
@@ -1142,10 +1142,10 @@ export function QrMenuView({ tableIdentifier }: Props) {
             </div>
 
             {/* Guest Details & Confirm Form */}
-            <div className="p-4 bg-[#141720] border-t border-[#262c3a] space-y-3">
+            <div className="p-4 bg-surface border-t border-line space-y-3">
               <div className="grid grid-cols-2 gap-2.5">
                 <div>
-                  <label className="block text-[11px] font-bold text-gray-300 mb-1 flex items-center gap-1">
+                  <label className="block text-[11px] font-bold text-ink-secondary mb-1 flex items-center gap-1">
                     <User size={12} className="text-amber-400" />
                     <span>Tên quý khách (Tùy chọn)</span>
                   </label>
@@ -1154,11 +1154,11 @@ export function QrMenuView({ tableIdentifier }: Props) {
                     value={guestName}
                     onChange={(e) => setGuestName(e.target.value)}
                     placeholder="Ví dụ: Anh Nam"
-                    className="w-full bg-[#12151d] border border-[#262c3b] rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-orange-500"
+                    className="w-full bg-well border border-line rounded-xl px-3 py-2 text-xs text-ink placeholder-subtle focus:outline-none focus:border-orange-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-gray-300 mb-1 flex items-center justify-between">
+                  <label className="block text-[11px] font-bold text-ink-secondary mb-1 flex items-center justify-between">
                     <span className="flex items-center gap-1">
                       <Phone size={12} className="text-amber-400" />
                       <span>SĐT tích điểm (Tùy chọn)</span>
@@ -1172,16 +1172,16 @@ export function QrMenuView({ tableIdentifier }: Props) {
                     value={guestPhone}
                     onChange={(e) => setGuestPhone(e.target.value)}
                     placeholder="09xx..."
-                    className="w-full bg-[#12151d] border border-[#262c3b] rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 font-mono"
+                    className="w-full bg-well border border-line rounded-xl px-3 py-2 text-xs text-ink placeholder-subtle focus:outline-none focus:border-orange-500 font-mono"
                   />
-                  <p className="text-[9.5px] text-gray-400 mt-1">
+                  <p className="text-[9.5px] text-muted mt-1">
                     Nhập SĐT để tự động lưu khách hàng &amp; tích điểm nâng hạng thành viên.
                   </p>
                 </div>
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-gray-300 mb-1 flex items-center gap-1">
+                <label className="block text-[11px] font-bold text-ink-secondary mb-1 flex items-center gap-1">
                   <MessageSquare size={12} className="text-amber-400" />
                   <span>Dặn dò Bếp &amp; Phục vụ</span>
                 </label>
@@ -1190,13 +1190,13 @@ export function QrMenuView({ tableIdentifier }: Props) {
                   value={orderNotes}
                   onChange={(e) => setOrderNotes(e.target.value)}
                   placeholder="Ví dụ: Lên bia trước, làm món nóng giòn..."
-                  className="w-full bg-[#12151d] border border-[#262c3b] rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-orange-500"
+                  className="w-full bg-well border border-line rounded-xl px-3 py-2 text-xs text-ink placeholder-subtle focus:outline-none focus:border-orange-500"
                 />
               </div>
 
               <div className="flex items-center justify-between pt-2">
                 <div>
-                  <span className="text-[10px] text-gray-500 uppercase tracking-wider block font-semibold">
+                  <span className="text-[10px] text-subtle uppercase tracking-wider block font-semibold">
                     Tổng thanh toán
                   </span>
                   <span className="text-xl font-black text-amber-400 font-mono">
@@ -1235,20 +1235,20 @@ export function QrMenuView({ tableIdentifier }: Props) {
           onClick={() => setBillDrawerOpen(false)}
         >
           <div
-            className="w-full max-w-lg bg-[#151822] border border-[#262c3d] rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden animate-in slide-in-from-bottom-6"
+            className="w-full max-w-lg bg-surface border border-line rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden animate-in slide-in-from-bottom-6"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="p-4 bg-gradient-to-r from-[#1c2230] to-[#151822] border-b border-[#252c3c] flex items-center justify-between">
+            <div className="p-4 bg-gradient-to-r from-raised to-surface border-b border-line flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
                   <Receipt size={18} />
                 </div>
                 <div>
-                  <h3 className="text-base font-black text-white font-heading">
+                  <h3 className="text-base font-black text-ink font-heading">
                     Hóa đơn Bàn {tableInfo?.tableNumber}
                   </h3>
-                  <p className="text-[11px] text-gray-400 font-mono">
+                  <p className="text-[11px] text-muted font-mono">
                     Mã đơn: #{activeBill.orderNumber ? (activeBill.orderNumber.length > 14 ? activeBill.orderNumber.slice(-8) : activeBill.orderNumber) : ""}
                   </p>
                 </div>
@@ -1256,7 +1256,7 @@ export function QrMenuView({ tableIdentifier }: Props) {
               <button
                 type="button"
                 onClick={() => setBillDrawerOpen(false)}
-                className="p-1.5 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors cursor-pointer"
+                className="p-1.5 rounded-full hover:bg-ink/10 text-muted hover:text-ink transition-colors cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -1264,17 +1264,17 @@ export function QrMenuView({ tableIdentifier }: Props) {
 
             {/* Items list */}
             <div className="p-4 flex-1 overflow-y-auto space-y-2.5 max-h-[420px]">
-              <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+              <div className="text-xs font-bold text-muted uppercase tracking-wider mb-1">
                 Danh sách món đã gọi ({activeBill.items.reduce((s, i) => s + i.quantity, 0)} phần)
               </div>
               {activeBill.items.map((item) => (
                 <div
                   key={item.id}
-                  className="p-3 rounded-xl bg-[#1b202d] border border-[#272e3f] flex items-start justify-between gap-3"
+                  className="p-3 rounded-xl bg-raised border border-line flex items-start justify-between gap-3"
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-baseline gap-2">
-                      <span className="font-bold text-sm text-gray-100">
+                      <span className="font-bold text-sm text-ink">
                         {item.productNameSnapshot}
                       </span>
                       {item.variantNameSnapshot && (
@@ -1288,8 +1288,8 @@ export function QrMenuView({ tableIdentifier }: Props) {
                         Ghi chú: {item.notes}
                       </div>
                     )}
-                    <div className="text-[11px] text-gray-400 mt-1">
-                      {formatCurrency(item.unitPrice)} × <strong className="text-white font-mono">{item.quantity}</strong>
+                    <div className="text-[11px] text-muted mt-1">
+                      {formatCurrency(item.unitPrice)} × <strong className="text-ink font-mono">{item.quantity}</strong>
                     </div>
                   </div>
                   <span className="font-mono font-bold text-sm text-amber-300 shrink-0">
@@ -1300,10 +1300,10 @@ export function QrMenuView({ tableIdentifier }: Props) {
             </div>
 
             {/* Footer */}
-            <div className="p-4 bg-[#12151e] border-t border-[#252c3c] flex flex-col gap-3">
+            <div className="p-4 bg-well border-t border-line flex flex-col gap-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block">
+                  <span className="text-xs font-bold text-muted uppercase tracking-wider block">
                     Tổng hóa đơn hiện tại
                   </span>
                   <span className="text-[10px] text-emerald-400">Đã cộng dồn tất cả các đợt gọi món</span>
@@ -1340,7 +1340,7 @@ export function QrMenuView({ tableIdentifier }: Props) {
               <button
                 type="button"
                 onClick={() => setBillDrawerOpen(false)}
-                className="w-full py-2.5 rounded-xl bg-[#202636] hover:bg-[#2b3346] text-white text-xs font-bold transition-colors cursor-pointer"
+                className="w-full py-2.5 rounded-xl bg-raised hover:bg-surface-hover text-ink text-xs font-bold transition-colors cursor-pointer"
               >
                 Đóng &amp; Tiếp tục gọi món
               </button>

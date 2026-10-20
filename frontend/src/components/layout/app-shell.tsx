@@ -52,7 +52,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pageTitle = pathname === "/tables" ? "Bàn ăn & Khu vực" : (currentNav?.label ?? "Tổng quan");
 
   return (
-    <div className="app-frame bg-[#141517] text-[#e5e7eb]">
+    <div className="app-frame bg-paper text-ink">
       <aside className={`sidebar ${mobileOpen ? "sidebar-open" : ""}`}>
         {/* Brand Header */}
         <div className="brand">
@@ -109,7 +109,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {mobileOpen ? <button className="scrim" onClick={() => setMobileOpen(false)} aria-label="Close navigation" /> : null}
 
-      <main className="main-area bg-[#141517]">
+      <main className="main-area bg-paper">
         <header className="topbar">
           <div className="flex items-center gap-2 shrink min-w-0">
             <button className="icon-button mobile-menu shrink-0" onClick={() => setMobileOpen(true)} aria-label="Open navigation">

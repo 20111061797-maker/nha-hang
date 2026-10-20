@@ -1,12 +1,51 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
+/*
+ * `dark:` utilities must follow the app theme toggle (html.dark / html.light),
+ * NOT the operating system's prefers-color-scheme (Tailwind v4 default).
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Semantic, theme-aware color tokens exposed as Tailwind utilities
+ * (bg-surface, text-ink, border-line, ...). Values switch with html.light.
+ */
+@theme inline {
+  --color-paper: var(--paper);
+  --color-sunken: var(--sunken);
+  --color-well: var(--well);
+  --color-surface: var(--surface);
+  --color-raised: var(--surface-raised);
+  --color-surface-hover: var(--surface-hover);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+
+  --color-ink: var(--ink);
+  --color-ink-secondary: var(--ink-secondary);
+  --color-muted: var(--muted);
+  --color-subtle: var(--subtle);
+  --color-faint: var(--faint);
+
+  --color-warm-surface: var(--warm-surface);
+  --color-warm-raised: var(--warm-raised);
+  --color-warm-line: var(--warm-line);
+  --color-warm-muted: var(--warm-muted);
+  --color-amber-soft: var(--amber-soft);
+  --color-success-soft: var(--success-soft);
+  --color-danger-soft: var(--danger-soft);
+}
+
 :root {
   --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
   --font-heading: "Outfit", "Plus Jakarta Sans", sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
-  /* Dark Command Center Theme Palette */
+  color-scheme: dark;
+
+  /* Dark Command Center Theme Palette (elevation: sunken < well < paper < surface < raised < hover) */
+  --sunken: #0e0f12;
+  --well: #16181c;
   --paper: #141517;
   --surface: #1c1e22;
   --surface-raised: #24272e;
@@ -17,6 +56,17 @@
   --ink: #f3f4f6;
   --ink-secondary: #d1d5db;
   --muted: #9ca3af;
+  --subtle: #6b7280;
+  --faint: #4b5563;
+
+  /* Warm / status tinted surfaces */
+  --warm-surface: #241e1b;
+  --warm-raised: #382b24;
+  --warm-line: #533f34;
+  --warm-muted: #a99182;
+  --amber-soft: #fef3c7;
+  --success-soft: #0f2e1b;
+  --danger-soft: #331111;
   
   /* Brand Accents (Flame & Amber & Emerald) */
   --amber: #f59e0b;
@@ -471,7 +521,7 @@ button {
   letter-spacing: 0.1em;
   font-size: 10px;
   font-weight: 800;
-  color: #9ca3af;
+  color: var(--muted);
 }
 
 .topbar-tools {
@@ -486,10 +536,11 @@ button {
   gap: 9px;
   font-size: 13px;
   font-weight: 700;
-  background: #20232a;
+  background: var(--surface-raised);
   padding: 5px 12px 5px 6px;
   border-radius: 20px;
-  border: 1px solid #383d47;
+  border: 1px solid var(--line);
+  color: var(--ink);
 }
 
 .avatar {
@@ -507,7 +558,7 @@ button {
 .icon-button {
   border: 1px solid transparent;
   background: transparent;
-  color: #d1d5db;
+  color: var(--ink-secondary);
   display: grid;
   place-items: center;
   padding: 7px;
@@ -515,7 +566,8 @@ button {
 }
 
 .icon-button:hover {
-  background: #2a2e38;
+  background: var(--surface-hover);
+  color: var(--ink);
 }
 
 .mobile-menu, .mobile-close {
@@ -542,7 +594,7 @@ button {
 }
 
 .crumb {
-  color: #6b7280;
+  color: var(--muted);
   margin-bottom: 20px;
   font-size: 11px;
   font-weight: 800;
@@ -552,7 +604,7 @@ button {
 
 .crumb span {
   margin: 0 6px;
-  color: #4b5563;
+  color: var(--subtle);
 }
 
 /* Page Heading */
@@ -568,11 +620,11 @@ button {
   line-height: 1.1;
   margin: 4px 0 6px;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--ink);
 }
 
 .page-heading p {
-  color: #9ca3af;
+  color: var(--muted);
   margin: 0;
   font-size: 14px;
 }
@@ -612,7 +664,7 @@ button {
 
 .metric-icon {
   color: var(--amber);
-  background: #382b1d;
+  background: var(--warm-raised);
   width: 38px;
   height: 38px;
   display: grid;
@@ -624,19 +676,19 @@ button {
 .metric-label {
   font-size: 12px;
   font-weight: 700;
-  color: #9ca3af;
+  color: var(--muted);
 }
 
 .metric-card strong {
   font-family: var(--font-heading);
   font-size: 28px;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--ink);
 }
 
 .metric-card small {
   font-size: 11px;
-  color: #6b7280;
+  color: var(--subtle);
 }
 
 /* Surface Cards & Buttons */
@@ -659,13 +711,13 @@ button {
   margin: 4px 0 0;
   font-size: 20px;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--ink);
 }
 
 .status-pill {
-  background: #064e3b;
-  color: #a7f3d0;
-  border: 1px solid #059669;
+  background: var(--success-soft);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
   border-radius: 20px;
   padding: 6px 12px;
   font-size: 11px;
@@ -705,13 +757,14 @@ button {
 }
 
 .secondary-button {
-  border: 1px solid #383d47;
-  background: #22252c;
-  color: #e5e7eb;
+  border: 1px solid var(--line-strong);
+  background: var(--surface-raised);
+  color: var(--ink-secondary);
 }
 
 .secondary-button:hover {
-  background: #2a2e38;
+  background: var(--surface-hover);
+  color: var(--ink);
 }
 
 /* Toast Notifications */
@@ -756,11 +809,11 @@ button {
   margin: 4px 0;
   font-size: 28px;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--ink);
 }
 
 .pos-subtext {
-  color: #9ca3af;
+  color: var(--muted);
   font-size: 14px;
   margin: 0;
 }
@@ -793,20 +846,20 @@ button {
 }
 
 .pos-stat-pill {
-  background: #242831;
+  background: var(--surface-raised);
   padding: 6px 12px;
   border-radius: 6px;
-  border: 1px solid #353a45;
+  border: 1px solid var(--line);
   display: flex;
   align-items: center;
   gap: 6px;
   font-weight: 600;
-  color: #d1d5db;
+  color: var(--ink-secondary);
 }
 
 .pos-stat-pill strong {
   font-weight: 800;
-  color: #ffffff;
+  color: var(--ink);
 }
 
 .pos-stat-pill.stat-avail { background: #064e3b; border-color: #059669; color: #a7f3d0; }
@@ -1727,16 +1780,16 @@ button {
 .pos-section-title {
   font-size: 12px;
   font-weight: 700;
-  color: #d1d5db;
+  color: var(--ink-secondary);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
 
 .pos-input {
   width: 100%;
-  border: 1px solid #383d47;
-  background: #22252c;
-  color: #f3f4f6;
+  border: 1px solid var(--line-strong);
+  background: var(--surface-raised);
+  color: var(--ink);
   border-radius: 6px;
   padding: 10px 12px;
   font-size: 13px;
@@ -2033,7 +2086,7 @@ button {
   font-family: var(--font-heading);
   font-size: 13px;
   font-weight: 700;
-  color: #d1d5db;
+  color: var(--ink-secondary);
   letter-spacing: 0.03em;
 }
 
@@ -2088,7 +2141,11 @@ button {
    ======================================================== */
 html.light,
 [data-theme="light"] {
-  --paper: #f8fafc;
+  color-scheme: light;
+
+  --sunken: #eef1f5;
+  --well: #f8fafc;
+  --paper: #f4f6f9;
   --surface: #ffffff;
   --surface-raised: #f1f5f9;
   --surface-hover: #e2e8f0;
@@ -2098,6 +2155,16 @@ html.light,
   --ink: #0f172a;
   --ink-secondary: #334155;
   --muted: #64748b;
+  --subtle: #94a3b8;
+  --faint: #cbd5e1;
+
+  --warm-surface: #fff7ed;
+  --warm-raised: #ffedd5;
+  --warm-line: #fed7aa;
+  --warm-muted: #9a6b4f;
+  --amber-soft: #b45309;
+  --success-soft: #ecfdf5;
+  --danger-soft: #fff1f2;
 
   --amber: #d97706;
   --amber-light: #fef3c7;
@@ -2238,74 +2305,6 @@ html.light .metric-icon {
   color: #d97706 !important;
 }
 
-/* Tailwind Dark Hex Overrides in Light Mode */
-html.light .bg-\[\#141517\] { background-color: #f8fafc !important; }
-html.light .bg-\[\#121316\] { background-color: #ffffff !important; }
-
-html.light .bg-\[\#1c1e22\],
-html.light .bg-\[\#1a1c1e\],
-html.light .bg-\[\#16181b\],
-html.light .bg-\[\#20232a\] {
-  background-color: #ffffff !important;
-  border-color: #e2e8f0 !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-html.light .bg-\[\#241e1b\] {
-  background-color: #ffffff !important;
-  border-color: #e2e8f0 !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-html.light .bg-\[\#24272e\],
-html.light .bg-\[\#1f2229\],
-html.light .bg-\[\#22252c\] {
-  background-color: #f8fafc !important;
-  border-color: #e2e8f0 !important;
-}
-
-html.light .bg-\[\#282c35\],
-html.light .bg-\[\#2a2e38\] {
-  background-color: #f1f5f9 !important;
-}
-
-html.light .bg-\[\#382b24\],
-html.light .bg-\[\#382b1d\] {
-  background-color: #fef3c7 !important;
-  border-color: #fde68a !important;
-}
-
-html.light .bg-\[\#1c2e24\] {
-  background-color: #ecfdf5 !important;
-  border-color: #a7f3d0 !important;
-  color: #065f46 !important;
-}
-
-/* Borders in Light Mode */
-html.light .border-\[\#2d3138\],
-html.light .border-\[\#2d3035\],
-html.light .border-\[\#443329\],
-html.light .border-\[\#353a45\],
-html.light .border-\[\#23262d\],
-html.light .border-\[\#282b32\],
-html.light .border-\[\#383d47\],
-html.light .border-\[\#533f34\],
-html.light .border-\[\#6a4f3e\],
-html.light .border-\[\#1f242d\],
-html.light .border-\[\#333845\] {
-  border-color: #e2e8f0 !important;
-}
-
-/* Headings and Typography in Light Mode */
-html.light h1,
-html.light h2,
-html.light h3,
-html.light h4,
-html.light h5,
-html.light h6 {
-  color: #0f172a !important;
-}
-
 html.light .page-heading h1 {
   color: #0f172a !important;
 }
@@ -2314,74 +2313,37 @@ html.light .page-heading p {
   color: #64748b !important;
 }
 
-/* Text Overrides for Card Titles, Stats & Body */
-html.light .bg-\[\#241e1b\] .text-white,
-html.light .bg-\[\#1c1e22\] .text-white,
-html.light .bg-\[\#1a1c1e\] .text-white,
-html.light .surface .text-white,
-html.light tr .text-white {
-  color: #0f172a !important;
-}
-
-html.light .text-\[\#fef3c7\] {
-  color: #b45309 !important;
-}
-
-html.light .text-\[\#a99182\] {
-  color: #78350f !important;
-}
-
-html.light .text-gray-200,
-html.light .text-gray-300 {
-  color: #334155 !important;
-}
-
-html.light .text-gray-400 {
-  color: #64748b !important;
-}
-
-html.light .text-\[\#e5e7eb\] {
-  color: #1e293b !important;
-}
-
-html.light .text-\[\#f3f4f6\] {
-  color: #0f172a !important;
-}
-
 /* Table Text & Formatting */
 html.light table {
-  color: #1e293b !important;
+  color: var(--ink);
 }
 
 html.light th {
-  background-color: #f8fafc !important;
-  color: #475569 !important;
-  border-color: #e2e8f0 !important;
+  border-color: var(--line) !important;
 }
 
 html.light td {
-  border-color: #e2e8f0 !important;
-  color: #1e293b !important;
-}
-
-html.light tr:hover td {
-  background-color: #f8fafc !important;
+  border-color: var(--line) !important;
 }
 
 /* Form Controls */
-html.light input[type="text"],
-html.light input[type="number"],
-html.light input[type="search"],
-html.light input[type="email"],
-html.light input[type="password"],
+html.light input[type="text"]:not(.bepnhau-input),
+html.light input[type="number"]:not(.bepnhau-input),
+html.light input[type="search"]:not(.bepnhau-input),
+html.light input[type="email"]:not(.bepnhau-input),
+html.light input[type="password"]:not(.bepnhau-input),
+html.light input[type="tel"]:not(.bepnhau-input),
+html.light input[type="date"],
+html.light input[type="datetime-local"],
+html.light input[type="time"],
 html.light select,
 html.light textarea {
   background-color: #ffffff !important;
-  border-color: #cbd5e1 !important;
-  color: #0f172a !important;
+  border-color: var(--line-strong) !important;
+  color: var(--ink) !important;
 }
 
-html.light input::placeholder,
+html.light input:not(.bepnhau-input)::placeholder,
 html.light textarea::placeholder {
   color: #94a3b8 !important;
 }
@@ -2710,98 +2672,6 @@ html.light .pos-option-btn-active {
 /* Beer Loading Screen in Light Mode */
 html.light .beer-loading-fullscreen {
   background: #f8fafc !important;
-}
-
-/* Universal Neutral Surface & Border Remapping for Light Mode */
-html.light [class*="border-[#"] {
-  border-color: #e2e8f0 !important;
-}
-
-/* Secondary dark backgrounds used across POS, KDS, Orders, Payments, Tables */
-html.light [class*="bg-[#141822]"],
-html.light [class*="bg-[#12151e]"],
-html.light [class*="bg-[#181c26]"],
-html.light [class*="bg-[#181c27]"],
-html.light [class*="bg-[#1a202c]"],
-html.light [class*="bg-[#1b202c]"],
-html.light [class*="bg-[#191d28]"],
-html.light [class*="bg-[#131620]"],
-html.light [class*="bg-[#1c2230]"],
-html.light [class*="bg-[#1c212d]"],
-html.light [class*="bg-[#1d222e]"],
-html.light [class*="bg-[#1a1f2c]"],
-html.light [class*="bg-[#1e2330]"],
-html.light [class*="bg-[#17181c]"],
-html.light [class*="bg-[#22252b]"],
-html.light [class*="bg-[#282f40]"],
-html.light [class*="bg-[#252a38]"],
-html.light [class*="bg-[#212736]"],
-html.light [class*="bg-[#242a3a]"],
-html.light [class*="bg-[#262c3d]"],
-html.light [class*="bg-[#2c3345]"],
-html.light [class*="bg-[#2a3142]"],
-html.light [class*="bg-[#2b3244]"],
-html.light [class*="bg-[#2a3040]"],
-html.light [class*="bg-[#1a1e29]"],
-html.light [class*="bg-[#13161f]"],
-html.light [class*="bg-[#141720]"] {
-  background-color: #ffffff !important;
-}
-
-html.light [class*="bg-[#10131a]"],
-html.light [class*="bg-[#1a1f2c]"] {
-  background-color: #f8fafc !important;
-}
-
-html.light [class*="hover:bg-[#"]:hover {
-  background-color: #f1f5f9 !important;
-}
-
-/* Typography contrast adjustments in light mode */
-html.light [class*="text-gray-1"],
-html.light [class*="text-gray-2"],
-html.light [class*="text-gray-3"] {
-  color: #1e293b !important;
-}
-
-html.light [class*="text-gray-4"],
-html.light [class*="text-gray-5"] {
-  color: #64748b !important;
-}
-
-/* Brand title in sidebar */
-html.light .brand span.text-white,
-html.light .brand .font-heading {
-  color: #0f172a !important;
-}
-
-/* Ensure headings, card labels, and stat digits are crisp dark */
-html.light h1.text-white,
-html.light h2.text-white,
-html.light h3.text-white,
-html.light h4.text-white,
-html.light p.text-white,
-html.light strong.text-white,
-html.light [class*="text-2xl"].text-white,
-html.light [class*="text-3xl"].text-white,
-html.light [class*="text-4xl"].text-white,
-html.light [class*="text-xl"].text-white {
-  color: #0f172a !important;
-}
-
-/* Preserve bright text inside gradient and badge buttons */
-html.light button.text-white,
-html.light a.text-white,
-html.light .nav-active,
-html.light .pos-pill-active,
-html.light .kds-station-tab-active,
-html.light [class*="from-orange"],
-html.light [class*="from-amber"],
-html.light [class*="from-emerald"],
-html.light [class*="bg-emerald-6"],
-html.light [class*="bg-orange-5"],
-html.light [class*="bg-amber-5"] {
-  color: #ffffff !important;
 }
 
 /* Light Mode Badges */

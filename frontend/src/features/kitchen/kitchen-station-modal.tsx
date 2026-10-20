@@ -120,11 +120,11 @@ export function KitchenStationModal({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-2xl rounded-2xl bg-[#161a24] border border-[#2b3345] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        className="w-full max-w-2xl rounded-2xl bg-surface border border-line-strong shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between p-5 bg-[#1c2230] border-b border-[#283042]">
+        <div className="flex items-center justify-between p-5 bg-raised border-b border-line">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-xl bg-orange-500/15 text-orange-400 border border-orange-500/25">
               <Layers size={20} />
@@ -133,12 +133,12 @@ export function KitchenStationModal({
               <span className="text-[11px] font-bold uppercase tracking-wider text-orange-400">
                 Thiết lập Điều Phối Bếp
               </span>
-              <h3 className="text-lg font-black text-white">Quản lý trạm bếp (Kitchen Stations)</h3>
+              <h3 className="text-lg font-black text-ink">Quản lý trạm bếp (Kitchen Stations)</h3>
             </div>
           </div>
           <button
             type="button"
-            className="p-2 rounded-xl text-gray-400 hover:text-white bg-[#242b3b] hover:bg-[#2e374b] border border-[#343e54] transition-all cursor-pointer"
+            className="p-2 rounded-xl text-muted hover:text-ink bg-surface-hover hover:bg-surface-hover border border-line-strong transition-all cursor-pointer"
             onClick={onClose}
             aria-label="Đóng"
           >
@@ -147,13 +147,13 @@ export function KitchenStationModal({
         </div>
 
         {/* Tab switcher */}
-        <div className="flex border-b border-[#262d3d] bg-[#12151e]">
+        <div className="flex border-b border-line bg-well">
           <button
             type="button"
             className={`flex-1 flex items-center justify-center gap-2 py-3 px-3 text-xs font-bold transition-all cursor-pointer border-b-2 ${
               activeTab === "list"
-                ? "text-orange-400 border-orange-500 bg-[#191e2b]"
-                : "text-gray-400 border-transparent hover:text-gray-200 hover:bg-[#151924]"
+                ? "text-orange-400 border-orange-500 bg-surface"
+                : "text-muted border-transparent hover:text-ink hover:bg-surface"
             }`}
             onClick={() => setActiveTab("list")}
           >
@@ -164,8 +164,8 @@ export function KitchenStationModal({
             type="button"
             className={`flex-1 flex items-center justify-center gap-2 py-3 px-3 text-xs font-bold transition-all cursor-pointer border-b-2 ${
               activeTab === "create"
-                ? "text-orange-400 border-orange-500 bg-[#191e2b]"
-                : "text-gray-400 border-transparent hover:text-gray-200 hover:bg-[#151924]"
+                ? "text-orange-400 border-orange-500 bg-surface"
+                : "text-muted border-transparent hover:text-ink hover:bg-surface"
             }`}
             onClick={() => setActiveTab("create")}
           >
@@ -176,8 +176,8 @@ export function KitchenStationModal({
             type="button"
             className={`flex-1 flex items-center justify-center gap-2 py-3 px-3 text-xs font-bold transition-all cursor-pointer border-b-2 ${
               activeTab === "assign"
-                ? "text-orange-400 border-orange-500 bg-[#191e2b]"
-                : "text-gray-400 border-transparent hover:text-gray-200 hover:bg-[#151924]"
+                ? "text-orange-400 border-orange-500 bg-surface"
+                : "text-muted border-transparent hover:text-ink hover:bg-surface"
             }`}
             onClick={() => setActiveTab("assign")}
           >
@@ -199,23 +199,23 @@ export function KitchenStationModal({
           {activeTab === "list" ? (
             <div className="flex flex-col gap-3">
               {stations.length === 0 ? (
-                <div className="text-center py-10 text-gray-400 text-sm">
+                <div className="text-center py-10 text-muted text-sm">
                   Chưa có trạm bếp nào. Hãy bấm &quot;Thêm trạm mới&quot; để thiết lập.
                 </div>
               ) : (
                 stations.map((st) => (
                   <div
                     key={st.id}
-                    className="flex items-center justify-between p-3.5 rounded-xl bg-[#141720] border border-[#262c3c] hover:border-[#38435c] transition-all"
+                    className="flex items-center justify-between p-3.5 rounded-xl bg-surface border border-line hover:border-line-strong transition-all"
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <span className="font-mono text-xs font-bold text-orange-400 bg-orange-500/15 px-2.5 py-1 rounded-lg border border-orange-500/30">
                         {st.code}
                       </span>
                       <div className="min-w-0">
-                        <h4 className="font-bold text-sm text-gray-100 truncate">{st.name}</h4>
+                        <h4 className="font-bold text-sm text-ink truncate">{st.name}</h4>
                         {st.description && (
-                          <p className="text-xs text-gray-400 truncate mt-0.5">{st.description}</p>
+                          <p className="text-xs text-muted truncate mt-0.5">{st.description}</p>
                         )}
                       </div>
                     </div>
@@ -241,12 +241,12 @@ export function KitchenStationModal({
           ) : activeTab === "create" ? (
             <form onSubmit={handleCreate} className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-gray-300">
+                <label className="text-xs font-bold text-ink-secondary">
                   Mã trạm (Code) <span className="text-rose-400">*</span>
                 </label>
                 <input
                   type="text"
-                  className="bg-[#12151e] border border-[#2c3447] text-sm text-white font-mono uppercase rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-orange-500 transition-colors"
+                  className="bg-well border border-line-strong text-sm text-ink font-mono uppercase rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-orange-500 transition-colors"
                   placeholder="VD: HOT, COLD, BAR, GRILL"
                   value={code}
                   onChange={(e) => setCode(e.target.value)}
@@ -255,12 +255,12 @@ export function KitchenStationModal({
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-gray-300">
+                <label className="text-xs font-bold text-ink-secondary">
                   Tên trạm bếp <span className="text-rose-400">*</span>
                 </label>
                 <input
                   type="text"
-                  className="bg-[#12151e] border border-[#2c3447] text-sm text-white rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-orange-500 transition-colors"
+                  className="bg-well border border-line-strong text-sm text-ink rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-orange-500 transition-colors"
                   placeholder="VD: Bếp Nóng, Bếp Lạnh, Quầy Pha Chế..."
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -269,17 +269,17 @@ export function KitchenStationModal({
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-gray-300">Mô tả / Ghi chú</label>
+                <label className="text-xs font-bold text-ink-secondary">Mô tả / Ghi chú</label>
                 <textarea
                   rows={2}
-                  className="bg-[#12151e] border border-[#2c3447] text-sm text-white rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-orange-500 transition-colors resize-none"
+                  className="bg-well border border-line-strong text-sm text-ink rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-orange-500 transition-colors resize-none"
                   placeholder="VD: Chuyên các món chiên xào, món súp, đồ nướng..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                 />
               </div>
 
-              <div className="flex justify-end pt-3 border-t border-[#262d3d] mt-2">
+              <div className="flex justify-end pt-3 border-t border-line mt-2">
                 <button
                   type="submit"
                   disabled={isSubmitting || !code.trim() || !name.trim()}
@@ -293,17 +293,17 @@ export function KitchenStationModal({
           ) : (
             <div className="flex flex-col gap-4">
               {stations.length === 0 ? (
-                <div className="text-center py-10 text-gray-400 text-sm">
+                <div className="text-center py-10 text-muted text-sm">
                   Chưa có trạm bếp nào. Vui lòng tạo trạm bếp trước.
                 </div>
               ) : (
                 <>
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-bold text-gray-300">
+                    <label className="text-xs font-bold text-ink-secondary">
                       Chọn trạm cần phân bổ món
                     </label>
                     <select
-                      className="bg-[#12151e] border border-[#2c3447] text-sm text-white rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-orange-500 cursor-pointer"
+                      className="bg-well border border-line-strong text-sm text-ink rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-orange-500 cursor-pointer"
                       value={selectedStationId}
                       onChange={(e) => setSelectedStationId(e.target.value)}
                     >
@@ -313,13 +313,13 @@ export function KitchenStationModal({
                         </option>
                       ))}
                     </select>
-                    <span className="text-[11px] text-gray-500">
+                    <span className="text-[11px] text-subtle">
                       Lưu ý: Mỗi món ăn chỉ thuộc về 1 trạm duy nhất. Khi phân bổ vào trạm này, món sẽ tự động rời khỏi trạm cũ.
                     </span>
                   </div>
 
                   <div className="flex justify-between items-center mt-2">
-                    <label className="text-xs font-bold text-gray-300">
+                    <label className="text-xs font-bold text-ink-secondary">
                       Danh sách món ăn từ thực đơn ({allProducts.length})
                     </label>
                     <button
@@ -341,8 +341,8 @@ export function KitchenStationModal({
                           key={p.id}
                           className={`flex items-center gap-3 p-2.5 rounded-xl border transition-all cursor-pointer ${
                             isChecked
-                              ? "bg-orange-500/10 border-orange-500/40 text-white"
-                              : "bg-[#141720] border-[#262c3c] text-gray-300 hover:bg-[#1a1f2b]"
+                              ? "bg-orange-500/10 border-orange-500/40 text-ink"
+                              : "bg-surface border-line text-ink-secondary hover:bg-raised"
                           }`}
                           onClick={() => toggleProduct(p.id)}
                         >
@@ -350,14 +350,14 @@ export function KitchenStationModal({
                             className={`w-5 h-5 rounded-md flex items-center justify-center border transition-colors ${
                               isChecked
                                 ? "bg-orange-500 border-orange-500 text-white"
-                                : "border-[#384257] bg-[#1d222e]"
+                                : "border-line-strong bg-raised"
                             }`}
                           >
                             {isChecked && <Check size={13} className="stroke-[3]" />}
                           </div>
                           <div className="flex-1 min-w-0">
                             <span className="block font-semibold text-xs truncate">{p.name}</span>
-                            <small className="block text-[11px] text-gray-400">
+                            <small className="block text-[11px] text-muted">
                               {p.categoryName} • {p.price.toLocaleString("vi-VN")} ₫
                             </small>
                           </div>
@@ -366,7 +366,7 @@ export function KitchenStationModal({
                     })}
                   </div>
 
-                  <div className="flex justify-end pt-3 border-t border-[#262d3d] mt-2">
+                  <div className="flex justify-end pt-3 border-t border-line mt-2">
                     <button
                       type="button"
                       disabled={isAssigning}

@@ -151,16 +151,16 @@ export function OrderTicket({
   const isDelivery = order.orderType === OrderType.Delivery;
 
   return (
-    <div className="flex flex-col rounded-2xl bg-[#151923] border border-[#272e3f] shadow-2xl overflow-hidden sticky top-4 max-h-[calc(100vh-100px)]">
+    <div className="flex flex-col rounded-2xl bg-surface border border-line shadow-2xl overflow-hidden sticky top-4 max-h-[calc(100vh-100px)]">
       {/* Ticket Header */}
-      <div className="p-4 bg-gradient-to-r from-[#1c2230] via-[#1a202d] to-[#151923] border-b border-[#283144] flex flex-col gap-3">
+      <div className="p-4 bg-gradient-to-r from-raised via-raised to-surface border-b border-line-strong flex flex-col gap-3">
         <div className="flex items-center justify-between gap-2">
           {/* Back button & Table Identifier */}
           <div className="flex items-center gap-2.5">
             <button
               type="button"
               onClick={onBackToFloor}
-              className="p-1.5 rounded-lg bg-[#242b3b] hover:bg-[#2e374b] text-gray-300 hover:text-white border border-[#343e54] transition-all cursor-pointer"
+              className="p-1.5 rounded-lg bg-surface-hover hover:bg-surface-hover text-ink-secondary hover:text-ink border border-line-strong transition-all cursor-pointer"
               title="Quay lại sơ đồ bàn"
             >
               <ArrowLeft size={16} />
@@ -168,7 +168,7 @@ export function OrderTicket({
 
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-base font-black text-white tracking-tight flex items-center gap-1.5">
+                <span className="text-base font-black text-ink tracking-tight flex items-center gap-1.5">
                   {isTakeaway ? (
                     <>
                       <ShoppingBag size={16} className="text-amber-400" />
@@ -200,13 +200,13 @@ export function OrderTicket({
         </div>
 
         {/* Order Meta: Code & Guest */}
-        <div className="flex items-center justify-between text-xs text-gray-400 pt-1 border-t border-white/5">
+        <div className="flex items-center justify-between text-xs text-muted pt-1 border-t border-ink/5">
           <div className="flex items-center gap-1.5">
             <span>Mã đơn:</span>
             <button
               type="button"
               onClick={copyOrderNo}
-              className="inline-flex items-center gap-1 text-[11px] font-mono text-gray-300 hover:text-white bg-[#10131a] px-2 py-0.5 rounded border border-[#272e3d] transition-colors"
+              className="inline-flex items-center gap-1 text-[11px] font-mono text-ink-secondary hover:text-ink bg-well px-2 py-0.5 rounded border border-line transition-colors"
               title="Nhấn để sao chép mã đơn"
             >
               <span>{order.orderNumber.length > 14 ? `#${order.orderNumber.slice(-8)}` : `#${order.orderNumber}`}</span>
@@ -218,8 +218,8 @@ export function OrderTicket({
             </button>
           </div>
 
-          <div className="flex items-center gap-1 text-[11px] text-gray-400">
-            <Clock size={12} className="text-gray-500" />
+          <div className="flex items-center gap-1 text-[11px] text-muted">
+            <Clock size={12} className="text-subtle" />
             <span>{new Date(order.createdAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}</span>
           </div>
         </div>
@@ -233,14 +233,14 @@ export function OrderTicket({
       </div>
 
       {/* Ticket Items List */}
-      <div className="p-3.5 flex-1 flex flex-col gap-2.5 overflow-y-auto max-h-[380px] bg-[#12151e]/80">
+      <div className="p-3.5 flex-1 flex flex-col gap-2.5 overflow-y-auto max-h-[380px] bg-well/80">
         {order.items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-            <div className="w-12 h-12 rounded-xl bg-[#1a202c] border border-[#2b3345] flex items-center justify-center text-gray-500 mb-2">
+            <div className="w-12 h-12 rounded-xl bg-raised border border-line-strong flex items-center justify-center text-subtle mb-2">
               <Receipt size={22} className="opacity-60" />
             </div>
-            <p className="text-xs font-bold text-gray-300">Chưa có món nào trong đơn</p>
-            <p className="text-[11px] text-gray-500 mt-1 max-w-[200px]">
+            <p className="text-xs font-bold text-ink-secondary">Chưa có món nào trong đơn</p>
+            <p className="text-[11px] text-subtle mt-1 max-w-[200px]">
               Chọn món ăn từ thực đơn bên trái để thêm vào hóa đơn bàn này.
             </p>
           </div>
@@ -248,13 +248,13 @@ export function OrderTicket({
           order.items.map((item) => (
             <div
               key={item.id}
-              className="p-3 rounded-xl bg-[#1b202c] hover:bg-[#202635] border border-[#2a3244] transition-all flex flex-col gap-2"
+              className="p-3 rounded-xl bg-raised hover:bg-raised border border-line-strong transition-all flex flex-col gap-2"
             >
               {/* Item Top: Name & Total Line Price */}
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-baseline gap-1.5 flex-wrap">
-                    <span className="font-bold text-gray-100 text-sm leading-snug">
+                    <span className="font-bold text-ink text-sm leading-snug">
                       {item.productNameSnapshot}
                     </span>
                     {item.variantNameSnapshot && (
@@ -269,7 +269,7 @@ export function OrderTicket({
                       {item.modifiers.map((m) => (
                         <span
                           key={m.id}
-                          className="text-[10px] font-medium text-gray-300 bg-[#262d3e] px-1.5 py-0.5 rounded border border-white/5"
+                          className="text-[10px] font-medium text-ink-secondary bg-surface-hover px-1.5 py-0.5 rounded border border-ink/5"
                         >
                           + {m.modifierNameSnapshot}{" "}
                           {m.totalPrice > 0 && `(${m.totalPrice.toLocaleString("vi-VN")} ₫)`}
@@ -293,7 +293,7 @@ export function OrderTicket({
               </div>
 
               {/* Item Bottom: Unit Price & Stepper / Quantity */}
-              <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/5 text-xs text-gray-400">
+              <div className="flex items-center justify-between gap-2 pt-2 border-t border-ink/5 text-xs text-muted">
                 <span className="text-[11px]">
                   {item.unitPrice.toLocaleString("vi-VN")} ₫ / phần
                 </span>
@@ -302,24 +302,24 @@ export function OrderTicket({
                   {isOpenOrDraft ? (
                     <>
                       {/* Quantity Stepper */}
-                      <div className="flex items-center rounded-lg bg-[#12151e] border border-[#2e374a] overflow-hidden">
+                      <div className="flex items-center rounded-lg bg-well border border-line-strong overflow-hidden">
                         <button
                           type="button"
                           disabled={isProcessing}
                           onClick={() => onUpdateItemQuantity(item.id, item.quantity, -1)}
-                          className="p-1 hover:bg-[#262e3e] text-gray-300 hover:text-white transition-colors cursor-pointer disabled:opacity-50"
+                          className="p-1 hover:bg-surface-hover text-ink-secondary hover:text-ink transition-colors cursor-pointer disabled:opacity-50"
                           title="Giảm 1"
                         >
                           <Minus size={13} />
                         </button>
-                        <span className="font-mono font-bold text-xs px-2.5 text-white min-w-[24px] text-center">
+                        <span className="font-mono font-bold text-xs px-2.5 text-ink min-w-[24px] text-center">
                           {item.quantity}
                         </span>
                         <button
                           type="button"
                           disabled={isProcessing}
                           onClick={() => onUpdateItemQuantity(item.id, item.quantity, 1)}
-                          className="p-1 hover:bg-[#262e3e] text-gray-300 hover:text-white transition-colors cursor-pointer disabled:opacity-50"
+                          className="p-1 hover:bg-surface-hover text-ink-secondary hover:text-ink transition-colors cursor-pointer disabled:opacity-50"
                           title="Tăng 1"
                         >
                           <Plus size={13} />
@@ -338,9 +338,9 @@ export function OrderTicket({
                       </button>
                     </>
                   ) : (
-                    <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-[#12151e] border border-[#2b3345]">
-                      <span className="text-[11px] text-gray-400">Số lượng:</span>
-                      <strong className="font-mono text-white text-xs">{item.quantity}</strong>
+                    <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-well border border-line-strong">
+                      <span className="text-[11px] text-muted">Số lượng:</span>
+                      <strong className="font-mono text-ink text-xs">{item.quantity}</strong>
                     </div>
                   )}
                 </div>
@@ -351,12 +351,12 @@ export function OrderTicket({
       </div>
 
       {/* Ticket Calculation & Checkout Footer */}
-      <div className="p-4 bg-[#141822] border-t border-[#262c3e] flex flex-col gap-3">
+      <div className="p-4 bg-surface border-t border-line flex flex-col gap-3">
         {/* Calc Details */}
-        <div className="flex flex-col gap-1.5 text-xs text-gray-300">
+        <div className="flex flex-col gap-1.5 text-xs text-ink-secondary">
           <div className="flex items-center justify-between">
-            <span className="text-gray-400">Tạm tính ({order.items.reduce((s, i) => s + i.quantity, 0)} món)</span>
-            <span className="font-mono font-semibold text-gray-200">
+            <span className="text-muted">Tạm tính ({order.items.reduce((s, i) => s + i.quantity, 0)} món)</span>
+            <span className="font-mono font-semibold text-ink">
               {order.subtotal.toLocaleString("vi-VN")} ₫
             </span>
           </div>
@@ -371,7 +371,7 @@ export function OrderTicket({
           )}
 
           {order.taxAmount > 0 && (
-            <div className="flex items-center justify-between text-gray-400">
+            <div className="flex items-center justify-between text-muted">
               <span>Thuế VAT (8%)</span>
               <span className="font-mono font-semibold">
                 {order.taxAmount.toLocaleString("vi-VN")} ₫
@@ -380,12 +380,12 @@ export function OrderTicket({
           )}
 
           {/* Total Row */}
-          <div className="flex items-center justify-between pt-2.5 border-t border-[#252c3c] mt-0.5">
+          <div className="flex items-center justify-between pt-2.5 border-t border-line mt-0.5">
             <div>
-              <span className="text-xs uppercase tracking-wider text-gray-300 font-bold block">
+              <span className="text-xs uppercase tracking-wider text-ink-secondary font-bold block">
                 Tổng thanh toán
               </span>
-              <span className="text-[10px] text-gray-500">Đã gồm thuế &amp; phí dịch vụ</span>
+              <span className="text-[10px] text-subtle">Đã gồm thuế &amp; phí dịch vụ</span>
             </div>
             <div className="text-right">
               <span className="text-2xl font-black font-mono text-amber-400 tracking-tight">
@@ -416,7 +416,7 @@ export function OrderTicket({
                   type="button"
                   disabled={isProcessing || isSepayLoading}
                   onClick={onPayWithSepay}
-                  className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-bold text-xs text-amber-300 bg-[#1e2538] hover:bg-[#28324a] border border-amber-500/40 hover:border-amber-400 transition-all cursor-pointer shadow-md disabled:opacity-60"
+                  className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-bold text-xs text-amber-300 bg-raised hover:bg-surface-hover border border-amber-500/40 hover:border-amber-400 transition-all cursor-pointer shadow-md disabled:opacity-60"
                 >
                   {isSepayLoading ? (
                     <>
@@ -463,7 +463,7 @@ export function OrderTicket({
           onClick={() => setCancelModalOpen(false)}
         >
           <div
-            className="w-full max-w-md rounded-2xl bg-[#181c26] border border-[#2e374a] shadow-2xl p-5 flex flex-col gap-4"
+            className="w-full max-w-md rounded-2xl bg-surface border border-line-strong shadow-2xl p-5 flex flex-col gap-4"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3">
@@ -471,16 +471,16 @@ export function OrderTicket({
                 <XCircle size={22} />
               </div>
               <div>
-                <h3 className="text-base font-bold text-white">Xác nhận hủy đơn hàng</h3>
-                <p className="text-xs text-gray-400">Đơn #{order.orderNumber}</p>
+                <h3 className="text-base font-bold text-ink">Xác nhận hủy đơn hàng</h3>
+                <p className="text-xs text-muted">Đơn #{order.orderNumber}</p>
               </div>
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-bold text-gray-300">Lý do hủy đơn *</label>
+              <label className="text-xs font-bold text-ink-secondary">Lý do hủy đơn *</label>
               <input
                 type="text"
-                className="bg-[#12151e] border border-[#2b3345] text-sm text-white rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-rose-500"
+                className="bg-well border border-line-strong text-sm text-ink rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-rose-500"
                 placeholder="VD: Khách đổi ý, khách về đột xuất..."
                 value={cancelReason}
                 onChange={(e) => setCancelReason(e.target.value)}
@@ -488,10 +488,10 @@ export function OrderTicket({
               />
             </div>
 
-            <div className="flex justify-end gap-2 pt-2 border-t border-white/5">
+            <div className="flex justify-end gap-2 pt-2 border-t border-ink/5">
               <button
                 type="button"
-                className="px-4 py-2 rounded-xl text-xs font-bold text-gray-300 hover:bg-[#252c3c] transition-colors cursor-pointer"
+                className="px-4 py-2 rounded-xl text-xs font-bold text-ink-secondary hover:bg-surface-hover transition-colors cursor-pointer"
                 onClick={() => setCancelModalOpen(false)}
               >
                 Đóng

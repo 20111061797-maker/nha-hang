@@ -112,7 +112,7 @@ export function KitchenTicketCard({
       default:
         return {
           label: "Hoàn tất",
-          class: "bg-gray-500/20 text-gray-300 border-gray-500/30",
+          class: "bg-gray-500/20 text-ink-secondary border-gray-500/30",
           dot: "bg-gray-400",
         };
     }
@@ -274,7 +274,7 @@ export function KitchenTicketCard({
                   {item.modifiers.map((mod, idx) => (
                     <span
                       key={idx}
-                      className="text-[11px] font-medium text-gray-300 bg-[#282f40] px-2 py-0.5 rounded-md border border-white/5"
+                      className="text-[11px] font-medium text-ink-secondary bg-surface-hover px-2 py-0.5 rounded-md border border-ink/5"
                     >
                       + {mod}
                     </span>
@@ -294,7 +294,7 @@ export function KitchenTicketCard({
         ))}
 
         {ticket.items.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-6 text-gray-500 text-xs italic">
+          <div className="flex flex-col items-center justify-center py-6 text-subtle text-xs italic">
             <UtensilsCrossed size={20} className="mb-1 opacity-40" />
             <span>Không có món cụ thể</span>
           </div>
