@@ -273,36 +273,36 @@ export function TablesManagementView() {
   }
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-16">
+    <div className="space-y-6 max-w-7xl mx-auto pb-16 text-ink">
       {/* Toast Notification */}
       {toastMsg && (
         <div
           className={`fixed top-4 right-4 z-[100] flex items-center gap-2 px-4 py-3 rounded-xl border shadow-xl text-sm font-semibold transition-all animate-in fade-in slide-in-from-top-4 ${
             toastMsg.type === "success"
-              ? "bg-emerald-50 border-emerald-300 text-emerald-800 dark:bg-[#0f2e1b] dark:border-emerald-500/50 dark:text-emerald-200"
-              : "bg-rose-50 border-rose-300 text-rose-800 dark:bg-[#331111] dark:border-rose-500/50 dark:text-rose-200"
+              ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300"
+              : "bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-300"
           }`}
         >
           {toastMsg.type === "success" ? <CheckCircle2 size={18} className="text-emerald-600 dark:text-emerald-400" /> : <AlertTriangle size={18} className="text-rose-600 dark:text-rose-400" />}
           <span>{toastMsg.text}</span>
-          <button onClick={() => setToastMsg(null)} className="ml-2 text-slate-400 hover:text-slate-700 dark:text-gray-400 dark:hover:text-white">
+          <button onClick={() => setToastMsg(null)} className="ml-2 text-muted hover:text-ink cursor-pointer">
             <X size={14} />
           </button>
         </div>
       )}
 
       {/* Top Banner / Actions Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white border border-slate-200 dark:bg-[#1a1d24] dark:border-[#2e333d] p-4 sm:p-6 rounded-2xl shadow-sm dark:shadow-lg">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-surface border border-line p-4 sm:p-6 rounded-2xl shadow-sm">
         <div>
           <div className="flex items-center gap-2.5">
-            <span className="p-2 rounded-xl bg-orange-50 border border-orange-200 text-orange-500 dark:bg-orange-950/60 dark:border-orange-500/30 dark:text-orange-400">
+            <span className="p-2 rounded-xl bg-primary/10 border border-primary/20 text-primary">
               <Grid3X3 size={22} />
             </span>
             <div>
-              <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight font-heading flex items-center gap-2">
+              <h1 className="text-xl sm:text-2xl font-black text-ink tracking-tight font-heading flex items-center gap-2">
                 Sơ Đồ & Quản Lý Bàn Ăn
               </h1>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-gray-400">
+              <p className="text-xs sm:text-sm text-muted">
                 Thiết lập số bàn, khu vực và mã QR đặt món trực tiếp tại bàn
               </p>
             </div>
@@ -313,16 +313,16 @@ export function TablesManagementView() {
           <button
             onClick={() => refetchTables()}
             disabled={isFetching}
-            className="px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-900 border border-slate-200 dark:bg-[#252a35] dark:hover:bg-[#2e3442] dark:text-gray-300 dark:hover:text-white dark:border-[#373e4f] rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all shadow-xs"
+            className="px-3 py-2 bg-surface hover:bg-surface-raised text-muted hover:text-ink border border-line rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
             title="Làm mới dữ liệu"
           >
-            <RefreshCw size={14} className={isFetching ? "animate-spin text-orange-500" : ""} />
+            <RefreshCw size={14} className={isFetching ? "animate-spin text-primary" : ""} />
             <span className="hidden sm:inline">Làm mới</span>
           </button>
 
           <button
             onClick={() => setAreasModalOpen(true)}
-            className="px-3.5 py-2 bg-white hover:bg-slate-100 text-amber-700 hover:text-amber-800 border border-amber-300 dark:bg-[#252a35] dark:hover:bg-[#2e3442] dark:text-amber-300 dark:hover:text-amber-200 dark:border-amber-500/30 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-all shadow-xs"
+            className="px-3.5 py-2 bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 hover:bg-amber-500/20 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
           >
             <Layers size={16} />
             <span>Khu vực ({areas.length})</span>
@@ -330,7 +330,7 @@ export function TablesManagementView() {
 
           <button
             onClick={() => setTableModal({ open: true, mode: "create" })}
-            className="px-4 py-2 bg-gradient-to-r from-[#e44d13] to-[#ff6622] hover:brightness-110 text-white rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 shadow-lg shadow-orange-950/20 transition-all cursor-pointer"
+            className="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:brightness-110 text-white rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 shadow-md shadow-orange-500/25 transition-all cursor-pointer"
           >
             <Plus size={16} />
             <span>Thêm bàn mới</span>
@@ -340,50 +340,50 @@ export function TablesManagementView() {
 
       {/* Stats Counter Bar */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 sm:gap-3">
-        <div className="bg-white border border-slate-200 dark:bg-[#1a1d24] dark:border-[#2e333d] p-3 rounded-xl flex items-center justify-between shadow-xs">
-          <div className="text-xs text-slate-500 dark:text-gray-400">Tổng số bàn</div>
-          <div className="text-lg font-black text-slate-900 dark:text-white">{stats.total}</div>
+        <div className="bg-surface border border-line p-3 rounded-xl flex items-center justify-between shadow-xs">
+          <div className="text-xs text-muted">Tổng số bàn</div>
+          <div className="text-lg font-black text-ink">{stats.total}</div>
         </div>
-        <div className="bg-emerald-50 border border-emerald-200 dark:bg-[#0f2e1b]/40 dark:border-emerald-500/30 p-3 rounded-xl flex items-center justify-between shadow-xs">
-          <div className="text-xs text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
+        <div className="bg-emerald-500/10 border border-emerald-500/25 p-3 rounded-xl flex items-center justify-between shadow-xs">
+          <div className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
             <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
             Bàn trống
           </div>
-          <div className="text-lg font-black text-emerald-900 dark:text-emerald-300">{stats.available}</div>
+          <div className="text-lg font-black text-emerald-700 dark:text-emerald-300">{stats.available}</div>
         </div>
-        <div className="bg-orange-50 border border-orange-200 dark:bg-orange-950/30 dark:border-orange-500/30 p-3 rounded-xl flex items-center justify-between shadow-xs">
-          <div className="text-xs text-orange-700 dark:text-orange-400 flex items-center gap-1">
+        <div className="bg-orange-500/10 border border-orange-500/25 p-3 rounded-xl flex items-center justify-between shadow-xs">
+          <div className="text-xs text-orange-600 dark:text-orange-400 flex items-center gap-1">
             <span className="w-2 h-2 rounded-full bg-orange-500 inline-block animate-pulse" />
             Có khách
           </div>
-          <div className="text-lg font-black text-orange-900 dark:text-orange-300">{stats.occupied}</div>
+          <div className="text-lg font-black text-orange-700 dark:text-orange-300">{stats.occupied}</div>
         </div>
-        <div className="bg-purple-50 border border-purple-200 dark:bg-purple-950/30 dark:border-purple-500/30 p-3 rounded-xl flex items-center justify-between shadow-xs">
-          <div className="text-xs text-purple-700 dark:text-purple-400 flex items-center gap-1">
+        <div className="bg-purple-500/10 border border-purple-500/25 p-3 rounded-xl flex items-center justify-between shadow-xs">
+          <div className="text-xs text-purple-600 dark:text-purple-400 flex items-center gap-1">
             <span className="w-2 h-2 rounded-full bg-purple-500 inline-block" />
             Đã đặt trước
           </div>
-          <div className="text-lg font-black text-purple-900 dark:text-purple-300">{stats.reserved}</div>
+          <div className="text-lg font-black text-purple-700 dark:text-purple-300">{stats.reserved}</div>
         </div>
-        <div className="bg-slate-100 border border-slate-200 dark:bg-gray-800/40 dark:border-gray-700/40 p-3 rounded-xl flex items-center justify-between col-span-2 sm:col-span-1 shadow-xs">
-          <div className="text-xs text-slate-600 dark:text-gray-400 flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-slate-400 inline-block" />
+        <div className="bg-sunken border border-line p-3 rounded-xl flex items-center justify-between col-span-2 sm:col-span-1 shadow-xs">
+          <div className="text-xs text-muted flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-muted/60 inline-block" />
             Tạm ngưng
           </div>
-          <div className="text-lg font-black text-slate-900 dark:text-gray-300">{stats.outOfService}</div>
+          <div className="text-lg font-black text-ink">{stats.outOfService}</div>
         </div>
       </div>
 
       {/* Filters Bar: Area Tabs & Search */}
-      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 bg-white border border-slate-200 dark:bg-[#1a1d24] dark:border-[#2e333d] p-3 rounded-2xl shadow-xs">
+      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 bg-surface border border-line p-3 rounded-2xl shadow-xs">
         {/* Area Navigation Tabs */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0 scrollbar-none">
           <button
             onClick={() => setSelectedAreaId("all")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer ${
               selectedAreaId === "all"
-                ? "bg-orange-600 text-white shadow-md shadow-orange-900/30"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-[#252a35]"
+                ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md shadow-orange-500/25"
+                : "text-muted hover:text-ink hover:bg-surface-raised"
             }`}
           >
             Tất cả khu vực ({tables.length})
@@ -395,10 +395,10 @@ export function TablesManagementView() {
               <button
                 key={area.id}
                 onClick={() => setSelectedAreaId(area.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer ${
                   isSelected
-                    ? "bg-orange-600 text-white shadow-md shadow-orange-900/30"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-[#252a35]"
+                    ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md shadow-orange-500/25"
+                    : "text-muted hover:text-ink hover:bg-surface-raised"
                 }`}
               >
                 {area.name} ({count})
@@ -410,20 +410,20 @@ export function TablesManagementView() {
         {/* Right: Search & Status Select */}
         <div className="flex items-center gap-2 shrink-0">
           <div className="relative flex-1 sm:w-48">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-400" size={14} />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted" size={14} />
             <input
               type="text"
               placeholder="Tìm số bàn..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 dark:bg-[#13151a] dark:border-[#2e333d] dark:text-white dark:placeholder-gray-500 pl-8 pr-3 py-1.5 rounded-xl text-xs focus:outline-none focus:border-orange-500"
+              className="w-full bg-sunken border border-line text-ink placeholder:text-muted pl-8 pr-3 py-1.5 rounded-xl text-xs focus:outline-none focus:border-primary"
             />
           </div>
 
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-slate-50 border border-slate-200 text-slate-800 dark:bg-[#13151a] dark:border-[#2e333d] dark:text-gray-300 px-2.5 py-1.5 rounded-xl text-xs focus:outline-none focus:border-orange-500"
+            className="bg-sunken border border-line text-ink px-2.5 py-1.5 rounded-xl text-xs focus:outline-none focus:border-primary cursor-pointer"
           >
             <option value="all">Tất cả trạng thái</option>
             <option value={TableStatus.Available}>Trống (Available)</option>
@@ -459,30 +459,30 @@ export function TablesManagementView() {
                 key={table.id}
                 className={`rounded-2xl p-4 flex flex-col justify-between transition-all duration-200 relative overflow-hidden group shadow-sm hover:shadow-md ${
                   isOccupied
-                    ? "bg-amber-50/70 border border-orange-300 hover:border-orange-400 dark:bg-gradient-to-b dark:from-[#231d1a] dark:to-[#1a1d24] dark:border-orange-500/50"
+                    ? "bg-surface border border-orange-500/40 hover:border-orange-500"
                     : isAvailable
-                    ? "bg-white border border-emerald-200 hover:border-emerald-400 dark:bg-[#1a1d24] dark:border-emerald-600/30 dark:hover:border-emerald-500"
+                    ? "bg-surface border border-line hover:border-emerald-500/50"
                     : isReserved
-                    ? "bg-purple-50/60 border border-purple-200 hover:border-purple-400 dark:bg-[#1a1d24] dark:border-purple-600/30 dark:hover:border-purple-500"
-                    : "bg-slate-50 border border-slate-200 opacity-75 dark:bg-[#1a1d24] dark:border-gray-700/40"
+                    ? "bg-surface border border-purple-500/30 hover:border-purple-500/60"
+                    : "bg-sunken border border-line opacity-75"
                 }`}
               >
                 {/* Top Badge & Number */}
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 dark:bg-[#252a35] dark:text-amber-400 dark:border-amber-500/20">
+                    <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-surface-raised text-muted border border-line">
                       {areaName}
                     </span>
 
                     <span
                       className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md flex items-center gap-1 ${
                         isAvailable
-                          ? "bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-500/40"
+                          ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
                           : isOccupied
-                          ? "bg-orange-100 text-orange-800 border border-orange-300 dark:bg-orange-950 dark:text-orange-300 dark:border-orange-500/40 animate-pulse"
+                          ? "bg-orange-500/15 text-orange-600 dark:text-orange-400 border border-orange-500/30 animate-pulse"
                           : isReserved
-                          ? "bg-purple-100 text-purple-800 border border-purple-300 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-500/40"
-                          : "bg-slate-200 text-slate-700 border border-slate-300 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600"
+                          ? "bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30"
+                          : "bg-ink/10 text-muted border border-line"
                       }`}
                     >
                       {isAvailable && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />}
@@ -500,23 +500,23 @@ export function TablesManagementView() {
 
                   {/* Main Table Info */}
                   <div className="flex items-baseline gap-2 mb-1">
-                    <h3 className="text-2xl font-black text-slate-900 dark:text-white font-heading tracking-tight">
+                    <h3 className="text-2xl font-black text-ink font-heading tracking-tight">
                       BÀN {table.tableNumber}
                     </h3>
                     {table.name && (
-                      <span className="text-xs text-slate-500 dark:text-gray-400 font-medium truncate">
+                      <span className="text-xs text-muted font-medium truncate">
                         ({table.name})
                       </span>
                     )}
                   </div>
 
-                  <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-gray-400 mb-2">
+                  <div className="flex items-center gap-3 text-xs text-muted mb-2">
                     <span className="flex items-center gap-1">
-                      <Users size={13} className="text-slate-400 dark:text-gray-400" />
+                      <Users size={13} className="text-muted" />
                       <span>{table.capacity} chỗ</span>
                     </span>
                     {table.qrCodeIdentifier && (
-                      <span className="text-amber-700 dark:text-amber-500/80 font-mono text-[11px]">
+                      <span className="text-primary font-mono text-[11px]">
                         QR: {table.qrCodeIdentifier}
                       </span>
                     )}
@@ -524,14 +524,14 @@ export function TablesManagementView() {
 
                   {/* Active Unpaid Order Warning Pill */}
                   {hasActiveOrder && (
-                    <div className="mb-2 flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-orange-100 border border-orange-300 text-[11px] font-bold text-orange-800 dark:bg-orange-950/60 dark:border-orange-500/40 dark:text-orange-300">
+                    <div className="mb-2 flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-orange-500/15 border border-orange-500/30 text-[11px] font-bold text-orange-700 dark:text-orange-300">
                       <span className="flex items-center gap-1.5">
                         <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
                         <span>Chưa thanh toán</span>
                       </span>
                       <a
                         href="/pos"
-                        className="text-[10px] text-amber-700 dark:text-amber-400 hover:underline font-mono"
+                        className="text-[10px] text-primary hover:underline font-mono"
                         title="Mở POS để xem và thanh toán hóa đơn"
                       >
                         Đơn #{activeOrder?.orderNumber ? activeOrder.orderNumber : activeOrder?.id.slice(0, 6)} ➔
@@ -541,7 +541,7 @@ export function TablesManagementView() {
                 </div>
 
                 {/* Bottom Action Buttons */}
-                <div className="pt-3 border-t border-slate-100 dark:border-[#2a2f3a] space-y-2">
+                <div className="pt-3 border-t border-line space-y-2">
                   {/* Status Switcher & QR Preview */}
                   <div className="flex items-center justify-between gap-1.5">
                     {/* Status dropdown */}
@@ -562,7 +562,7 @@ export function TablesManagementView() {
                         });
                       }}
                       disabled={changeStatusMutation.isPending}
-                      className="bg-slate-50 border border-slate-200 text-[11px] font-semibold text-slate-800 dark:bg-[#13151a] dark:border-[#2e333d] dark:text-gray-300 rounded-lg px-2 py-1.5 focus:outline-none focus:border-orange-500 cursor-pointer flex-1"
+                      className="bg-sunken border border-line text-[11px] font-semibold text-ink rounded-lg px-2 py-1.5 focus:outline-none focus:border-primary cursor-pointer flex-1"
                     >
                       <option value={TableStatus.Available} disabled={hasActiveOrder}>
                         🟢 Trống {hasActiveOrder ? "(Đang có đơn)" : ""}
@@ -579,7 +579,7 @@ export function TablesManagementView() {
                     {/* QR Code button */}
                     <button
                       onClick={() => setQrModal({ open: true, table })}
-                      className="p-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 hover:text-amber-800 border border-amber-200 dark:bg-[#252a35] dark:hover:bg-[#323947] dark:text-amber-400 dark:hover:text-amber-300 dark:border-amber-500/30 transition-all shadow-xs"
+                      className="p-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/25 transition-all shadow-xs cursor-pointer"
                       title="Xem & In mã QR đặt món của bàn"
                     >
                       <QrCode size={15} />
@@ -588,7 +588,7 @@ export function TablesManagementView() {
                     {/* Edit button */}
                     <button
                       onClick={() => setTableModal({ open: true, mode: "edit", table })}
-                      className="p-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-700 hover:text-sky-800 border border-sky-200 dark:bg-[#252a35] dark:hover:bg-[#323947] dark:text-blue-400 dark:hover:text-blue-300 dark:border-blue-500/30 transition-all shadow-xs"
+                      className="p-1.5 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/25 transition-all shadow-xs cursor-pointer"
                       title="Sửa thông tin bàn"
                     >
                       <Edit2 size={15} />
@@ -600,8 +600,8 @@ export function TablesManagementView() {
                       disabled={isOccupied || hasActiveOrder}
                       className={`p-1.5 rounded-lg border transition-all ${
                         isOccupied || hasActiveOrder
-                          ? "bg-slate-100 text-slate-400 border-slate-200 dark:bg-gray-800/40 dark:text-gray-600 dark:border-gray-800 cursor-not-allowed"
-                          : "bg-rose-50 hover:bg-rose-100 text-rose-700 hover:text-rose-800 border-rose-200 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 dark:text-rose-400 dark:hover:text-rose-300 dark:border-rose-500/30 shadow-xs"
+                          ? "bg-sunken text-muted/40 border-line/50 cursor-not-allowed"
+                          : "bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/25 shadow-xs cursor-pointer"
                       }`}
                       title={
                         hasActiveOrder
@@ -622,7 +622,7 @@ export function TablesManagementView() {
       )}
 
       {filteredTables.length > 0 && (
-        <div className="bg-white border border-slate-200 dark:bg-[#181a20] dark:border-[#262a34] rounded-2xl overflow-hidden shadow-xs dark:shadow-lg mt-2">
+        <div className="bg-surface border border-line rounded-2xl overflow-hidden shadow-xs mt-2">
           <Pagination
             currentPage={page}
             totalItems={filteredTables.length}
@@ -654,22 +654,22 @@ export function TablesManagementView() {
       {/* MODAL 2: Xác nhận Xóa Bàn */}
       {deleteModal.open && deleteModal.table && (
         <div className="fixed inset-0 z-50 bg-black/60 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white border border-rose-200 dark:bg-[#1c1f26] dark:border-rose-500/30 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
+          <div className="bg-surface border border-line rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
             <div className="flex items-center gap-3">
-              <span className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 dark:bg-rose-950/60 dark:border-rose-500/40 dark:text-rose-400">
+              <span className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-600 dark:text-rose-400">
                 <Trash2 size={24} />
               </span>
               <div>
-                <h3 className="text-lg font-black text-slate-900 dark:text-white font-heading">
+                <h3 className="text-lg font-black text-ink font-heading">
                   Xác nhận xóa bàn ăn?
                 </h3>
-                <p className="text-xs text-slate-500 dark:text-gray-400">
+                <p className="text-xs text-muted">
                   Hành động này sẽ xóa hoặc vô hiệu hóa bàn khỏi sơ đồ quán.
                 </p>
               </div>
             </div>
 
-            <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 text-sm text-slate-700 dark:bg-[#14151a] dark:border-[#2a2e38] dark:text-gray-300 space-y-1.5">
+            <div className="bg-sunken p-3.5 rounded-xl border border-line text-sm text-ink space-y-1.5">
               <div>
                 <strong>Số bàn:</strong> BÀN {deleteModal.table.tableNumber}
               </div>
@@ -687,7 +687,7 @@ export function TablesManagementView() {
               <button
                 type="button"
                 onClick={() => setDeleteModal({ open: false })}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 dark:text-gray-300 dark:hover:text-white dark:bg-[#262a34] dark:hover:bg-[#303642] transition-all"
+                className="px-4 py-2 rounded-xl text-xs font-bold text-muted hover:text-ink bg-sunken hover:bg-surface-raised transition-all cursor-pointer"
               >
                 Hủy bỏ
               </button>
@@ -695,7 +695,7 @@ export function TablesManagementView() {
                 type="button"
                 disabled={deleteTableMutation.isPending}
                 onClick={() => deleteTableMutation.mutate(deleteModal.table!.id)}
-                className="px-4 py-2 rounded-xl text-xs font-black text-white bg-rose-600 hover:bg-rose-500 shadow-lg shadow-rose-950/30 transition-all flex items-center gap-1.5"
+                className="px-4 py-2 rounded-xl text-xs font-black text-white bg-rose-600 hover:bg-rose-500 shadow-md shadow-rose-600/30 transition-all flex items-center gap-1.5 cursor-pointer"
               >
                 {deleteTableMutation.isPending ? "Đang xóa..." : "Xác nhận xóa"}
               </button>
@@ -733,22 +733,22 @@ export function TablesManagementView() {
       {/* MODAL 4: Mã QR Đặt Món Bàn */}
       {qrModal.open && qrModal.table && (
         <div className="fixed inset-0 z-50 bg-black/60 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white border border-slate-200 dark:bg-[#1c1f26] dark:border-[#353a47] rounded-2xl w-full max-w-sm p-6 shadow-2xl space-y-5 text-center relative">
+          <div className="bg-surface border border-line rounded-2xl w-full max-w-sm p-6 shadow-2xl space-y-5 text-center relative">
             <button
               onClick={() => setQrModal({ open: false })}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 dark:text-gray-400 dark:hover:text-white"
+              className="absolute top-4 right-4 text-muted hover:text-ink cursor-pointer"
             >
               <X size={18} />
             </button>
 
             <div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 border border-orange-200 text-orange-600 dark:bg-orange-950/60 dark:border-orange-500/30 dark:text-orange-400 text-xs font-bold mb-2">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold mb-2">
                 🔥 QUÁN BẾP NHẬU
               </div>
-              <h3 className="text-2xl font-black text-slate-900 dark:text-white font-heading">
+              <h3 className="text-2xl font-black text-ink font-heading">
                 BÀN {qrModal.table.tableNumber}
               </h3>
-              <p className="text-xs text-slate-500 dark:text-gray-400">
+              <p className="text-xs text-muted">
                 {areasMap.get(qrModal.table.areaId) ?? "Sảnh chính"} • Quét để xem menu & gọi món
               </p>
             </div>
@@ -765,7 +765,7 @@ export function TablesManagementView() {
               />
             </div>
 
-            <div className="text-[11px] text-slate-600 dark:text-gray-400 font-mono bg-slate-50 dark:bg-[#14151a] p-2 rounded-xl border border-slate-200 dark:border-[#2a2e38] break-all">
+            <div className="text-[11px] text-muted font-mono bg-sunken p-2 rounded-xl border border-line break-all">
               {typeof window !== "undefined" ? window.location.origin : "http://localhost:3000"}/table/{qrModal.table.id}
             </div>
 
@@ -778,7 +778,7 @@ export function TablesManagementView() {
                   setCopiedLink(true);
                   setTimeout(() => setCopiedLink(false), 2000);
                 }}
-                className="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#262a34] dark:hover:bg-[#303642] dark:text-gray-300 dark:hover:text-white transition-all flex items-center justify-center gap-1.5 shadow-xs"
+                className="px-3 py-2 rounded-xl text-xs font-bold bg-sunken hover:bg-surface-raised text-muted hover:text-ink border border-line transition-all flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
               >
                 {copiedLink ? <Check size={14} className="text-emerald-600 dark:text-emerald-400" /> : <Copy size={14} />}
                 <span>{copiedLink ? "Đã chép link" : "Chép link"}</span>
@@ -789,7 +789,7 @@ export function TablesManagementView() {
                 onClick={() => {
                   window.open(`/table/${qrModal.table!.id}`, "_blank");
                 }}
-                className="px-3 py-2 rounded-xl text-xs font-black bg-gradient-to-r from-[#e44d13] to-[#ff6622] text-white shadow-md hover:brightness-110 transition-all flex items-center justify-center gap-1.5"
+                className="px-3 py-2 rounded-xl text-xs font-black bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md hover:brightness-110 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <ExternalLink size={14} />
                 <span>Mở menu khách</span>
@@ -860,19 +860,19 @@ function TableFormModal({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
-      <div className="bg-white border border-slate-200 dark:bg-[#1c1f26] dark:border-[#353a47] rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#2e333e] pb-3">
-          <h3 className="text-lg font-black text-slate-900 dark:text-white font-heading flex items-center gap-2">
-            {mode === "create" ? <Plus size={18} className="text-orange-500" /> : <Edit2 size={18} className="text-blue-500 dark:text-blue-400" />}
+      <div className="bg-surface border border-line rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4">
+        <div className="flex items-center justify-between border-b border-line pb-3">
+          <h3 className="text-lg font-black text-ink font-heading flex items-center gap-2">
+            {mode === "create" ? <Plus size={18} className="text-primary" /> : <Edit2 size={18} className="text-sky-600 dark:text-sky-400" />}
             <span>{mode === "create" ? "Thêm Bàn Ăn Mới" : `Chỉnh Sửa Bàn ${table?.tableNumber}`}</span>
           </h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 dark:text-gray-400 dark:hover:text-white">
+          <button onClick={onClose} className="text-muted hover:text-ink cursor-pointer">
             <X size={18} />
           </button>
         </div>
 
         {error && (
-          <div className="bg-rose-50 border border-rose-200 text-rose-700 dark:bg-rose-950/40 dark:border-rose-500/40 dark:text-rose-300 p-3 rounded-xl text-xs font-semibold flex items-center gap-2">
+          <div className="bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 p-3 rounded-xl text-xs font-semibold flex items-center gap-2">
             <AlertTriangle size={15} />
             <span>{error}</span>
           </div>
@@ -882,13 +882,13 @@ function TableFormModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {/* Area select */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-gray-300 mb-1">
+              <label className="block text-xs font-bold text-ink mb-1">
                 Khu vực <span className="text-rose-500">*</span>
               </label>
               <select
                 value={areaId}
                 onChange={(e) => setAreaId(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 text-slate-900 dark:bg-[#13151a] dark:border-[#2e333d] dark:text-white px-3 py-2 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-orange-500"
+                className="w-full bg-sunken border border-line text-ink px-3 py-2 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-primary cursor-pointer"
                 required
               >
                 {areas.map((a) => (
@@ -901,7 +901,7 @@ function TableFormModal({
 
             {/* Table Number */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-gray-300 mb-1">
+              <label className="block text-xs font-bold text-ink mb-1">
                 Số bàn (Hiển thị) <span className="text-rose-500">*</span>
               </label>
               <input
@@ -909,7 +909,7 @@ function TableFormModal({
                 placeholder="Ví dụ: 01, VIP-2..."
                 value={tableNumber}
                 onChange={(e) => setTableNumber(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 text-slate-900 dark:bg-[#13151a] dark:border-[#2e333d] dark:text-white px-3 py-2 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-orange-500 font-bold"
+                className="w-full bg-sunken border border-line text-ink px-3 py-2 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-primary font-bold"
                 required
               />
             </div>
@@ -918,26 +918,26 @@ function TableFormModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {/* Custom Name */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-gray-300 mb-1">Tên gợi nhớ (Tùy chọn)</label>
+              <label className="block text-xs font-bold text-ink mb-1">Tên gợi nhớ (Tùy chọn)</label>
               <input
                 type="text"
                 placeholder="Ví dụ: Bàn Cửa Sổ, Bàn Tròn..."
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 text-slate-900 dark:bg-[#13151a] dark:border-[#2e333d] dark:text-white px-3 py-2 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-orange-500"
+                className="w-full bg-sunken border border-line text-ink px-3 py-2 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-primary"
               />
             </div>
 
             {/* Capacity */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-gray-300 mb-1">Số chỗ ngồi</label>
+              <label className="block text-xs font-bold text-ink mb-1">Số chỗ ngồi</label>
               <input
                 type="number"
                 min={1}
                 max={100}
                 value={capacity}
                 onChange={(e) => setCapacity(Number(e.target.value))}
-                className="w-full bg-slate-50 border border-slate-200 text-slate-900 dark:bg-[#13151a] dark:border-[#2e333d] dark:text-white px-3 py-2 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-orange-500"
+                className="w-full bg-sunken border border-line text-ink px-3 py-2 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-primary"
                 required
               />
             </div>
@@ -946,7 +946,7 @@ function TableFormModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {/* QR Identifier */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-gray-300 mb-1">
+              <label className="block text-xs font-bold text-ink mb-1">
                 Mã định danh QR (Tùy chọn)
               </label>
               <input
@@ -954,34 +954,34 @@ function TableFormModal({
                 placeholder="Ví dụ: ban-01 (để trống tự tạo)"
                 value={qrCodeIdentifier}
                 onChange={(e) => setQrCodeIdentifier(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 text-slate-900 dark:bg-[#13151a] dark:border-[#2e333d] dark:text-white px-3 py-2 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-orange-500"
+                className="w-full bg-sunken border border-line text-ink px-3 py-2 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-primary"
               />
             </div>
 
             {/* Display Order */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-gray-300 mb-1">Thứ tự sắp xếp</label>
+              <label className="block text-xs font-bold text-ink mb-1">Thứ tự sắp xếp</label>
               <input
                 type="number"
                 value={displayOrder}
                 onChange={(e) => setDisplayOrder(Number(e.target.value))}
-                className="w-full bg-slate-50 border border-slate-200 text-slate-900 dark:bg-[#13151a] dark:border-[#2e333d] dark:text-white px-3 py-2 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-orange-500"
+                className="w-full bg-sunken border border-line text-ink px-3 py-2 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-primary"
               />
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100 dark:border-[#2e333e]">
+          <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-line">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 dark:text-gray-300 dark:hover:text-white dark:bg-[#262a34] dark:hover:bg-[#303642] transition-all"
+              className="px-4 py-2 rounded-xl text-xs font-bold text-muted hover:text-ink bg-sunken hover:bg-surface-raised transition-all cursor-pointer"
             >
               Hủy
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-5 py-2 rounded-xl text-xs sm:text-sm font-black text-white bg-gradient-to-r from-[#e44d13] to-[#ff6622] hover:brightness-110 shadow-lg shadow-orange-950/20 transition-all flex items-center gap-1.5 cursor-pointer"
+              className="px-5 py-2 rounded-xl text-xs sm:text-sm font-black text-white bg-gradient-to-r from-orange-500 to-amber-500 hover:brightness-110 shadow-md shadow-orange-500/25 transition-all flex items-center gap-1.5 cursor-pointer"
             >
               {isSubmitting ? "Đang lưu..." : mode === "create" ? "Tạo bàn mới" : "Lưu thay đổi"}
             </button>
@@ -1025,13 +1025,13 @@ function AreasManagementModal({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
-      <div className="bg-white border border-slate-200 dark:bg-[#1c1f26] dark:border-[#353a47] rounded-2xl w-full max-w-xl p-6 shadow-2xl space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#2e333e] pb-3">
-          <h3 className="text-lg font-black text-slate-900 dark:text-white font-heading flex items-center gap-2">
+      <div className="bg-surface border border-line rounded-2xl w-full max-w-xl p-6 shadow-2xl space-y-4">
+        <div className="flex items-center justify-between border-b border-line pb-3">
+          <h3 className="text-lg font-black text-ink font-heading flex items-center gap-2">
             <Layers size={20} className="text-amber-500 dark:text-amber-400" />
             <span>Quản Lý Khu Vực Nhà Hàng</span>
           </h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 dark:text-gray-400 dark:hover:text-white">
+          <button onClick={onClose} className="text-muted hover:text-ink cursor-pointer">
             <X size={18} />
           </button>
         </div>
@@ -1039,21 +1039,21 @@ function AreasManagementModal({
         {/* Existing areas list */}
         <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
           {areas.length === 0 ? (
-            <p className="text-xs text-slate-500 dark:text-gray-500 italic py-2">Chưa có khu vực nào.</p>
+            <p className="text-xs text-muted italic py-2">Chưa có khu vực nào.</p>
           ) : (
             areas.map((area) => {
               const tableCount = tables.filter((t) => t.areaId === area.id).length;
               return (
                 <div
                   key={area.id}
-                  className="bg-slate-50 border border-slate-200 dark:bg-[#13151a] dark:border-[#2a2e38] p-3 rounded-xl flex items-center justify-between gap-3 shadow-xs"
+                  className="bg-sunken border border-line p-3 rounded-xl flex items-center justify-between gap-3 shadow-xs"
                 >
                   <div>
-                    <h4 className="text-sm font-bold text-slate-900 dark:text-white">{area.name}</h4>
+                    <h4 className="text-sm font-bold text-ink">{area.name}</h4>
                     {area.description && (
-                      <p className="text-xs text-slate-500 dark:text-gray-400">{area.description}</p>
+                      <p className="text-xs text-muted">{area.description}</p>
                     )}
-                    <span className="text-[11px] text-amber-700 dark:text-amber-500 font-medium">
+                    <span className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
                       {tableCount} bàn ăn
                     </span>
                   </div>
@@ -1061,7 +1061,7 @@ function AreasManagementModal({
                   <button
                     type="button"
                     onClick={() => onRequestDeleteArea(area)}
-                    className="p-2 rounded-lg border text-xs transition-all bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-500/30 dark:hover:bg-rose-900/60 dark:hover:text-white shadow-xs"
+                    className="p-2 rounded-lg border text-xs transition-all bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/25 hover:bg-rose-500/20 shadow-xs cursor-pointer"
                     title="Xóa khu vực này"
                   >
                     <Trash2 size={14} />
@@ -1073,8 +1073,8 @@ function AreasManagementModal({
         </div>
 
         {/* Add Area Form */}
-        <form onSubmit={handleCreate} className="bg-slate-50 p-4 rounded-xl border border-slate-200 dark:bg-[#13151a] dark:border-[#2e333d] space-y-3">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">
+        <form onSubmit={handleCreate} className="bg-surface-raised p-4 rounded-xl border border-line space-y-3">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-primary">
             + Thêm khu vực mới
           </h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -1083,7 +1083,7 @@ function AreasManagementModal({
               placeholder="Tên khu vực (ví dụ: Tầng 2, Sân thượng...)"
               value={newAreaName}
               onChange={(e) => setNewAreaName(e.target.value)}
-              className="bg-white border border-slate-200 text-slate-900 placeholder-slate-400 dark:bg-[#1a1d24] dark:border-[#333a47] dark:text-white dark:placeholder-gray-500 px-3 py-1.5 rounded-lg text-xs focus:outline-none focus:border-orange-500"
+              className="bg-sunken border border-line text-ink placeholder:text-muted px-3 py-1.5 rounded-lg text-xs focus:outline-none focus:border-primary"
               required
             />
             <input
@@ -1091,14 +1091,14 @@ function AreasManagementModal({
               placeholder="Mô tả ngắn (tùy chọn)..."
               value={newAreaDesc}
               onChange={(e) => setNewAreaDesc(e.target.value)}
-              className="bg-white border border-slate-200 text-slate-900 placeholder-slate-400 dark:bg-[#1a1d24] dark:border-[#333a47] dark:text-white dark:placeholder-gray-500 px-3 py-1.5 rounded-lg text-xs focus:outline-none focus:border-orange-500"
+              className="bg-sunken border border-line text-ink placeholder:text-muted px-3 py-1.5 rounded-lg text-xs focus:outline-none focus:border-primary"
             />
           </div>
           <div className="flex justify-end">
             <button
               type="submit"
               disabled={isCreating || !newAreaName.trim()}
-              className="px-4 py-1.5 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-xs font-bold transition-all disabled:opacity-50 cursor-pointer shadow-xs"
+              className="px-4 py-1.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg text-xs font-bold transition-all disabled:opacity-50 cursor-pointer shadow-xs"
             >
               {isCreating ? "Đang thêm..." : "Thêm khu vực"}
             </button>
@@ -1109,7 +1109,7 @@ function AreasManagementModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl text-xs font-bold text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 dark:text-gray-300 dark:hover:text-white dark:bg-[#262a34] dark:hover:bg-[#303642] transition-all"
+            className="px-4 py-2 rounded-xl text-xs font-bold text-muted hover:text-ink bg-sunken hover:bg-surface-raised transition-all cursor-pointer"
           >
             Đóng
           </button>
@@ -1157,40 +1157,40 @@ function DeleteAreaConfirmModal({
 
   return (
     <div className="fixed inset-0 z-[60] bg-black/60 dark:bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
-      <div className="bg-white border border-slate-200 dark:bg-[#1c1f26] dark:border-[#353a47] rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#2e333e] pb-3">
+      <div className="bg-surface border border-line rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
+        <div className="flex items-center justify-between border-b border-line pb-3">
           <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400">
             <AlertTriangle size={22} />
-            <h3 className="text-base font-black text-slate-900 dark:text-white">Xác Nhận Xóa Khu Vực</h3>
+            <h3 className="text-base font-black text-ink">Xác Nhận Xóa Khu Vực</h3>
           </div>
-          <button onClick={onClose} disabled={isDeleting} className="text-slate-400 hover:text-slate-700 dark:text-gray-400 dark:hover:text-white">
+          <button onClick={onClose} disabled={isDeleting} className="text-muted hover:text-ink cursor-pointer">
             <X size={18} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <p className="text-sm text-slate-700 dark:text-gray-300">
-            Bạn đang yêu cầu xóa khu vực: <strong className="text-slate-900 dark:text-white text-base underline decoration-orange-500">{area.name}</strong>
+          <p className="text-sm text-ink-secondary">
+            Bạn đang yêu cầu xóa khu vực: <strong className="text-ink text-base underline decoration-primary">{area.name}</strong>
           </p>
 
           {tableCount === 0 ? (
-            <div className="p-3.5 bg-slate-50 dark:bg-[#14161b] rounded-xl border border-slate-200 dark:border-gray-800 text-xs text-slate-600 dark:text-gray-400 leading-relaxed">
+            <div className="p-3.5 bg-sunken rounded-xl border border-line text-xs text-muted leading-relaxed">
               Khu vực này hiện không có bàn ăn nào. Bạn có chắc chắn muốn xóa không? Thao tác này không thể hoàn tác.
             </div>
           ) : (
             <div className="space-y-3">
-              <div className="p-3 bg-amber-50 border border-amber-200 text-amber-900 dark:bg-amber-950/40 dark:border-amber-500/30 dark:text-amber-300 rounded-xl text-xs flex items-start gap-2">
+              <div className="p-3 bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 rounded-xl text-xs flex items-start gap-2">
                 <AlertTriangle size={16} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                 <div>
-                  Khu vực này đang có <strong className="text-amber-900 dark:text-amber-200 font-bold">{tableCount} bàn ăn</strong>. Vui lòng chọn cách xử lý bên dưới:
+                  Khu vực này đang có <strong className="font-bold">{tableCount} bàn ăn</strong>. Vui lòng chọn cách xử lý bên dưới:
                 </div>
               </div>
 
               {otherAreas.length > 0 && (
                 <label className={`block p-3 rounded-xl border cursor-pointer transition-all ${
                   actionType === "move"
-                    ? "bg-orange-50 border-orange-300 text-slate-900 dark:bg-orange-950/30 dark:border-orange-500/50 dark:text-white"
-                    : "bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300 dark:bg-[#14161b] dark:border-gray-800 dark:text-gray-400 dark:hover:border-gray-700"
+                    ? "bg-orange-500/10 border-orange-500/40 text-ink"
+                    : "bg-sunken border-line text-muted hover:border-line-strong"
                 }`}>
                   <div className="flex items-center gap-2 mb-2">
                     <input
@@ -1198,9 +1198,9 @@ function DeleteAreaConfirmModal({
                       name="areaAction"
                       checked={actionType === "move"}
                       onChange={() => setActionType("move")}
-                      className="accent-orange-500"
+                      className="accent-orange-500 cursor-pointer"
                     />
-                    <span className="text-xs font-bold text-slate-900 dark:text-white">
+                    <span className="text-xs font-bold text-ink">
                       Chuyển toàn bộ {tableCount} bàn sang khu vực khác
                     </span>
                   </div>
@@ -1209,7 +1209,7 @@ function DeleteAreaConfirmModal({
                       <select
                         value={selectedTargetAreaId}
                         onChange={(e) => setSelectedTargetAreaId(e.target.value)}
-                        className="w-full bg-white border border-slate-200 text-slate-900 dark:bg-[#1b1e26] dark:border-[#3a404f] dark:text-white rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-orange-500"
+                        className="w-full bg-surface border border-line text-ink rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-primary cursor-pointer"
                       >
                         {otherAreas.map((a) => (
                           <option key={a.id} value={a.id}>
@@ -1224,8 +1224,8 @@ function DeleteAreaConfirmModal({
 
               <label className={`block p-3 rounded-xl border cursor-pointer transition-all ${
                 actionType === "cascade"
-                  ? "bg-rose-50 border-rose-300 text-rose-950 dark:bg-rose-950/30 dark:border-rose-500/50 dark:text-white"
-                  : "bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300 dark:bg-[#14161b] dark:border-gray-800 dark:text-gray-400 dark:hover:border-gray-700"
+                  ? "bg-rose-500/10 border-rose-500/40 text-rose-700 dark:text-rose-300"
+                  : "bg-sunken border-line text-muted hover:border-line-strong"
               }`}>
                 <div className="flex items-center gap-2">
                   <input
@@ -1233,25 +1233,25 @@ function DeleteAreaConfirmModal({
                     name="areaAction"
                     checked={actionType === "cascade"}
                     onChange={() => setActionType("cascade")}
-                    className="accent-rose-500"
+                    className="accent-rose-500 cursor-pointer"
                   />
-                  <span className="text-xs font-bold text-rose-700 dark:text-rose-300">
+                  <span className="text-xs font-bold text-rose-600 dark:text-rose-300">
                     Xóa khu vực cùng tất cả {tableCount} bàn ăn
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-500 dark:text-gray-500 pl-6 mt-1">
+                <p className="text-[11px] text-muted pl-6 mt-1">
                   Chỉ xóa các bàn trống, không có đơn hàng đang chạy. Bàn đang có khách hoặc đơn hàng dang dở sẽ không bị xóa.
                 </p>
               </label>
             </div>
           )}
 
-          <div className="flex justify-end gap-2.5 pt-2 border-t border-slate-100 dark:border-[#2e333e]">
+          <div className="flex justify-end gap-2.5 pt-2 border-t border-line">
             <button
               type="button"
               onClick={onClose}
               disabled={isDeleting}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 dark:text-gray-400 dark:hover:text-white dark:bg-[#262a34] dark:hover:bg-[#303642] transition-all"
+              className="px-4 py-2 rounded-xl text-xs font-bold text-muted hover:text-ink bg-sunken hover:bg-surface-raised transition-all cursor-pointer"
             >
               Hủy
             </button>

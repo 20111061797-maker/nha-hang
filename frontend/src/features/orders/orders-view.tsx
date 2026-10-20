@@ -279,38 +279,38 @@ export function OrdersView() {
 
       {/* Top Stats Row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-white border border-slate-200 dark:bg-[#1c1e22] dark:border-[#2d3138] rounded-2xl p-4 flex flex-col justify-between shadow-xs">
-          <span className="text-xs text-slate-500 dark:text-gray-400 font-medium">Tổng đơn hôm nay</span>
-          <span className="text-2xl font-black text-slate-900 dark:text-white font-mono mt-1">{stats.total}</span>
+        <div className="bg-surface border border-line rounded-2xl p-4 flex flex-col justify-between shadow-xs">
+          <span className="text-xs text-muted font-medium">Tổng đơn hôm nay</span>
+          <span className="text-2xl font-black text-ink font-mono mt-1">{stats.total}</span>
         </div>
-        <div className="bg-amber-50 border border-amber-200 dark:bg-[#1c1e22] dark:border-[#2d3138] rounded-2xl p-4 flex flex-col justify-between shadow-xs">
-          <span className="text-xs text-amber-700 dark:text-amber-400 font-medium">Đang phục vụ</span>
-          <span className="text-2xl font-black text-amber-900 dark:text-amber-300 font-mono mt-1">{stats.active}</span>
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 flex flex-col justify-between shadow-xs">
+          <span className="text-xs text-amber-500 font-medium">Đang phục vụ</span>
+          <span className="text-2xl font-black text-amber-400 font-mono mt-1">{stats.active}</span>
         </div>
-        <div className="bg-emerald-50 border border-emerald-200 dark:bg-[#1c1e22] dark:border-[#2d3138] rounded-2xl p-4 flex flex-col justify-between shadow-xs">
-          <span className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">Đã thanh toán</span>
-          <span className="text-2xl font-black text-emerald-900 dark:text-emerald-300 font-mono mt-1">{stats.completed}</span>
+        <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 flex flex-col justify-between shadow-xs">
+          <span className="text-xs text-emerald-500 font-medium">Đã thanh toán</span>
+          <span className="text-2xl font-black text-emerald-400 font-mono mt-1">{stats.completed}</span>
         </div>
-        <div className="bg-orange-50 border border-orange-200 dark:bg-[#1c1e22] dark:border-[#2d3138] rounded-2xl p-4 flex flex-col justify-between shadow-xs">
-          <span className="text-xs text-orange-700 dark:text-gray-400 font-medium">Doanh thu hoàn tất</span>
-          <span className="text-xl sm:text-2xl font-black text-orange-900 dark:text-[#fef3c7] font-mono mt-1">
+        <div className="bg-orange-500/10 border border-orange-500/30 rounded-2xl p-4 flex flex-col justify-between shadow-xs">
+          <span className="text-xs text-orange-500 font-medium">Doanh thu hoàn tất</span>
+          <span className="text-xl sm:text-2xl font-black text-orange-400 font-mono mt-1">
             {stats.totalRevenue.toLocaleString("vi-VN")} đ
           </span>
         </div>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-white border border-slate-200 dark:bg-[#1a1c1e] dark:border-[#2d3035] p-3 sm:p-4 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-xs">
+      <div className="bg-surface border border-line p-3 sm:p-4 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-xs">
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 flex-1 min-w-[260px]">
           {/* Search Box */}
           <div className="relative flex-1 min-w-[180px] max-w-xs">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-400" />
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Tìm theo số bàn, mã đơn..."
-              className="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 dark:bg-[#22252b] dark:border-[#383d47] rounded-xl text-xs dark:text-white dark:placeholder-gray-500 focus:outline-none focus:border-amber-500"
+              className="w-full pl-9 pr-3 py-1.5 bg-surface-raised border border-line text-ink placeholder-subtle rounded-xl text-xs focus:outline-none focus:border-amber-500"
             />
           </div>
 
@@ -318,7 +318,7 @@ export function OrdersView() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-slate-50 border border-slate-200 text-slate-800 dark:bg-[#22252b] dark:border-[#383d47] dark:text-gray-200 text-xs rounded-xl px-3 py-1.5 font-bold focus:outline-none"
+            className="bg-surface-raised border border-line text-ink text-xs rounded-xl px-3 py-1.5 font-bold focus:outline-none"
           >
             <option value="all">Tất cả trạng thái</option>
             <option value={OrderStatus.Open}>Mới tạo</option>
@@ -333,7 +333,7 @@ export function OrdersView() {
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            className="bg-slate-50 border border-slate-200 text-slate-800 dark:bg-[#22252b] dark:border-[#383d47] dark:text-gray-200 text-xs rounded-xl px-3 py-1.5 font-bold focus:outline-none"
+            className="bg-surface-raised border border-line text-ink text-xs rounded-xl px-3 py-1.5 font-bold focus:outline-none"
           >
             <option value="all">Tất cả loại đơn</option>
             <option value={OrderType.DineIn}>Tại bàn</option>
@@ -342,24 +342,24 @@ export function OrdersView() {
           </select>
         </div>
 
-        <span className="text-xs text-slate-500 dark:text-gray-400 font-mono">
-          Hiển thị <strong>{filteredOrders.length}</strong> / {orders.length} đơn
+        <span className="text-xs text-muted font-mono">
+          Hiển thị <strong className="text-ink">{filteredOrders.length}</strong> / {orders.length} đơn
         </span>
       </div>
 
       {/* Orders Table List */}
-      <div className="bg-white border border-slate-200 dark:bg-[#1c1e22] dark:border-[#2d3138] rounded-2xl overflow-hidden shadow-xs dark:shadow-lg">
+      <div className="bg-surface border border-line rounded-2xl overflow-hidden shadow-xs">
         {filteredOrders.length === 0 ? (
-          <div className="p-12 text-center text-slate-500 dark:text-gray-400 flex flex-col items-center gap-2">
-            <Package size={36} className="text-slate-400 dark:text-gray-500 mb-1" />
-            <span className="text-sm font-bold text-slate-800 dark:text-gray-300">Không có đơn hàng nào</span>
-            <span className="text-xs text-slate-500 dark:text-gray-500">Thử thay đổi bộ lọc hoặc tạo đơn mới từ màn hình POS.</span>
+          <div className="p-12 text-center text-muted flex flex-col items-center gap-2">
+            <Package size={36} className="text-subtle mb-1" />
+            <span className="text-sm font-bold text-ink">Không có đơn hàng nào</span>
+            <span className="text-xs text-muted">Thử thay đổi bộ lọc hoặc tạo đơn mới từ màn hình POS.</span>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 dark:bg-[#17181c] dark:border-[#2d3138] dark:text-gray-400 uppercase tracking-wider font-extrabold text-[10px]">
+                <tr className="bg-surface-raised border-b border-line text-muted uppercase tracking-wider font-extrabold text-[10px]">
                   <th className="py-3 px-4">Mã Đơn</th>
                   <th className="py-3 px-4">Bàn / Loại</th>
                   <th className="py-3 px-4">Thời Gian</th>
@@ -368,33 +368,33 @@ export function OrdersView() {
                   <th className="py-3 px-4 text-right">Thao Tác</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-[#282b33]">
+              <tbody className="divide-y divide-line">
                 {paginatedOrders.map((order) => {
                   const isTakeaway = order.orderType === OrderType.Takeaway;
                   const tableName = order.diningTableId ? tableMap.get(order.diningTableId) : null;
                   return (
                     <tr
                       key={order.id}
-                      className="hover:bg-slate-50 dark:hover:bg-[#23262e] transition-colors cursor-pointer group"
+                      className="hover:bg-surface-hover transition-colors cursor-pointer group"
                       onClick={() => setSelectedOrderId(order.id)}
                     >
-                      <td className="py-3 px-4 font-mono font-bold text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400">
+                      <td className="py-3 px-4 font-mono font-bold text-ink group-hover:text-amber-500">
                         #{order.orderNumber}
                       </td>
-                      <td className="py-3 px-4 font-semibold text-slate-800 dark:text-gray-200">
+                      <td className="py-3 px-4 font-semibold text-ink-secondary">
                         {isTakeaway ? (
-                          <span className="text-amber-600 dark:text-amber-400">Mang về</span>
+                          <span className="text-amber-500">Mang về</span>
                         ) : (
                           <span>{tableName ?? "Tại bàn"}</span>
                         )}
                       </td>
-                      <td className="py-3 px-4 text-slate-500 dark:text-gray-400 font-mono">
+                      <td className="py-3 px-4 text-muted font-mono">
                         {new Date(order.createdAt).toLocaleTimeString("vi-VN", {
                           hour: "2-digit",
                           minute: "2-digit",
                         })}
                       </td>
-                      <td className="py-3 px-4 font-mono font-bold text-orange-600 dark:text-[#fef3c7]">
+                      <td className="py-3 px-4 font-mono font-bold text-orange-500">
                         {order.totalAmount.toLocaleString("vi-VN")} đ
                       </td>
                       <td className="py-3 px-4">
@@ -403,7 +403,7 @@ export function OrdersView() {
                       <td className="py-3 px-4 text-right">
                         <button
                           type="button"
-                          className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-amber-500 hover:text-white font-bold text-slate-700 dark:bg-[#2b2f3a] dark:text-gray-200 transition-colors shadow-xs"
+                          className="px-2.5 py-1 rounded-lg bg-surface-raised hover:bg-amber-500 hover:text-white font-bold text-ink-secondary border border-line transition-colors shadow-xs"
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedOrderId(order.id);
@@ -438,7 +438,7 @@ export function OrdersView() {
           onClick={() => setSelectedOrderId(null)}
         >
           <div
-            className="bg-white border border-slate-200 dark:bg-[#1c1e22] dark:border-[#383d47] rounded-2xl w-full max-w-xl max-h-[92vh] overflow-y-auto shadow-2xl flex flex-col"
+            className="bg-surface border border-line-strong rounded-2xl w-full max-w-xl max-h-[92vh] overflow-y-auto shadow-2xl flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {orderDetailLoading || !activeOrder ? (
@@ -448,19 +448,19 @@ export function OrdersView() {
             ) : (
               <>
                 {/* Modal Header */}
-                <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-100 dark:border-[#2d3138]">
+                <div className="flex items-center justify-between p-4 sm:p-5 border-b border-line">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-xl">
                       🧾
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h2 className="text-base font-bold text-slate-900 dark:text-white font-mono">
+                        <h2 className="text-base font-bold text-ink font-mono">
                           ĐƠN HÀNG #{activeOrder.orderNumber}
                         </h2>
                         {getStatusBadge(activeOrder.status)}
                       </div>
-                      <span className="text-xs text-slate-500 dark:text-gray-400">
+                      <span className="text-xs text-muted">
                         {activeOrder.diningTableId && tableMap.has(activeOrder.diningTableId)
                           ? tableMap.get(activeOrder.diningTableId)
                           : activeOrder.orderType === OrderType.Takeaway
@@ -477,7 +477,7 @@ export function OrdersView() {
                   </div>
                   <button
                     type="button"
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:text-white dark:hover:bg-[#282c37] transition-all cursor-pointer"
+                    className="p-1.5 rounded-lg text-muted hover:text-ink hover:bg-surface-hover transition-all cursor-pointer"
                     onClick={() => setSelectedOrderId(null)}
                     aria-label="Đóng"
                   >
@@ -488,18 +488,18 @@ export function OrdersView() {
                 {/* Bill Paper View */}
                 <div className="p-4 sm:p-5 flex flex-col gap-4 font-sans">
                   {/* Quán Bếp Nhậu Header */}
-                  <div className="text-center pb-3 border-b border-dashed border-slate-200 dark:border-[#383d47]">
-                    <span className="text-sm font-black tracking-wider text-amber-600 dark:text-amber-400 uppercase font-heading">
+                  <div className="text-center pb-3 border-b border-dashed border-line">
+                    <span className="text-sm font-black tracking-wider text-amber-500 uppercase font-heading">
                       🔥 QUÁN BẾP NHẬU 🍺
                     </span>
-                    <p className="text-[11px] text-slate-500 dark:text-gray-400 mt-0.5 m-0">
+                    <p className="text-[11px] text-muted mt-0.5 m-0">
                       {currentBranch?.name ?? "Chi nhánh trung tâm"} • Ẩm thực Bia &amp; Món Nướng
                     </p>
                   </div>
 
                   {/* Items List */}
                   <div className="flex flex-col gap-2">
-                    <div className="flex justify-between text-[11px] font-bold text-slate-500 dark:text-gray-400 uppercase pb-1 border-b border-slate-100 dark:border-[#2d3138]">
+                    <div className="flex justify-between text-[11px] font-bold text-muted uppercase pb-1 border-b border-line">
                       <span>Món Ăn / Đồ Uống</span>
                       <div className="flex gap-6">
                         <span>SL</span>
@@ -508,19 +508,19 @@ export function OrdersView() {
                     </div>
 
                     {activeOrder.items.map((item) => (
-                      <div key={item.id} className="flex justify-between items-start text-xs py-1.5 border-b border-slate-100 dark:border-[#282b33]">
+                      <div key={item.id} className="flex justify-between items-start text-xs py-1.5 border-b border-line">
                         <div className="flex flex-col">
-                          <span className="font-bold text-slate-900 dark:text-white">{item.productNameSnapshot}</span>
+                          <span className="font-bold text-ink">{item.productNameSnapshot}</span>
                           {item.variantNameSnapshot && (
-                            <span className="text-[10px] text-amber-700 dark:text-amber-400">{item.variantNameSnapshot}</span>
+                            <span className="text-[10px] text-amber-500">{item.variantNameSnapshot}</span>
                           )}
                           {item.notes && (
-                            <span className="text-[10px] text-slate-500 dark:text-gray-400 italic">Ghi chú: {item.notes}</span>
+                            <span className="text-[10px] text-muted italic">Ghi chú: {item.notes}</span>
                           )}
                         </div>
                         <div className="flex gap-6 items-center">
-                          <span className="font-mono text-slate-600 dark:text-gray-300">x{item.quantity}</span>
-                          <span className="w-20 text-right font-mono font-bold text-slate-900 dark:text-gray-100">
+                          <span className="font-mono text-ink-secondary">x{item.quantity}</span>
+                          <span className="w-20 text-right font-mono font-bold text-ink">
                             {item.lineTotal.toLocaleString("vi-VN")} đ
                           </span>
                         </div>
@@ -529,24 +529,24 @@ export function OrdersView() {
                   </div>
 
                   {/* Bill Summary */}
-                  <div className="bg-slate-50 dark:bg-[#24272e] border border-slate-200 dark:border-[#383d47] p-3 rounded-xl flex flex-col gap-1.5 text-xs font-mono">
-                    <div className="flex justify-between text-slate-600 dark:text-gray-300">
+                  <div className="bg-surface-raised border border-line p-3 rounded-xl flex flex-col gap-1.5 text-xs font-mono">
+                    <div className="flex justify-between text-ink-secondary">
                       <span>Tạm tính ({activeOrder.items.length} món):</span>
-                      <span className="font-bold">{activeOrder.subtotal.toLocaleString("vi-VN")} đ</span>
+                      <span className="font-bold text-ink">{activeOrder.subtotal.toLocaleString("vi-VN")} đ</span>
                     </div>
                     {activeOrder.discountAmount > 0 && (
-                      <div className="flex justify-between text-rose-600 dark:text-rose-400">
+                      <div className="flex justify-between text-rose-500">
                         <span>Giảm giá:</span>
                         <span>-{activeOrder.discountAmount.toLocaleString("vi-VN")} đ</span>
                       </div>
                     )}
                     {activeOrder.taxAmount > 0 && (
-                      <div className="flex justify-between text-slate-500 dark:text-gray-400">
+                      <div className="flex justify-between text-muted">
                         <span>Thuế VAT:</span>
                         <span>+{activeOrder.taxAmount.toLocaleString("vi-VN")} đ</span>
                       </div>
                     )}
-                    <div className="flex justify-between text-base font-black text-amber-600 dark:text-amber-300 pt-2 border-t border-slate-200 dark:border-[#383d47]">
+                    <div className="flex justify-between text-base font-black text-amber-500 pt-2 border-t border-line">
                       <span>TỔNG CỘNG:</span>
                       <span>{activeOrder.totalAmount.toLocaleString("vi-VN")} đ</span>
                     </div>
@@ -554,7 +554,7 @@ export function OrdersView() {
                 </div>
 
                 {/* Modal Footer Actions */}
-                <div className="p-4 sm:p-5 bg-slate-50 dark:bg-[#17181c] border-t border-slate-100 dark:border-[#2d3138] flex flex-wrap items-center justify-between gap-3">
+                <div className="p-4 sm:p-5 bg-surface-raised border-t border-line flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
@@ -569,7 +569,7 @@ export function OrdersView() {
                     {!isOrderCancelled(activeOrder.status) && !isOrderCompleted(activeOrder.status) && (
                       <button
                         type="button"
-                        className="px-3 py-2 rounded-xl text-xs font-bold text-rose-400 hover:bg-rose-950/40 border border-rose-900/60 transition-colors flex items-center gap-1.5"
+                        className="px-3 py-2 rounded-xl text-xs font-bold text-rose-400 hover:bg-rose-500/10 border border-rose-500/40 transition-colors flex items-center gap-1.5"
                         onClick={() => setCancelModalOpen(true)}
                       >
                         <Ban size={15} />
