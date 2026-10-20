@@ -26,9 +26,17 @@ import {
   CheckCircle,
   AlertTriangle,
   Utensils,
+  UtensilsCrossed,
+  ShoppingBag,
   PlusCircle,
   X,
   Grid3X3,
+  User,
+  Users,
+  FileText,
+  Plus,
+  Minus,
+  Sparkles,
 } from "lucide-react";
 
 export function PosView() {
@@ -42,6 +50,7 @@ export function PosView() {
   const [isTakeawayNewOrder, setIsTakeawayNewOrder] = useState(false);
   const [guestName, setGuestName] = useState("");
   const [orderNotes, setOrderNotes] = useState("");
+  const [guestCount, setGuestCount] = useState<number>(2);
   const [isSepayLoading, setIsSepayLoading] = useState(false);
 
   const [notification, setNotification] = useState<{
@@ -284,6 +293,9 @@ export function PosView() {
       // Table is available or needs a new order
       setTargetTableForNewOrder(table);
       setIsTakeawayNewOrder(false);
+      setGuestCount(table.capacity || 2);
+      setGuestName("");
+      setOrderNotes("");
       setNewOrderModalOpen(true);
     }
   };
@@ -292,11 +304,22 @@ export function PosView() {
     setSelectedTable(null);
     setTargetTableForNewOrder(null);
     setIsTakeawayNewOrder(true);
+    setGuestCount(1);
+    setGuestName("");
+    setOrderNotes("");
     setNewOrderModalOpen(true);
   };
 
   const handleConfirmNewOrder = () => {
     if (!branchId) return;
+
+    let combinedNotes = orderNotes.trim();
+    if (!isTakeawayNewOrder && guestCount > 0) {
+      const guestPrefix = `[${guestCount} khách]`;
+      if (!combinedNotes.includes("khách")) {
+        combinedNotes = combinedNotes ? `${guestPrefix} ${combinedNotes}` : guestPrefix;
+      }
+    }
 
     if (isTakeawayNewOrder) {
       createOrderMutation.mutate({
@@ -304,7 +327,7 @@ export function PosView() {
         orderType: OrderType.Takeaway,
         diningTableId: null,
         customerNameSnapshot: guestName.trim() || undefined,
-        notes: orderNotes.trim() || undefined,
+        notes: combinedNotes || undefined,
       });
     } else if (targetTableForNewOrder) {
       createOrderMutation.mutate({
@@ -312,7 +335,7 @@ export function PosView() {
         orderType: OrderType.DineIn,
         diningTableId: targetTableForNewOrder.id,
         customerNameSnapshot: guestName.trim() || undefined,
-        notes: orderNotes.trim() || undefined,
+        notes: combinedNotes || undefined,
       });
     }
   };
@@ -638,18 +661,61 @@ export function PosView() {
 
       {/* New Order Modal */}
       {newOrderModalOpen && (
-        <div className="pos-modal-backdrop" onClick={() => setNewOrderModalOpen(false)}>
-          <div className="pos-modal-card pos-modal-sm" onClick={(e) => e.stopPropagation()}>
-            <div className="pos-modal-header">
-              <div>
-                <div className="eyebrow">
-                  {isTakeawayNewOrder ? "Mang về" : `Bàn ${targetTableForNewOrder?.tableNumber}`}
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200"
+          onClick={() => setNewOrderModalOpen(false)}
+        >
+          <div
+            className="relative w-full max-w-lg bg-surface border border-line rounded-3xl shadow-2xl overflow-hidden transition-all text-ink animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Ambient Top Gradient Accent Line */}
+            <div
+              className={`h-1.5 w-full bg-gradient-to-r ${
+                isTakeawayNewOrder
+                  ? "from-emerald-500 via-teal-500 to-cyan-500"
+                  : "from-orange-500 via-amber-500 to-yellow-500"
+              }`}
+            />
+
+            {/* Modal Header */}
+            <div className="px-6 pt-5 pb-4 flex items-start justify-between border-b border-line/60">
+              <div className="flex items-center gap-3.5">
+                <div
+                  className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-md ${
+                    isTakeawayNewOrder
+                      ? "bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-emerald-500/20"
+                      : "bg-gradient-to-br from-orange-500 to-amber-600 text-white shadow-orange-500/20"
+                  }`}
+                >
+                  {isTakeawayNewOrder ? <ShoppingBag size={24} /> : <UtensilsCrossed size={24} />}
                 </div>
-                <h3>Tạo đơn hàng mới</h3>
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full text-[11px] font-black tracking-wide uppercase ${
+                        isTakeawayNewOrder
+                          ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+                          : "bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20"
+                      }`}
+                    >
+                      {isTakeawayNewOrder ? "Đơn mang về" : `Bàn ${targetTableForNewOrder?.tableNumber}`}
+                    </span>
+                    {!isTakeawayNewOrder && (
+                      <span className="text-[11px] font-semibold text-muted bg-surface-raised px-2 py-0.5 rounded-full border border-line">
+                        {areas.find((a) => a.id === targetTableForNewOrder?.areaId)?.name || "Khu vực chung"}
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="text-lg font-bold text-ink">
+                    {isTakeawayNewOrder ? "Tạo đơn mang về mới" : "Mở bàn & Tạo đơn mới"}
+                  </h3>
+                </div>
               </div>
+
               <button
                 type="button"
-                className="icon-button"
+                className="p-2 text-muted hover:text-ink hover:bg-surface-raised rounded-xl transition-all"
                 onClick={() => setNewOrderModalOpen(false)}
                 aria-label="Đóng"
               >
@@ -657,57 +723,177 @@ export function PosView() {
               </button>
             </div>
 
-            <div className="pos-modal-body">
+            {/* Modal Body */}
+            <div className="p-6 space-y-5">
+              {/* Dine-in Table Info & Guest Stepper */}
               {!isTakeawayNewOrder && targetTableForNewOrder && (
-                <div className="pos-modal-table-summary">
-                  <Utensils size={18} className="text-green" />
-                  <span>
-                    Bàn số <strong>{targetTableForNewOrder.tableNumber}</strong> (Sức chứa:{" "}
-                    {targetTableForNewOrder.capacity} khách)
-                  </span>
+                <div className="bg-sunken border border-line rounded-2xl p-4 space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                          Bàn sẵn sàng phục vụ
+                        </span>
+                        <span className="text-xs text-muted">•</span>
+                        <span className="text-xs text-muted font-medium">
+                          Sức chứa {targetTableForNewOrder.capacity} chỗ
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted">Số lượng khách dùng bữa tại bàn:</p>
+                    </div>
+
+                    {/* Stepper */}
+                    <div className="flex items-center bg-surface border border-line rounded-xl p-1 shadow-inner self-start sm:self-auto">
+                      <button
+                        type="button"
+                        onClick={() => setGuestCount((c) => Math.max(1, c - 1))}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-muted hover:text-ink hover:bg-surface-raised active:scale-95 transition-all"
+                        aria-label="Giảm khách"
+                      >
+                        <Minus size={14} />
+                      </button>
+                      <div className="px-3 min-w-[70px] text-center">
+                        <span className="text-sm font-black text-ink">{guestCount}</span>
+                        <span className="text-[10px] text-muted ml-1 font-medium">khách</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setGuestCount((c) => c + 1)}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-muted hover:text-ink hover:bg-surface-raised active:scale-95 transition-all"
+                        aria-label="Tăng khách"
+                      >
+                        <Plus size={14} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Preset quick buttons */}
+                  <div className="flex items-center gap-1.5 pt-1 border-t border-line/40">
+                    <span className="text-[11px] text-muted font-medium mr-1 flex items-center gap-1">
+                      <Users size={12} /> Nhanh:
+                    </span>
+                    {[1, 2, 4, 6, 8, 10].map((num) => (
+                      <button
+                        key={num}
+                        type="button"
+                        onClick={() => setGuestCount(num)}
+                        className={`text-xs px-2.5 py-1 rounded-lg font-bold transition-all ${
+                          guestCount === num
+                            ? "bg-orange-500 text-white shadow-sm"
+                            : "bg-surface hover:bg-surface-raised border border-line text-muted hover:text-ink"
+                        }`}
+                      >
+                        {num}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
 
-              <div className="pos-form-field">
-                <label className="pos-section-title">Tên khách / Ghi nhận</label>
-                <input
-                  type="text"
-                  className="pos-input"
-                  placeholder="VD: Anh Nam, Khách quen..."
-                  value={guestName}
-                  onChange={(e) => setGuestName(e.target.value)}
-                  autoFocus
-                />
+              {/* Guest Name Field */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold uppercase tracking-wider text-muted flex items-center gap-1.5">
+                    <User size={14} className="text-orange-500" />
+                    <span>Tên khách hàng / Ghi nhận</span>
+                  </label>
+                  <span className="text-[11px] text-muted italic">Không bắt buộc</span>
+                </div>
+                <div className="relative">
+                  <input
+                    type="text"
+                    className="w-full bg-surface border border-line rounded-xl px-4 py-2.5 text-sm font-medium text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all shadow-sm"
+                    placeholder="VD: Anh Nam, Chị Lan, Bàn VIP..."
+                    value={guestName}
+                    onChange={(e) => setGuestName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleConfirmNewOrder();
+                      }
+                    }}
+                    autoFocus
+                  />
+                </div>
+                {/* Quick Chips for Guest Name */}
+                <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                  <span className="text-[11px] text-muted font-medium mr-1 flex items-center gap-1">
+                    <Sparkles size={11} className="text-amber-500" /> Gợi ý:
+                  </span>
+                  {["Khách quen", "Khách VIP", "Khách đoàn", "Đặt trước"].map((tag) => (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => setGuestName((prev) => (prev ? `${prev} - ${tag}` : tag))}
+                      className="text-xs px-2.5 py-1 rounded-lg bg-surface-raised hover:bg-orange-500/10 hover:text-orange-600 dark:hover:text-orange-400 hover:border-orange-500/30 border border-line text-muted font-medium transition-all active:scale-95"
+                    >
+                      +{tag}
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              <div className="pos-form-field">
-                <label className="pos-section-title">Ghi chú phục vụ</label>
-                <input
-                  type="text"
-                  className="pos-input"
-                  placeholder="VD: Khách VIP, đặt trước nước suối..."
-                  value={orderNotes}
-                  onChange={(e) => setOrderNotes(e.target.value)}
-                />
+              {/* Service Notes Field */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold uppercase tracking-wider text-muted flex items-center gap-1.5">
+                    <FileText size={14} className="text-amber-500" />
+                    <span>Ghi chú phục vụ bếp &amp; Pha chế</span>
+                  </label>
+                  <span className="text-[11px] text-muted italic">Gửi bếp / bar</span>
+                </div>
+                <div className="relative">
+                  <input
+                    type="text"
+                    className="w-full bg-surface border border-line rounded-xl px-4 py-2.5 text-sm font-medium text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all shadow-sm"
+                    placeholder="VD: Ít đá, không cay, chuẩn bị dĩa riêng..."
+                    value={orderNotes}
+                    onChange={(e) => setOrderNotes(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleConfirmNewOrder();
+                      }
+                    }}
+                  />
+                </div>
+                {/* Quick kitchen chips */}
+                <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                  <span className="text-[11px] text-muted font-medium mr-1">Yêu cầu:</span>
+                  {["Ít đá", "Không cay", "Lên món nhanh", "Mang về sau", "Ưu tiên trẻ em"].map((noteTag) => (
+                    <button
+                      key={noteTag}
+                      type="button"
+                      onClick={() => {
+                        setOrderNotes((prev) => (prev ? `${prev}, ${noteTag}` : noteTag));
+                      }}
+                      className="text-xs px-2.5 py-1 rounded-lg bg-surface-raised hover:bg-amber-500/10 hover:text-amber-600 dark:hover:text-amber-400 hover:border-amber-500/30 border border-line text-muted font-medium transition-all active:scale-95"
+                    >
+                      +{noteTag}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
-            <div className="pos-modal-footer">
+            {/* Modal Footer */}
+            <div className="px-6 py-4 bg-sunken/60 border-t border-line flex items-center justify-between gap-3">
               <button
                 type="button"
-                className="secondary-button"
+                className="px-5 py-2.5 rounded-xl text-sm font-bold text-muted hover:text-ink hover:bg-surface-raised border border-line/60 transition-all active:scale-95"
                 onClick={() => setNewOrderModalOpen(false)}
               >
                 Hủy bỏ
               </button>
               <button
                 type="button"
-                className="primary-button"
                 disabled={createOrderMutation.isPending}
                 onClick={handleConfirmNewOrder}
+                className="px-6 py-2.5 rounded-xl text-sm font-black text-white bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 active:scale-95 shadow-lg shadow-orange-500/25 hover:shadow-orange-500/35 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <PlusCircle size={16} />
-                {createOrderMutation.isPending ? "Đang tạo đơn..." : "Bắt đầu chọn món"}
+                <PlusCircle size={18} />
+                <span>{createOrderMutation.isPending ? "Đang tạo đơn..." : "Bắt đầu chọn món"}</span>
               </button>
             </div>
           </div>
