@@ -132,7 +132,7 @@ export function QrMenuView({ tableIdentifier }: Props) {
     queryKey: ["public-table-bill", tableId],
     queryFn: () => (tableId ? qrOrderApi.getActiveBill(tableId) : Promise.resolve(null)),
     enabled: Boolean(tableId),
-    refetchInterval: 8000,
+    refetchInterval: 2500,
   });
 
   // Pre-fill customer details from active bill if already on table

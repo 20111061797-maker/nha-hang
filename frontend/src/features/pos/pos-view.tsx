@@ -17,6 +17,7 @@ import { PaymentMethod } from "@/types/payments";
 import { announcePaymentSuccess } from "@/lib/audio/payment-sound";
 import { handleSepayPopupReturn, submitSepayCheckout } from "@/lib/sepay/checkout-redirect";
 import { TableFloorPlan } from "./table-floor-plan";
+import { useKitchenSignalR } from "@/features/kitchen/use-kitchen-signalr";
 import { MenuSelector } from "./menu-selector";
 import { OrderTicket } from "./order-ticket";
 import { LoadingState, EmptyState } from "@/components/feedback/states";
@@ -79,6 +80,7 @@ export function PosView() {
     queryKey: ["pos-tables", branchId],
     queryFn: () => (branchId ? posApi.getTables(branchId) : Promise.resolve([])),
     enabled: Boolean(branchId),
+    refetchInterval: 3000,
   });
 
   const { data: menu, isLoading: menuLoading } = useQuery({
@@ -91,13 +93,38 @@ export function PosView() {
     queryKey: ["pos-orders", branchId],
     queryFn: () => (branchId ? posApi.getBranchOrders(branchId) : Promise.resolve([])),
     enabled: Boolean(branchId),
-    refetchInterval: 15000,
+    refetchInterval: 2500,
   });
 
   const { data: activeOrder } = useQuery({
     queryKey: ["pos-order", activeOrderId],
     queryFn: () => (activeOrderId ? posApi.getOrder(activeOrderId) : Promise.resolve(null)),
     enabled: Boolean(activeOrderId),
+    refetchInterval: 2000,
+  });
+
+  // SignalR thời gian thực: Khi khách quét mã QR gọi món hoặc thêm món mới, cập nhật ngay tức thì
+  useKitchenSignalR({
+    branchId,
+    onEvent: (evt) => {
+      queryClient.invalidateQueries({ queryKey: ["pos-orders", branchId] });
+      queryClient.invalidateQueries({ queryKey: ["pos-tables", branchId] });
+      if (activeOrderId) {
+        queryClient.invalidateQueries({ queryKey: ["pos-order", activeOrderId] });
+      }
+      if (
+        evt.eventName === "NewOrderCreated" ||
+        evt.eventName === "KitchenOrderCreated"
+      ) {
+        const tableNum = evt.tableNumber || (evt as any).tableNumberSnapshot;
+        if (selectedTable && tableNum === selectedTable.tableNumber) {
+          showNotification(
+            "success",
+            `Khách Bàn ${tableNum} vừa gọi thêm món qua QR! Số lượng và tiền đã cập nhật.`
+          );
+        }
+      }
+    },
   });
 
   // Mutations
@@ -673,6 +700,7 @@ export function PosView() {
           <TableFloorPlan
             areas={areas}
             tables={tables}
+            orders={orders}
             onSelectTable={handleSelectTable}
             onCreateTakeaway={handleCreateTakeaway}
           />

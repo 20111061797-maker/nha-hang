@@ -78,4 +78,8 @@ export type KitchenEvent = {
   status: KitchenOrderStatus;
   updatedAt: string;
   itemId?: string | null;
+  tableNumber?: string | null;
+  orderNumber?: string | null;
+  itemSummary?: string | null;
+  stationName?: string | null;
 };

@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { announcePaymentSuccess } from "@/lib/audio/payment-sound";
 import { handleSepayPopupReturn, submitSepayCheckout } from "@/lib/sepay/checkout-redirect";
+import { useKitchenSignalR } from "@/features/kitchen/use-kitchen-signalr";
 import { useEffect } from "react";
 
 export function OrdersView() {
@@ -136,13 +137,25 @@ export function OrdersView() {
     queryKey: ["branch-orders", branchId],
     queryFn: () => (branchId ? posApi.getBranchOrders(branchId) : Promise.resolve([])),
     enabled: Boolean(branchId),
-    refetchInterval: 10000,
+    refetchInterval: 3000,
   });
 
   const { data: activeOrder, isLoading: orderDetailLoading } = useQuery({
     queryKey: ["order-detail", selectedOrderId],
     queryFn: () => (selectedOrderId ? posApi.getOrder(selectedOrderId) : Promise.resolve(null)),
     enabled: Boolean(selectedOrderId),
+    refetchInterval: 2500,
+  });
+
+  useKitchenSignalR({
+    branchId,
+    onEvent: () => {
+      queryClient.invalidateQueries({ queryKey: ["branch-orders", branchId] });
+      queryClient.invalidateQueries({ queryKey: ["pos-tables", branchId] });
+      if (selectedOrderId) {
+        queryClient.invalidateQueries({ queryKey: ["order-detail", selectedOrderId] });
+      }
+    },
   });
 
   const isOrderCompleted = (status: any) =>

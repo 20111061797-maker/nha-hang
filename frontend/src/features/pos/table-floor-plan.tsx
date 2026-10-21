@@ -3,14 +3,17 @@
 import { useMemo, useState } from "react";
 import {
   TableStatus,
+  OrderStatus,
   type DiningArea,
   type DiningTable,
+  type OrderListItem,
 } from "@/types/pos";
 import { Users, Plus, ShoppingBag, UtensilsCrossed } from "lucide-react";
 
 type Props = {
   areas: DiningArea[];
   tables: DiningTable[];
+  orders?: OrderListItem[];
   onSelectTable: (table: DiningTable) => void;
   onCreateTakeaway: () => void;
 };
@@ -18,6 +21,7 @@ type Props = {
 export function TableFloorPlan({
   areas,
   tables,
+  orders = [],
   onSelectTable,
   onCreateTakeaway,
 }: Props) {
@@ -43,6 +47,23 @@ export function TableFloorPlan({
     const reserved = tables.filter((t) => t.status === TableStatus.Reserved).length;
     return { total, available, occupied, reserved };
   }, [tables]);
+
+  const ordersByTableId = useMemo(() => {
+    const map = new Map<string, OrderListItem>();
+    if (!orders) return map;
+    for (const o of orders) {
+      if (
+        o.diningTableId &&
+        o.status !== OrderStatus.Completed &&
+        o.status !== OrderStatus.Cancelled &&
+        (o.status as any) !== 6 &&
+        (o.status as any) !== 7
+      ) {
+        map.set(o.diningTableId, o);
+      }
+    }
+    return map;
+  }, [orders]);
 
   const getTableStatusInfo = (status: TableStatus) => {
     switch (status) {
@@ -159,6 +180,7 @@ export function TableFloorPlan({
           filteredTables.map((table) => {
             const statusInfo = getTableStatusInfo(table.status);
             const isOccupied = table.status === TableStatus.Occupied;
+            const tableOrder = ordersByTableId.get(table.id);
 
             return (
               <div
@@ -185,12 +207,17 @@ export function TableFloorPlan({
                     <Users size={14} />
                     <span>{table.capacity} chỗ</span>
                   </div>
+                  {tableOrder && (
+                    <div className="mt-1 text-xs font-mono font-black text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded-lg flex items-center justify-center animate-fade-in shadow-sm">
+                      <span>{tableOrder.totalAmount.toLocaleString("vi-VN")} ₫</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="pos-table-card-footer">
                   {isOccupied ? (
                     <div className="pos-table-action-hint occupied-hint">
-                      <span>Đang phục vụ</span>
+                      <span>{tableOrder ? "Đang có đơn" : "Đang phục vụ"}</span>
                       <small>Nhấp xem đơn →</small>
                     </div>
                   ) : (
