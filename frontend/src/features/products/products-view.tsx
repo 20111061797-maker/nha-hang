@@ -22,7 +22,9 @@ import {
   RefreshCw,
   FolderPlus,
   Image as ImageIcon,
+  Scale,
 } from "lucide-react";
+import { ProductRecipeModal } from "./product-recipe-modal";
 
 interface ProductWithContext {
   id: string;
@@ -62,6 +64,11 @@ export function ProductsView() {
   }>({ open: false, mode: "create" });
 
   const [deleteProductModal, setDeleteProductModal] = useState<{
+    open: boolean;
+    product?: ProductWithContext;
+  }>({ open: false });
+
+  const [recipeModal, setRecipeModal] = useState<{
     open: boolean;
     product?: ProductWithContext;
   }>({ open: false });
@@ -677,6 +684,16 @@ export function ProductsView() {
                   <div className="flex items-center justify-end gap-1.5 pt-1">
                     <button
                       type="button"
+                      onClick={() => setRecipeModal({ open: true, product })}
+                      className="p-1.5 rounded-lg border text-xs text-ink-secondary hover:text-ink bg-surface-hover hover:bg-surface-hover border-line-strong transition-all flex items-center gap-1"
+                      title="Công thức định lượng nguyên liệu"
+                    >
+                      <Scale size={12} className="text-emerald-400" />
+                      <span className="text-[11px] font-medium">Định lượng</span>
+                    </button>
+
+                    <button
+                      type="button"
                       onClick={() => setProductModal({ open: true, mode: "edit", product })}
                       className="p-1.5 rounded-lg border text-xs text-ink-secondary hover:text-ink bg-surface-hover hover:bg-surface-hover border-line-strong transition-all flex items-center gap-1"
                       title="Sửa thông tin món"
@@ -735,6 +752,18 @@ export function ProductsView() {
               });
             }
           }}
+        />
+      )}
+
+      {/* MODAL: Định lượng nguyên liệu món ăn */}
+      {recipeModal.open && recipeModal.product && (
+        <ProductRecipeModal
+          open={recipeModal.open}
+          onClose={() => setRecipeModal({ open: false })}
+          productId={recipeModal.product.id}
+          productName={recipeModal.product.name}
+          branchId={branchId || ""}
+          variants={recipeModal.product.variants}
         />
       )}
 

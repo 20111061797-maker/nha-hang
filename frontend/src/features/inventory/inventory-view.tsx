@@ -26,6 +26,7 @@ import {
   RefreshCw,
   Clock,
   Sparkles,
+  UtensilsCrossed,
 } from "lucide-react";
 
 function formatVnd(amount: number) {
@@ -61,12 +62,18 @@ export function InventoryView() {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [itemsPage, setItemsPage] = useState(1);
   const [historyPage, setHistoryPage] = useState(1);
+  const [historySearch, setHistorySearch] = useState("");
+  const [historyTypeFilter, setHistoryTypeFilter] = useState("ALL");
   const [notice, setNotice] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
   // Reset về trang 1 khi đổi bộ lọc hoặc tìm kiếm
   useEffect(() => {
     setItemsPage(1);
   }, [search, statusFilter]);
+
+  useEffect(() => {
+    setHistoryPage(1);
+  }, [historySearch, historyTypeFilter]);
 
   // Modals
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -128,10 +135,35 @@ export function InventoryView() {
     return items.slice(start, start + PAGE_SIZE);
   }, [items, itemsPage]);
 
+  const filteredHistory = useMemo(() => {
+    return transactions.filter((tx) => {
+      const s = historySearch.trim().toLowerCase();
+      const matchSearch =
+        !s ||
+        tx.ingredientName.toLowerCase().includes(s) ||
+        (tx.reason && tx.reason.toLowerCase().includes(s)) ||
+        tx.performedBy.toLowerCase().includes(s);
+
+      if (!matchSearch) return false;
+
+      if (historyTypeFilter === "ALL") return true;
+      if (historyTypeFilter === "RECEIPT") return tx.transactionType.toLowerCase() === "receipt";
+      if (historyTypeFilter === "COOKING") return tx.reason?.toLowerCase().includes("tiêu hao chế biến");
+      if (historyTypeFilter === "WASTE")
+        return (
+          tx.reason?.toLowerCase().includes("hao hụt") ||
+          tx.reason?.toLowerCase().includes("hỏng") ||
+          tx.reason?.toLowerCase().includes("làm lại")
+        );
+      if (historyTypeFilter === "COUNT") return tx.transactionType.toLowerCase() === "count";
+      return true;
+    });
+  }, [transactions, historySearch, historyTypeFilter]);
+
   const paginatedHistory = useMemo(() => {
     const start = (historyPage - 1) * PAGE_SIZE;
-    return transactions.slice(start, start + PAGE_SIZE);
-  }, [transactions, historyPage]);
+    return filteredHistory.slice(start, start + PAGE_SIZE);
+  }, [filteredHistory, historyPage]);
 
   // Mutations
   const createMutation = useMutation({
@@ -660,136 +692,206 @@ export function InventoryView() {
 
       {/* Tab 2: Lịch sử Nhập / Xuất kho (Transactions) */}
       {activeTab === "history" && (
-        <div className="bg-surface rounded-3xl border border-line shadow-sm overflow-hidden">
-          {isTxLoading ? (
-            <div className="p-12 text-center text-muted flex flex-col items-center justify-center gap-3">
-              <RefreshCw className="animate-spin text-amber-500" size={24} />
-              <span className="text-xs">Đang tải lịch sử kho...</span>
+        <div className="space-y-4">
+          {/* History Filters Toolbar */}
+          <div className="bg-surface p-4 rounded-2xl border border-line flex flex-col md:flex-row items-center justify-between gap-3 shadow-xs">
+            {/* Search input */}
+            <div className="relative w-full md:w-80">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-subtle" size={15} />
+              <input
+                type="text"
+                placeholder="Tìm theo nguyên liệu, món, bàn, đơn..."
+                value={historySearch}
+                onChange={(e) => setHistorySearch(e.target.value)}
+                className="w-full text-xs pl-9 pr-8 py-2 rounded-xl bg-surface-raised border border-line text-ink placeholder:text-subtle focus:border-amber-500 outline-none"
+              />
+              {historySearch && (
+                <button
+                  type="button"
+                  onClick={() => setHistorySearch("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-subtle hover:text-ink"
+                >
+                  <X size={14} />
+                </button>
+              )}
             </div>
-          ) : transactions.length === 0 ? (
-            <div className="p-16 text-center text-subtle flex flex-col items-center justify-center gap-3">
-              <History size={36} />
-              <div className="text-sm font-bold text-ink-secondary">Chưa có biến động kho nào</div>
-              <p className="text-xs text-subtle">
-                Các thao tác nhập hàng, xuất kho, kiểm kê sẽ được ghi lại chi tiết tại đây.
-              </p>
+
+            {/* Filter Pills */}
+            <div className="flex items-center gap-1.5 flex-wrap w-full md:w-auto">
+              {[
+                { key: "ALL", label: "Tất cả" },
+                { key: "COOKING", label: "🍳 Tiêu hao chế biến" },
+                { key: "RECEIPT", label: "📦 Nhập kho" },
+                { key: "WASTE", label: "⚠️ Hao hụt / Làm lại" },
+                { key: "COUNT", label: "⚖️ Kiểm kê" },
+              ].map((pill) => (
+                <button
+                  key={pill.key}
+                  type="button"
+                  onClick={() => setHistoryTypeFilter(pill.key)}
+                  className={`text-xs px-3 py-1.5 rounded-xl font-medium transition-all ${
+                    historyTypeFilter === pill.key
+                      ? "bg-amber-500 text-black font-bold shadow-sm"
+                      : "bg-surface-raised text-ink-secondary hover:text-ink hover:bg-surface-hover border border-line"
+                  }`}
+                >
+                  {pill.label}
+                </button>
+              ))}
             </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse">
-                <thead>
-                  <tr className="border-b border-line bg-well text-muted font-bold uppercase tracking-wider text-[11px]">
-                    <th className="py-4 px-5">Thời gian</th>
-                    <th className="py-4 px-5">Loại giao dịch</th>
-                    <th className="py-4 px-5">Mặt hàng</th>
-                    <th className="py-4 px-5">Biến động</th>
-                    <th className="py-4 px-5">Đơn giá</th>
-                    <th className="py-4 px-5">Tồn Trước &rarr; Sau</th>
-                    <th className="py-4 px-5">Người thực hiện</th>
-                    <th className="py-4 px-5">Lý do / Ghi chú</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-line">
-                  {paginatedHistory.map((tx) => {
-                    const isReceipt = tx.transactionType.toLowerCase() === "receipt";
-                    const isIssue = tx.transactionType.toLowerCase() === "issue";
-                    const isCount = tx.transactionType.toLowerCase() === "count";
+          </div>
 
-                    return (
-                      <tr key={tx.id} className="hover:bg-raised transition-colors">
-                        {/* Time */}
-                        <td className="py-4 px-5 font-mono text-muted flex items-center gap-1.5">
-                          <Clock size={12} className="text-subtle" />
-                          <span>{formatDate(tx.createdAt)}</span>
-                        </td>
+          <div className="bg-surface rounded-3xl border border-line shadow-sm overflow-hidden">
+            {isTxLoading ? (
+              <div className="p-12 text-center text-muted flex flex-col items-center justify-center gap-3">
+                <RefreshCw className="animate-spin text-amber-500" size={24} />
+                <span className="text-xs">Đang tải lịch sử kho...</span>
+              </div>
+            ) : filteredHistory.length === 0 ? (
+              <div className="p-16 text-center text-subtle flex flex-col items-center justify-center gap-3">
+                <History size={36} />
+                <div className="text-sm font-bold text-ink-secondary">Không tìm thấy biến động kho phù hợp</div>
+                <p className="text-xs text-subtle">
+                  Hãy thử thay đổi từ khóa tìm kiếm hoặc bỏ chọn bộ lọc để xem đầy đủ lịch sử.
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-line bg-well text-muted font-bold uppercase tracking-wider text-[11px]">
+                      <th className="py-4 px-5">Thời gian</th>
+                      <th className="py-4 px-5">Loại giao dịch</th>
+                      <th className="py-4 px-5">Mặt hàng</th>
+                      <th className="py-4 px-5">Biến động</th>
+                      <th className="py-4 px-5">Đơn giá</th>
+                      <th className="py-4 px-5">Tồn Trước &rarr; Sau</th>
+                      <th className="py-4 px-5">Người thực hiện</th>
+                      <th className="py-4 px-5">Lý do / Món / Bàn</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-line">
+                    {paginatedHistory.map((tx) => {
+                      const isReceipt = tx.transactionType.toLowerCase() === "receipt";
+                      const isCount = tx.transactionType.toLowerCase() === "count";
+                      const isCooking = tx.reason?.toLowerCase().includes("tiêu hao chế biến");
+                      const isReCook = tx.reason?.toLowerCase().includes("làm lại món");
+                      const isWaste = tx.reason?.toLowerCase().includes("hao hụt") || tx.reason?.toLowerCase().includes("hỏng");
+                      const isIssue = tx.transactionType.toLowerCase() === "issue" && !isCooking && !isReCook && !isWaste;
 
-                        {/* Type Badge */}
-                        <td className="py-4 px-5">
-                          {isReceipt && (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-600/40">
-                              <TrendingUp size={12} />
-                              Nhập kho
+                      return (
+                        <tr key={tx.id} className="hover:bg-raised transition-colors">
+                          {/* Time */}
+                          <td className="py-4 px-5 font-mono text-muted flex items-center gap-1.5 whitespace-nowrap">
+                            <Clock size={12} className="text-subtle" />
+                            <span>{formatDate(tx.createdAt)}</span>
+                          </td>
+
+                          {/* Type Badge */}
+                          <td className="py-4 px-5 whitespace-nowrap">
+                            {isCooking && (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-purple-950/80 text-purple-300 border border-purple-600/40">
+                                <UtensilsCrossed size={12} />
+                                Tiêu hao chế biến
+                              </span>
+                            )}
+                            {isReCook && (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-950/80 text-amber-300 border border-amber-600/40">
+                                <RefreshCw size={12} />
+                                Làm lại món
+                              </span>
+                            )}
+                            {isWaste && (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-950/80 text-rose-300 border border-rose-600/40">
+                                <AlertTriangle size={12} />
+                                Hao hụt / Hỏng
+                              </span>
+                            )}
+                            {isReceipt && (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-600/40">
+                                <TrendingUp size={12} />
+                                Nhập kho
+                              </span>
+                            )}
+                            {isIssue && (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-950/80 text-rose-300 border border-rose-600/40">
+                                <TrendingDown size={12} />
+                                Xuất kho
+                              </span>
+                            )}
+                            {isCount && (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-sky-950/80 text-sky-300 border border-sky-600/40">
+                                <Scale size={12} />
+                                Kiểm kê
+                              </span>
+                            )}
+                          </td>
+
+                          {/* Ingredient */}
+                          <td className="py-4 px-5">
+                            <span className="font-bold text-ink">{tx.ingredientName}</span>
+                            <span className="text-[11px] text-muted ml-1.5">({tx.unitName})</span>
+                          </td>
+
+                          {/* Delta */}
+                          <td className="py-4 px-5 font-mono font-bold whitespace-nowrap">
+                            <span
+                              className={
+                                tx.quantityDelta > 0
+                                  ? "text-emerald-400"
+                                  : tx.quantityDelta < 0
+                                  ? "text-rose-400"
+                                  : "text-muted"
+                              }
+                            >
+                              {tx.quantityDelta > 0 ? `+${tx.quantityDelta}` : tx.quantityDelta}{" "}
+                              {tx.unitName}
                             </span>
-                          )}
-                          {isIssue && (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-950/80 text-rose-300 border border-rose-600/40">
-                              <TrendingDown size={12} />
-                              Xuất hao hụt
-                            </span>
-                          )}
-                          {isCount && (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-sky-950/80 text-sky-300 border border-sky-600/40">
-                              <Scale size={12} />
-                              Kiểm kê
-                            </span>
-                          )}
-                          {!isReceipt && !isIssue && !isCount && (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-raised text-ink-secondary border border-line-strong">
-                              {tx.transactionType}
-                            </span>
-                          )}
-                        </td>
+                          </td>
 
-                        {/* Ingredient */}
-                        <td className="py-4 px-5">
-                          <span className="font-bold text-ink">{tx.ingredientName}</span>
-                          <span className="text-[11px] text-muted ml-1.5">({tx.unitName})</span>
-                        </td>
+                          {/* Cost */}
+                          <td className="py-4 px-5 font-mono text-ink-secondary whitespace-nowrap">
+                            {formatVnd(tx.unitCost)}
+                          </td>
 
-                        {/* Delta */}
-                        <td className="py-4 px-5 font-mono font-bold">
-                          <span
-                            className={
-                              tx.quantityDelta > 0
-                                ? "text-emerald-400"
-                                : tx.quantityDelta < 0
-                                ? "text-rose-400"
-                                : "text-muted"
-                            }
-                          >
-                            {tx.quantityDelta > 0 ? `+${tx.quantityDelta}` : tx.quantityDelta}{" "}
-                            {tx.unitName}
-                          </span>
-                        </td>
+                          {/* Before -> After */}
+                          <td className="py-4 px-5 font-mono text-muted whitespace-nowrap">
+                            <span>{tx.quantityBefore}</span>
+                            <span className="mx-1 text-faint">&rarr;</span>
+                            <span className="font-bold text-ink">{tx.quantityAfter}</span>
+                          </td>
 
-                        {/* Cost */}
-                        <td className="py-4 px-5 font-mono text-ink-secondary">
-                          {formatVnd(tx.unitCost)}
-                        </td>
+                          {/* Performed By */}
+                          <td className="py-4 px-5 text-ink-secondary font-medium whitespace-nowrap">
+                            {tx.performedBy}
+                          </td>
 
-                        {/* Before -> After */}
-                        <td className="py-4 px-5 font-mono text-muted">
-                          <span>{tx.quantityBefore}</span>
-                          <span className="mx-1 text-faint">&rarr;</span>
-                          <span className="font-bold text-ink">{tx.quantityAfter}</span>
-                        </td>
+                          {/* Reason */}
+                          <td className="py-4 px-5 text-ink-secondary text-xs">
+                            {tx.reason ? (
+                              <span className="break-words font-medium">{tx.reason}</span>
+                            ) : (
+                              <span className="text-muted italic">—</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
 
-                        {/* Performed By */}
-                        <td className="py-4 px-5 text-ink-secondary font-medium">
-                          {tx.performedBy}
-                        </td>
-
-                        {/* Reason */}
-                        <td className="py-4 px-5 text-muted italic max-w-xs truncate">
-                          {tx.reason || "—"}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {transactions.length > 0 && (
-            <Pagination
-              currentPage={historyPage}
-              totalItems={transactions.length}
-              pageSize={PAGE_SIZE}
-              onPageChange={setHistoryPage}
-              itemLabel="biến động kho"
-            />
-          )}
+            {filteredHistory.length > 0 && (
+              <Pagination
+                currentPage={historyPage}
+                totalItems={filteredHistory.length}
+                pageSize={PAGE_SIZE}
+                onPageChange={setHistoryPage}
+                itemLabel="biến động kho"
+              />
+            )}
+          </div>
         </div>
       )}
 

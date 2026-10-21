@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RestaurantManagement.Application.Features.Inventory;
+using RestaurantManagement.Application.Features.Recipes;
 using RestaurantManagement.Infrastructure.Authentication;
 
 namespace RestaurantManagement.API.Controllers;
@@ -8,7 +9,9 @@ namespace RestaurantManagement.API.Controllers;
 [ApiController]
 [Route("api/inventory")]
 [Authorize]
-public sealed class InventoryController(IInventoryManagementService service) : ControllerBase
+public sealed class InventoryController(
+    IInventoryManagementService service,
+    IInventoryConsumptionService consumptionService) : ControllerBase
 {
     [HttpGet("summary")]
     [RequirePermission("inventory.read")]
@@ -67,6 +70,31 @@ public sealed class InventoryController(IInventoryManagementService service) : C
             return BadRequest(new { message = "InventoryItemId là bắt buộc." });
 
         var result = await service.AdjustStockAsync(request, ct);
+        return Ok(result);
+    }
+
+    [HttpPost("waste")]
+    [RequirePermission("inventory.adjust")]
+    public async Task<IActionResult> RecordWaste([FromBody] RecordWasteRequest request, CancellationToken ct)
+    {
+        if (request.BranchId == Guid.Empty)
+            return BadRequest(new { message = "BranchId là bắt buộc." });
+
+        if (request.Quantity <= 0)
+            return BadRequest(new { message = "Số lượng phải lớn hơn 0." });
+
+        var result = await consumptionService.RecordWasteAsync(request, ct);
+        return Ok(result);
+    }
+
+    [HttpPost("re-cook")]
+    [RequirePermission("inventory.adjust")]
+    public async Task<IActionResult> RecordReCook([FromBody] RecordReCookRequest request, CancellationToken ct)
+    {
+        if (request.KitchenOrderId == Guid.Empty || request.KitchenOrderItemId == Guid.Empty)
+            return BadRequest(new { message = "KitchenOrderId và KitchenOrderItemId là bắt buộc." });
+
+        var result = await consumptionService.RecordReCookAsync(request, ct);
         return Ok(result);
     }
 }

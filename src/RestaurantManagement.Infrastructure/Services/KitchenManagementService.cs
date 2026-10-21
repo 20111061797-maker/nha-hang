@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using RestaurantManagement.Application.Common.Exceptions;
 using RestaurantManagement.Application.Common.Interfaces;
+using RestaurantManagement.Application.Features.Inventory;
 using RestaurantManagement.Application.Features.Kitchen;
 using RestaurantManagement.Domain.Entities;
 using RestaurantManagement.Domain.Enums;
@@ -14,7 +15,8 @@ public sealed class KitchenManagementService(
     RestaurantDbContext dbContext,
     ICurrentUserService currentUser,
     IAuditWriter auditWriter,
-    IKitchenEventPublisher eventPublisher) : IKitchenService
+    IKitchenEventPublisher eventPublisher,
+    IInventoryConsumptionService inventoryConsumptionService) : IKitchenService
 {
     public async Task<IReadOnlyList<KitchenStationResponse>> GetStationsAsync(Guid branchId, CancellationToken cancellationToken)
     {
@@ -256,6 +258,12 @@ public sealed class KitchenManagementService(
         if (target == KitchenOrderStatus.Cancelled) kitchenOrder.CancelledAt = now;
         await auditWriter.WriteAsync($"KitchenOrder{target}", nameof(KitchenOrder), kitchenOrder.Id, currentUser.Username, null, cancellationToken);
         await SaveAsync(cancellationToken);
+
+        // Deduct inventory consumption when cooking is ready or completed (idempotent)
+        if (target is KitchenOrderStatus.Ready or KitchenOrderStatus.Completed)
+        {
+            await inventoryConsumptionService.DeductForKitchenOrderAsync(kitchenOrder.Id, cancellationToken);
+        }
 
         // Gather details for events
         var order = await dbContext.Orders.AsNoTracking().FirstOrDefaultAsync(o => o.Id == kitchenOrder.OrderId, cancellationToken);

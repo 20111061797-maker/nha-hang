@@ -13,6 +13,7 @@ using RestaurantManagement.Application.Features.Payments;
 using RestaurantManagement.Application.Features.Customers;
 using RestaurantManagement.Application.Features.Employees;
 using RestaurantManagement.Application.Features.Inventory;
+using RestaurantManagement.Application.Features.Recipes;
 using RestaurantManagement.Application.Features.Audit;
 using RestaurantManagement.Infrastructure.Authentication;
 using RestaurantManagement.Infrastructure.Persistence.DbContext;
@@ -46,6 +47,8 @@ public static class DependencyInjection
         services.AddScoped<ICustomerManagementService, CustomerManagementService>();
         services.AddScoped<IEmployeeManagementService, EmployeeManagementService>();
         services.AddScoped<IInventoryManagementService, InventoryManagementService>();
+        services.AddScoped<IRecipeService, RecipeService>();
+        services.AddScoped<IInventoryConsumptionService, InventoryConsumptionService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
         services.AddSingleton<IEmailSender, DevelopmentEmailSender>();

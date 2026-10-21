@@ -22,7 +22,9 @@ import {
   UtensilsCrossed,
   Copy,
   CheckCheck,
+  RefreshCw,
 } from "lucide-react";
+import { KitchenReCookModal } from "./kitchen-recook-modal";
 
 type Props = {
   ticket: KitchenOrder;
@@ -48,6 +50,7 @@ export function KitchenTicketCard({
     return Math.max(0, Math.floor((Date.now() - created) / 1000));
   });
   const [copied, setCopied] = useState(false);
+  const [reCookModalOpen, setReCookModalOpen] = useState(false);
 
   useEffect(() => {
     const calculateElapsed = () => {
@@ -339,29 +342,63 @@ export function KitchenTicketCard({
         )}
 
         {ticket.status === KitchenOrderStatus.Preparing && (
-          <button
-            type="button"
-            disabled={isProcessing}
-            onClick={() => onReady(ticket.id, ticket.version)}
-            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:via-teal-500 hover:to-cyan-500 shadow-md shadow-emerald-500/25 active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer"
-          >
-            <BellRing size={16} className="animate-bounce" />
-            <span>Hoàn tất / Báo phục vụ</span>
-          </button>
+          <div className="w-full flex items-center gap-2">
+            <button
+              type="button"
+              disabled={isProcessing}
+              onClick={() => onReady(ticket.id, ticket.version)}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:via-teal-500 hover:to-cyan-500 shadow-md shadow-emerald-500/25 active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer"
+            >
+              <BellRing size={16} className="animate-bounce" />
+              <span>Hoàn tất / Báo phục vụ</span>
+            </button>
+            <button
+              type="button"
+              disabled={isProcessing}
+              title="Báo làm lại món / hỏng món"
+              onClick={() => setReCookModalOpen(true)}
+              className="p-2.5 rounded-xl text-amber-400 hover:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 active:scale-95 transition-all disabled:opacity-50 cursor-pointer shrink-0"
+            >
+              <RefreshCw size={16} />
+            </button>
+          </div>
         )}
 
         {ticket.status === KitchenOrderStatus.Ready && (
-          <button
-            type="button"
-            disabled={isProcessing}
-            onClick={() => onComplete(ticket.id, ticket.version)}
-            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-500 hover:via-indigo-500 hover:to-blue-500 shadow-md shadow-purple-500/25 active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer"
-          >
-            <ChefHat size={16} />
-            <span>Đã giao món (Lưu trữ)</span>
-          </button>
+          <div className="w-full flex items-center gap-2">
+            <button
+              type="button"
+              disabled={isProcessing}
+              onClick={() => onComplete(ticket.id, ticket.version)}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-500 hover:via-indigo-500 hover:to-blue-500 shadow-md shadow-purple-500/25 active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer"
+            >
+              <ChefHat size={16} />
+              <span>Đã giao món (Lưu trữ)</span>
+            </button>
+            <button
+              type="button"
+              disabled={isProcessing}
+              title="Báo làm lại món / hỏng món"
+              onClick={() => setReCookModalOpen(true)}
+              className="p-2.5 rounded-xl text-amber-400 hover:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 active:scale-95 transition-all disabled:opacity-50 cursor-pointer shrink-0"
+            >
+              <RefreshCw size={16} />
+            </button>
+          </div>
         )}
       </div>
+
+      {reCookModalOpen && (
+        <KitchenReCookModal
+          open={reCookModalOpen}
+          onClose={() => setReCookModalOpen(false)}
+          branchId={ticket.branchId}
+          kitchenOrderId={ticket.id}
+          orderNumber={ticket.orderNumber}
+          tableNumber={ticket.tableNumber}
+          items={ticket.items}
+        />
+      )}
     </div>
   );
 }

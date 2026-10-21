@@ -166,12 +166,15 @@ public sealed class KitchenManagementServiceTests
         context.Branches.Add(branch); context.KitchenStations.Add(station); context.Products.Add(product); context.ModifierGroups.Add(group); context.Modifiers.Add(modifier);
         context.KitchenStationProducts.Add(new KitchenStationProduct { KitchenStationId = station.Id, ProductId = product.Id });
         context.SaveChanges();
-        return (new KitchenManagementService(context, new TestUser(administrator), new TestAudit(), new TestPublisher()), context, branch, station);
+        var user = new TestUser(administrator);
+        var audit = new TestAudit();
+        var inventoryConsumptionService = new InventoryConsumptionService(context, user, audit);
+        return (new KitchenManagementService(context, user, audit, new TestPublisher(), inventoryConsumptionService), context, branch, station);
     }
 
     private static (KitchenManagementService Service, RestaurantDbContext Context, Branch Branch, KitchenStation Station, TestPublisher Publisher) SetupWithPublisher()
     {
-        var context = CreateContext(Guid.NewGuid().ToString()); var branch = new Branch { Code = Guid.NewGuid().ToString(), Name = "Main" }; var station = new KitchenStation { BranchId = branch.Id, Code = "GRILL", Name = "Grill" }; var product = new Product { Sku = Guid.NewGuid().ToString(), Name = "Pho Bo" }; var group = new ModifierGroup { Name = "Extras", MaximumSelections = 2 }; var modifier = new Modifier { ModifierGroupId = group.Id, Name = "Extra Cheese", DefaultPrice = 1 }; context.Branches.Add(branch); context.KitchenStations.Add(station); context.Products.Add(product); context.ModifierGroups.Add(group); context.Modifiers.Add(modifier); context.KitchenStationProducts.Add(new KitchenStationProduct { KitchenStationId = station.Id, ProductId = product.Id }); context.SaveChanges(); var publisher = new TestPublisher(); return (new KitchenManagementService(context, new TestUser(true), new TestAudit(), publisher), context, branch, station, publisher);
+        var context = CreateContext(Guid.NewGuid().ToString()); var branch = new Branch { Code = Guid.NewGuid().ToString(), Name = "Main" }; var station = new KitchenStation { BranchId = branch.Id, Code = "GRILL", Name = "Grill" }; var product = new Product { Sku = Guid.NewGuid().ToString(), Name = "Pho Bo" }; var group = new ModifierGroup { Name = "Extras", MaximumSelections = 2 }; var modifier = new Modifier { ModifierGroupId = group.Id, Name = "Extra Cheese", DefaultPrice = 1 }; context.Branches.Add(branch); context.KitchenStations.Add(station); context.Products.Add(product); context.ModifierGroups.Add(group); context.Modifiers.Add(modifier); context.KitchenStationProducts.Add(new KitchenStationProduct { KitchenStationId = station.Id, ProductId = product.Id }); context.SaveChanges(); var publisher = new TestPublisher(); var user = new TestUser(true); var audit = new TestAudit(); var inventoryConsumptionService = new InventoryConsumptionService(context, user, audit); return (new KitchenManagementService(context, user, audit, publisher, inventoryConsumptionService), context, branch, station, publisher);
     }
 
     private static async Task<Order> AddOrderAsync(RestaurantDbContext context, Branch branch, KitchenStation station, OrderStatus status)
