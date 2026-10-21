@@ -36,6 +36,7 @@ type Props = {
   onRemoveItem: (itemId: string) => void;
   onBackToFloor: () => void;
   onBackToMenu?: () => void;
+  onMarkOrderReady?: () => void;
 };
 
 export function OrderTicket({
@@ -52,6 +53,7 @@ export function OrderTicket({
   onRemoveItem,
   onBackToFloor,
   onBackToMenu,
+  onMarkOrderReady,
 }: Props) {
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
@@ -425,12 +427,53 @@ export function OrderTicket({
 
           {(isConfirmed || isPreparing || isReady) && (
             <div className="flex flex-col gap-2">
+              {/* Cảnh báo quy trình bếp: Phải ra đồ ăn ngoài mới được thanh toán */}
+              {(isConfirmed || isPreparing) && (
+                <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 flex flex-col gap-2 shadow-sm">
+                  <div className="flex items-start gap-2.5">
+                    <ChefHat size={18} className="text-amber-400 shrink-0 mt-0.5 animate-pulse" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-xs text-amber-300">Đang chờ bếp ra món</p>
+                      <p className="text-[11px] text-amber-200/80 leading-relaxed mt-0.5">
+                        Quy trình yêu cầu bếp hoàn tất chế biến và ra đồ ăn (&ldquo;Món đã xong&rdquo;) trước khi thanh toán và trả bàn.
+                      </p>
+                    </div>
+                  </div>
+                  {onMarkOrderReady && (
+                    <button
+                      type="button"
+                      disabled={isProcessing}
+                      onClick={onMarkOrderReady}
+                      className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold text-xs transition-colors cursor-pointer"
+                      title="Nhân viên/Quản lý xác nhận món đã được mang ra bàn"
+                    >
+                      <CheckCheck size={14} className="text-amber-400" />
+                      <span>Xác nhận đồ ăn đã ra bàn</span>
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {isReady && (
+                <div className="p-2.5 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 flex items-center gap-2 shadow-sm">
+                  <CheckCheck size={16} className="text-emerald-400 shrink-0" />
+                  <span className="font-bold text-xs">
+                    Đồ ăn đã ra ngoài bàn! Sẵn sàng thanh toán &amp; trả bàn.
+                  </span>
+                </div>
+              )}
+
               {onPayWithSepay && (
                 <button
                   type="button"
-                  disabled={isProcessing || isSepayLoading}
+                  disabled={isProcessing || isSepayLoading || isConfirmed || isPreparing}
                   onClick={onPayWithSepay}
-                  className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-bold text-xs text-amber-300 bg-raised hover:bg-surface-hover border border-amber-500/40 hover:border-amber-400 transition-all cursor-pointer shadow-md disabled:opacity-60"
+                  title={
+                    isConfirmed || isPreparing
+                      ? "Chờ bếp hoàn tất chế biến và ra đồ ăn mới có thể thanh toán"
+                      : "Thanh toán QR SePay (VietQR)"
+                  }
+                  className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-bold text-xs text-amber-300 bg-raised hover:bg-surface-hover border border-amber-500/40 hover:border-amber-400 transition-all cursor-pointer shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {isSepayLoading ? (
                     <>
@@ -448,9 +491,14 @@ export function OrderTicket({
 
               <button
                 type="button"
-                disabled={isProcessing}
+                disabled={isProcessing || isConfirmed || isPreparing}
                 onClick={onCompleteOrder}
-                className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-black text-sm text-white bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 shadow-lg shadow-emerald-500/25 active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer"
+                title={
+                  isConfirmed || isPreparing
+                    ? "Chờ bếp hoàn tất chế biến và ra đồ ăn mới có thể thanh toán"
+                    : "Thanh toán Tiền mặt & Trả bàn"
+                }
+                className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-black text-sm text-white bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 shadow-lg shadow-emerald-500/25 active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               >
                 <Banknote size={18} />
                 <span>Thanh toán Tiền mặt &amp; Trả bàn</span>

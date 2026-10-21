@@ -5,6 +5,7 @@ using RestaurantManagement.Application.Common.Interfaces;
 using RestaurantManagement.Application.Features.Modifiers;
 using RestaurantManagement.Application.Features.Orders;
 using RestaurantManagement.Application.Features.Pricing;
+using RestaurantManagement.Application.Features.Inventory;
 using RestaurantManagement.Application.Features.Kitchen;
 using RestaurantManagement.Domain.Entities;
 using RestaurantManagement.Domain.Enums;
@@ -19,7 +20,8 @@ public sealed class OrderManagementService(
     IAuditWriter auditWriter,
     IProductPricingService productPricingService,
     IModifierComboService modifierComboService,
-    IKitchenService? kitchenService = null) : IOrderService
+    IKitchenService? kitchenService = null,
+    IInventoryConsumptionService? inventoryConsumptionService = null) : IOrderService
 {
     public async Task<OrderDetails> CreateAsync(CreateOrderRequest request, CancellationToken cancellationToken)
     {
@@ -153,15 +155,44 @@ public sealed class OrderManagementService(
         dbContext.OrderStatusHistories.Add(new OrderStatusHistory { OrderId = orderId, OldStatus = old, NewStatus = request.Status, ChangedBy = currentUser.UserId, Note = request.Reason }); 
         if (request.Status is OrderStatus.Completed or OrderStatus.Cancelled) 
         {
+            if (request.Status == OrderStatus.Completed)
+            {
+                var activeKitchenOrders = await dbContext.KitchenOrders
+                    .Where(ko => ko.OrderId == orderId && ko.Status != KitchenOrderStatus.Cancelled)
+                    .ToListAsync(cancellationToken);
+
+                if (activeKitchenOrders.Count > 0 && activeKitchenOrders.Any(k => k.Status is KitchenOrderStatus.New or KitchenOrderStatus.Accepted or KitchenOrderStatus.Preparing))
+                {
+                    throw new ApplicationException("Bếp chưa hoàn tất chế biến và ra đồ ăn cho bàn này. Vui lòng chờ bếp hoàn tất ra món trước khi thanh toán trả bàn.");
+                }
+            }
+
             await ReleaseTableAsync(order, cancellationToken);
-            var activeKitchenOrders = await dbContext.KitchenOrders
+            var activeKitchenOrdersToClose = await dbContext.KitchenOrders
                 .Where(ko => ko.OrderId == orderId && ko.Status != KitchenOrderStatus.Completed && ko.Status != KitchenOrderStatus.Cancelled)
                 .ToListAsync(cancellationToken);
-            foreach (var ko in activeKitchenOrders)
+            foreach (var ko in activeKitchenOrdersToClose)
             {
                 ko.Status = request.Status == OrderStatus.Completed ? KitchenOrderStatus.Completed : KitchenOrderStatus.Cancelled;
                 ko.UpdatedAt = DateTimeOffset.UtcNow;
                 ko.Version++;
+            }
+        }
+        else if (request.Status == OrderStatus.Ready)
+        {
+            var activeKitchenOrders = await dbContext.KitchenOrders
+                .Where(ko => ko.OrderId == orderId && ko.Status != KitchenOrderStatus.Ready && ko.Status != KitchenOrderStatus.Completed && ko.Status != KitchenOrderStatus.Cancelled)
+                .ToListAsync(cancellationToken);
+            foreach (var ko in activeKitchenOrders)
+            {
+                ko.Status = KitchenOrderStatus.Ready;
+                ko.ReadyAt = DateTimeOffset.UtcNow;
+                ko.UpdatedAt = DateTimeOffset.UtcNow;
+                ko.Version++;
+                if (inventoryConsumptionService != null)
+                {
+                    await inventoryConsumptionService.DeductForKitchenOrderAsync(ko.Id, cancellationToken);
+                }
             }
         }
         await auditWriter.WriteAsync("OrderStatusChanged", nameof(Order), orderId, currentUser.Username, null, cancellationToken); 

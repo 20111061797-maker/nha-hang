@@ -322,6 +322,10 @@ public sealed class RecipeAndInventoryConsumptionTests
         balAfterCooking.Quantity.Should().Be(8m);
         var txCountAfterCooking = await context.InventoryTransactions.CountAsync(t => t.InventoryItemId == invItem.Id);
 
+        // Bếp hoàn tất chế biến và ra đồ ăn
+        kitchenOrder.Status = KitchenOrderStatus.Ready;
+        await context.SaveChangesAsync(C);
+
         // Khách thanh toán hóa đơn
         var paymentService = new PaymentManagementService(context, new TestUser(true), new TestAudit());
         var paymentResult = await paymentService.CreateAsync(kitchenOrder.OrderId, new CreatePaymentRequest(
@@ -343,6 +347,30 @@ public sealed class RecipeAndInventoryConsumptionTests
 
         var txCountAfterPayment = await context.InventoryTransactions.CountAsync(t => t.InventoryItemId == invItem.Id);
         txCountAfterPayment.Should().Be(txCountAfterCooking);
+    }
+
+    [Fact]
+    public async Task Scenario11_Thanh_toán_bị_chặn_khi_bếp_chưa_ra_món_hoàn_tất()
+    {
+        var (context, _, _, branch, _, product) = await SetupScenarioAsync();
+        var (kitchenOrder, _) = await CreateKitchenOrderWithItemAsync(context, branch.Id, product.Id, product.Name, 1);
+        kitchenOrder.Status = KitchenOrderStatus.Preparing;
+        await context.SaveChangesAsync(C);
+
+        var paymentService = new PaymentManagementService(context, new TestUser(true), new TestAudit());
+        var act = () => paymentService.CreateAsync(kitchenOrder.OrderId, new CreatePaymentRequest(
+            PaymentMethod.Cash,
+            200m,
+            200m,
+            null,
+            null,
+            null,
+            null,
+            null
+        ), C);
+
+        await act.Should().ThrowAsync<RestaurantManagement.Application.Common.Exceptions.ApplicationException>()
+            .WithMessage("*chưa hoàn tất chế biến và ra đồ ăn*");
     }
 
     // --- Helpers ---

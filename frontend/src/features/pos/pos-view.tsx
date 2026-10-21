@@ -222,6 +222,22 @@ export function PosView() {
     },
   });
 
+  const markOrderReadyMutation = useMutation({
+    mutationFn: (orderId: string) => posApi.markOrderReady(orderId),
+    onSuccess: (updated) => {
+      queryClient.setQueryData(["pos-order", updated.id], updated);
+      queryClient.invalidateQueries({ queryKey: ["pos-orders", branchId] });
+      queryClient.invalidateQueries({ queryKey: ["pos-tables", branchId] });
+      showNotification(
+        "success",
+        `Đã xác nhận món đơn #${updated.orderNumber} đã ra bàn! Sẵn sàng thanh toán & trả bàn.`
+      );
+    },
+    onError: (err: unknown) => {
+      showNotification("error", getErrorMessage(err, "Không thể cập nhật trạng thái món."));
+    },
+  });
+
   const completeOrderMutation = useMutation({
     mutationFn: async (orderId: string) => {
       const amount = activeOrder?.totalAmount || 0;
@@ -708,6 +724,7 @@ export function PosView() {
                 onRemoveItem={handleRemoveItem}
                 onBackToFloor={handleBackToFloor}
                 onBackToMenu={() => setMobileViewTab("menu")}
+                onMarkOrderReady={() => activeOrderId && markOrderReadyMutation.mutate(activeOrderId)}
               />
             </div>
           </div>

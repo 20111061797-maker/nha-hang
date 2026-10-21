@@ -1,4 +1,5 @@
 import { apiRequest } from "./client";
+import { OrderStatus } from "@/types/pos";
 import type {
   AddOrderItemRequest,
   CancelOrderRequest,
@@ -72,6 +73,13 @@ export const posApi = {
     const query = expectedVersion !== undefined ? `?expectedVersion=${expectedVersion}` : "";
     return apiRequest<OrderDetails>(`/api/orders/${orderId}/complete${query}`, {
       method: "POST",
+    });
+  },
+
+  markOrderReady(orderId: string): Promise<OrderDetails> {
+    return apiRequest<OrderDetails>(`/api/orders/${orderId}/status`, {
+      method: "PATCH",
+      body: { status: OrderStatus.Ready, reason: "Phục vụ xác nhận đồ ăn đã ra bàn" },
     });
   },
 

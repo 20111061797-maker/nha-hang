@@ -31,6 +31,7 @@ public sealed class PaymentManagementService(
         }
 
         EnsurePayableOrder(order);
+        await EnsureKitchenReadyForPaymentAsync(order, cancellationToken);
         var remaining = await GetRemainingPayableAmountAsync(order, cancellationToken);
         if (request.Amount > remaining) throw new ConflictException("Payment exceeds the remaining payable amount.");
 
@@ -254,6 +255,21 @@ public sealed class PaymentManagementService(
     private async Task<Order> EnsureOrderAccessAsync(Order order, CancellationToken ct) { await EnsureBranchAccessAsync(order.BranchId, ct); return order; }
     private async Task<Payment> EnsurePaymentAccessAsync(Payment payment, CancellationToken ct) { await EnsureBranchAccessAsync(payment.BranchId, ct); return payment; }
     private static void EnsurePayableOrder(Order order) { if (order.Status is OrderStatus.Draft or OrderStatus.Cancelled) throw new ApplicationException("This order cannot be paid in its current state."); }
+    private async Task EnsureKitchenReadyForPaymentAsync(Order order, CancellationToken ct)
+    {
+        var kitchenOrders = await dbContext.KitchenOrders
+            .Where(k => k.OrderId == order.Id && k.Status != KitchenOrderStatus.Cancelled)
+            .ToListAsync(ct);
+
+        if (kitchenOrders.Count > 0)
+        {
+            var notReady = kitchenOrders.Any(k => k.Status is KitchenOrderStatus.New or KitchenOrderStatus.Accepted or KitchenOrderStatus.Preparing);
+            if (notReady)
+            {
+                throw new ApplicationException("Bếp chưa hoàn tất chế biến và ra đồ ăn cho bàn này. Vui lòng chờ bếp hoàn tất ra món trước khi thanh toán trả bàn.");
+            }
+        }
+    }
     private static bool MatchesIdempotentRequest(Payment payment, CreatePaymentRequest request) => payment.Method == request.PaymentMethod
         && payment.Amount == request.Amount
         && payment.TenderedAmount == request.TenderedAmount

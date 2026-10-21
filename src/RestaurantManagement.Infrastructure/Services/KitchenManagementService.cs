@@ -256,6 +256,31 @@ public sealed class KitchenManagementService(
         if (target == KitchenOrderStatus.Ready) kitchenOrder.ReadyAt = now;
         if (target == KitchenOrderStatus.Completed) kitchenOrder.CompletedAt = now;
         if (target == KitchenOrderStatus.Cancelled) kitchenOrder.CancelledAt = now;
+
+        // Synchronize parent Order status with kitchen progress
+        var parentOrder = await dbContext.Orders.FirstOrDefaultAsync(o => o.Id == kitchenOrder.OrderId, cancellationToken);
+        if (parentOrder != null && parentOrder.Status != OrderStatus.Completed && parentOrder.Status != OrderStatus.Cancelled)
+        {
+            if (target is KitchenOrderStatus.Ready or KitchenOrderStatus.Completed)
+            {
+                var otherActiveTickets = await dbContext.KitchenOrders
+                    .Where(x => x.OrderId == kitchenOrder.OrderId && x.Id != kitchenOrder.Id && x.Status != KitchenOrderStatus.Cancelled)
+                    .ToListAsync(cancellationToken);
+
+                var allReadyOrCompleted = otherActiveTickets.All(x => x.Status is KitchenOrderStatus.Ready or KitchenOrderStatus.Completed);
+                if (allReadyOrCompleted)
+                {
+                    parentOrder.Status = OrderStatus.Ready;
+                    parentOrder.Version++;
+                }
+            }
+            else if (target == KitchenOrderStatus.Preparing && parentOrder.Status != OrderStatus.Preparing)
+            {
+                parentOrder.Status = OrderStatus.Preparing;
+                parentOrder.Version++;
+            }
+        }
+
         await auditWriter.WriteAsync($"KitchenOrder{target}", nameof(KitchenOrder), kitchenOrder.Id, currentUser.Username, null, cancellationToken);
         await SaveAsync(cancellationToken);
 
