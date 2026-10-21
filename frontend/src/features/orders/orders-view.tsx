@@ -64,8 +64,10 @@ export function OrdersView() {
       })
       .then(() => posApi.completeOrder(orderId))
       .then(() => {
+        setPaymentModalOpen(false);
         queryClient.invalidateQueries({ queryKey: ["branch-orders", branchId] });
         queryClient.invalidateQueries({ queryKey: ["pos-tables", branchId] });
+        queryClient.invalidateQueries({ queryKey: ["order-detail", orderId] });
         showToast(`Thanh toán ${amount.toLocaleString("vi-VN")} ₫ thành công! Bàn đã dọn trống.`);
       })
       .catch((err) => {

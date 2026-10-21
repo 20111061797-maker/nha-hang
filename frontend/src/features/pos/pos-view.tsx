@@ -227,9 +227,11 @@ export function PosView() {
         prev ? prev.map((o) => (o.id === updated.id ? { ...o, status: OrderStatus.Completed } : o)) : []
       );
 
+      queryClient.removeQueries({ queryKey: ["pos-order", updated.id] });
       queryClient.invalidateQueries({ queryKey: ["pos-orders", branchId] });
       queryClient.invalidateQueries({ queryKey: ["pos-tables", branchId] });
       queryClient.invalidateQueries({ queryKey: ["branch-orders", branchId] });
+      queryClient.invalidateQueries({ queryKey: ["branch-payments", branchId] });
 
       showNotification(
         "success",
@@ -251,6 +253,13 @@ export function PosView() {
     status === "7" ||
     status === "Completed" ||
     status === "Cancelled";
+
+  // Tự động quay về sơ đồ bàn / phòng nếu đơn hàng hiện tại đã hoàn tất hoặc đã hủy (không kẹt lại màn hình đơn)
+  useEffect(() => {
+    if (activeOrder && isOrderInactive(activeOrder.status)) {
+      handleBackToFloor();
+    }
+  }, [activeOrder]);
 
   const cancelOrderMutation = useMutation({
     mutationFn: (vars: { orderId: string; reason: string }) => {
@@ -343,6 +352,8 @@ export function PosView() {
   const handleBackToFloor = () => {
     setActiveOrderId(null);
     setSelectedTable(null);
+    setTargetTableForNewOrder(null);
+    setNewOrderModalOpen(false);
   };
 
   const handleAddItem = (params: {
@@ -406,7 +417,7 @@ export function PosView() {
       }
 
       const updated = await posApi.completeOrder(orderId);
-      const tableId = updated.diningTableId;
+      const tableId = selectedTable?.id || updated.diningTableId || activeOrder?.diningTableId;
       if (tableId) {
         queryClient.setQueryData<DiningTable[]>(["pos-tables", branchId], (prev) =>
           prev
@@ -414,6 +425,11 @@ export function PosView() {
             : []
         );
       }
+      queryClient.setQueryData<OrderListItem[]>(["pos-orders", branchId], (prev) =>
+        prev ? prev.map((o) => (o.id === updated.id ? { ...o, status: OrderStatus.Completed } : o)) : []
+      );
+      queryClient.removeQueries({ queryKey: ["pos-order", orderId] });
+
       queryClient.invalidateQueries({ queryKey: ["pos-orders", branchId] });
       queryClient.invalidateQueries({ queryKey: ["pos-tables", branchId] });
       queryClient.invalidateQueries({ queryKey: ["branch-orders", branchId] });
@@ -424,6 +440,10 @@ export function PosView() {
       );
     } catch (err) {
       console.error("Lỗi hoàn tất đơn SePay:", err);
+      showNotification("error", getErrorMessage(err, "Có lỗi khi hoàn tất đơn hàng sau khi thanh toán."));
+    } finally {
+      setIsSepayLoading(false);
+      handleBackToFloor();
     }
   };
 
