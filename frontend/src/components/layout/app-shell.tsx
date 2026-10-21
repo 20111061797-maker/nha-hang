@@ -18,6 +18,7 @@ import {
   UserCheck,
   Users,
   UtensilsCrossed,
+  History,
   X,
 } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -37,6 +38,7 @@ const navigation = [
   { label: "Tồn kho", href: "/inventory", permission: "inventory.read", icon: Boxes, enabled: true },
   { label: "Khách hàng", href: "/customers", permission: "customer.read", icon: Users, enabled: true },
   { label: "Nhân viên", href: "/employees", permission: "employee.read", icon: UserCheck, enabled: true },
+  { label: "Lịch sử thao tác", href: "/audit-logs", permission: "employee.read", icon: History, enabled: true },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {

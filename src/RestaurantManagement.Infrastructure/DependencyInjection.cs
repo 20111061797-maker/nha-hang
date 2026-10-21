@@ -13,6 +13,7 @@ using RestaurantManagement.Application.Features.Payments;
 using RestaurantManagement.Application.Features.Customers;
 using RestaurantManagement.Application.Features.Employees;
 using RestaurantManagement.Application.Features.Inventory;
+using RestaurantManagement.Application.Features.Audit;
 using RestaurantManagement.Infrastructure.Authentication;
 using RestaurantManagement.Infrastructure.Persistence.DbContext;
 using RestaurantManagement.Infrastructure.Services;
@@ -34,6 +35,7 @@ public static class DependencyInjection
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<RestaurantDbContext>());
         services.AddSingleton<IDateTimeProvider, SystemDateTimeProvider>();
         services.AddScoped<IAuditWriter, AuditWriter>();
+        services.AddScoped<IAuditLogService, AuditLogService>();
         services.AddScoped<IBranchManagementService, BranchManagementService>();
         services.AddScoped<IMenuManagementService, MenuManagementService>();
         services.AddScoped<IModifierComboService, ModifierComboService>();
