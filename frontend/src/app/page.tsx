@@ -1,7 +1,14 @@
 "use client";
 
 import { AppShell } from "@/components/layout/app-shell";
-import { Bell, ChevronDown, TrendingUp, TrendingDown } from "lucide-react";
+import {
+  Bell,
+  ChevronDown,
+  TrendingUp,
+  TrendingDown,
+  Sparkles,
+  Percent,
+} from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -48,6 +55,15 @@ export default function DashboardPage() {
   const [range, setRange] = useState<DashboardRange>("today");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState("");
+  const [chartMetric, setChartMetric] = useState<"both" | "revenue" | "profit">("both");
+  const [hoveredPoint, setHoveredPoint] = useState<{
+    hour: number;
+    revenue: number;
+    cost: number;
+    profit: number;
+    x: number;
+    y: number;
+  } | null>(null);
 
   useEffect(() => {
     const updateTime = () => {
@@ -91,30 +107,57 @@ export default function DashboardPage() {
   const rangeLabel = RANGES.find((r) => r.key === range)?.label ?? "Hôm nay";
   const revenueChange = data ? percentChange(data.revenueToday, data.revenueYesterday) : null;
   const monthChange = data ? percentChange(data.revenueMonth, data.revenueLastMonth) : null;
+  const profitChange = data ? percentChange(data.profitToday, data.profitYesterday) : null;
+  const profitMonthChange = data ? percentChange(data.profitMonth, data.profitLastMonth) : null;
 
-  // Hourly revenue chart geometry
+  const aov = (data?.orderCountRange ?? 0) > 0 ? (data?.revenueRange ?? 0) / data!.orderCountRange : 0;
+  const costRatio = (data?.revenueRange ?? 0) > 0 ? ((data?.costRange ?? 0) / data!.revenueRange) * 100 : 0;
+  const profitRatio = data?.profitMarginRange ?? 0;
+
+  // Hourly revenue & profit chart geometry
   const chart = useMemo(() => {
     const hourly = data?.hourly ?? [];
     const nowHour = new Date().getHours();
     const startHour = 6;
     const endHour = Math.max(nowHour, 12);
     const points = hourly.filter((h) => h.hour >= startHour && h.hour <= endHour);
-    const max = Math.max(...points.map((p) => p.revenue), 1);
-    const left = 30;
-    const right = 680;
+    const maxVal = Math.max(
+      ...points.map((p) => Math.max(p.revenue, p.profit, p.cost, 0)),
+      1
+    );
+    const left = 35;
+    const right = 675;
     const top = 30;
     const bottom = 210;
     const step = points.length > 1 ? (right - left) / (points.length - 1) : 0;
-    const coords = points.map((p, i) => ({
-      x: left + i * step,
-      y: bottom - (p.revenue / max) * (bottom - top),
-      hour: p.hour,
-      revenue: p.revenue,
-    }));
-    const line = coords.map((c, i) => `${i === 0 ? "M" : "L"} ${c.x},${c.y}`).join(" ");
-    const area = coords.length ? `${line} L ${coords[coords.length - 1].x},${bottom} L ${coords[0].x},${bottom} Z` : "";
-    const peak = coords.reduce((best, c) => (c.revenue > (best?.revenue ?? 0) ? c : best), null as (typeof coords)[number] | null);
-    return { coords, line, area, max, peak, startHour, endHour };
+
+    const coords = points.map((p, i) => {
+      const x = left + i * step;
+      const yRev = bottom - (Math.max(p.revenue, 0) / maxVal) * (bottom - top);
+      const yProfit = bottom - (Math.max(p.profit, 0) / maxVal) * (bottom - top);
+      const yCost = bottom - (Math.max(p.cost, 0) / maxVal) * (bottom - top);
+      return {
+        x,
+        yRev,
+        yProfit,
+        yCost,
+        hour: p.hour,
+        revenue: p.revenue,
+        cost: p.cost,
+        profit: p.profit,
+      };
+    });
+
+    const lineRev = coords.map((c, i) => `${i === 0 ? "M" : "L"} ${c.x},${c.yRev}`).join(" ");
+    const areaRev = coords.length ? `${lineRev} L ${coords[coords.length - 1].x},${bottom} L ${coords[0].x},${bottom} Z` : "";
+
+    const lineProfit = coords.map((c, i) => `${i === 0 ? "M" : "L"} ${c.x},${c.yProfit}`).join(" ");
+    const areaProfit = coords.length ? `${lineProfit} L ${coords[coords.length - 1].x},${bottom} L ${coords[0].x},${bottom} Z` : "";
+
+    const peakRev = coords.reduce((best, c) => (c.revenue > (best?.revenue ?? 0) ? c : best), null as (typeof coords)[number] | null);
+    const peakProfit = coords.reduce((best, c) => (c.profit > (best?.profit ?? 0) ? c : best), null as (typeof coords)[number] | null);
+
+    return { coords, lineRev, areaRev, lineProfit, areaProfit, maxVal, peakRev, peakProfit, startHour, endHour };
   }, [data]);
 
   const donutTotal = (data?.topByRevenue ?? []).reduce((s, p) => s + p.revenue, 0);
@@ -131,7 +174,7 @@ export default function DashboardPage() {
             </div>
             <div>
               <h1 className="text-sm sm:text-base md:text-lg font-black uppercase tracking-wide text-ink font-heading">
-                BẢNG ĐIỀU KHIỂN QUẢN LÝ
+                BẢNG ĐIỀU KHIỂN DOANH THU & LỢI NHUẬN
               </h1>
               <div className="flex items-center gap-2 text-[11px] sm:text-xs text-muted">
                 <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -196,179 +239,406 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* ROW 1: metric cards */}
+        {/* ROW 1: 4 Executive Financial & Operational Cards */}
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-warm-surface border border-warm-line rounded-2xl p-4 md:p-5 flex justify-between items-start shadow-lg relative overflow-hidden group hover:border-warm-line transition-all">
+          {/* Card 1: Doanh thu */}
+          <div className="bg-warm-surface border border-warm-line rounded-2xl p-4 md:p-5 flex justify-between items-start shadow-lg relative overflow-hidden group hover:border-amber-500/50 transition-all">
             <div className="flex flex-col gap-1 z-10">
-              <span className="text-xs text-warm-muted font-semibold">Doanh thu {rangeLabel.toLowerCase()}</span>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-amber-400" />
+                <span className="text-xs text-warm-muted font-semibold uppercase tracking-wider">
+                  Tổng Doanh Thu ({rangeLabel.toLowerCase()})
+                </span>
+              </div>
               <div className="flex items-baseline gap-1 mt-0.5">
                 <span className="text-2xl md:text-3xl font-black text-amber-soft font-mono tracking-tight">
                   {isLoading ? "…" : vnd(data?.revenueRange ?? 0)}
                 </span>
                 <span className="text-xs font-bold text-amber-400">VNĐ</span>
               </div>
-              {range === "today" && (
-                <span
-                  className={`text-xs font-bold mt-1 flex items-center gap-1 ${
-                    revenueChange === null
-                      ? "text-subtle"
-                      : revenueChange >= 0
-                        ? "text-emerald-400"
-                        : "text-rose-400"
-                  }`}
-                >
-                  {revenueChange !== null && (revenueChange >= 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />)}
-                  <span>
-                    {revenueChange === null
-                      ? "Chưa có doanh thu hôm qua để so sánh"
-                      : `${revenueChange >= 0 ? "+" : ""}${revenueChange.toFixed(0)}% so với hôm qua`}
+
+              <div className="flex flex-wrap items-center gap-2 mt-1">
+                {range === "today" && (
+                  <span
+                    className={`text-[11px] font-bold flex items-center gap-0.5 px-2 py-0.5 rounded-full ${
+                      revenueChange === null
+                        ? "text-subtle bg-surface/60"
+                        : revenueChange >= 0
+                          ? "text-emerald-400 bg-emerald-950/50 border border-emerald-800/50"
+                          : "text-rose-400 bg-rose-950/50 border border-rose-800/50"
+                    }`}
+                  >
+                    {revenueChange !== null && (revenueChange >= 0 ? <TrendingUp size={11} /> : <TrendingDown size={11} />)}
+                    <span>
+                      {revenueChange === null
+                        ? "Chưa có số hôm qua"
+                        : `${revenueChange >= 0 ? "+" : ""}${revenueChange.toFixed(0)}% vs hôm qua`}
+                    </span>
                   </span>
-                </span>
-              )}
+                )}
+                {aov > 0 && (
+                  <span className="text-[11px] text-muted">
+                    TB/đơn: <strong className="text-ink font-mono">{compactMoney(aov)}</strong>
+                  </span>
+                )}
+              </div>
             </div>
-            <div className="w-14 h-14 rounded-2xl bg-danger-soft border border-warm-line flex items-center justify-center text-3xl shadow-inner group-hover:scale-105 transition-transform">
+            <div className="w-13 h-13 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-2xl shadow-inner group-hover:scale-110 transition-transform">
               💵
             </div>
-            <div className="absolute -bottom-6 -right-6 w-28 h-28 bg-amber-600/10 rounded-full blur-xl pointer-events-none" />
+            <div className="absolute -bottom-6 -right-6 w-28 h-28 bg-amber-600/15 rounded-full blur-xl pointer-events-none" />
           </div>
 
-          <div className="bg-warm-surface border border-warm-line rounded-2xl p-4 md:p-5 flex justify-between items-start shadow-lg relative overflow-hidden group hover:border-warm-line transition-all">
+          {/* Card 2: Lợi nhuận thuần */}
+          <div className="bg-warm-surface border border-emerald-900/40 rounded-2xl p-4 md:p-5 flex justify-between items-start shadow-lg relative overflow-hidden group hover:border-emerald-500/50 transition-all">
             <div className="flex flex-col gap-1 z-10">
-              <span className="text-xs text-warm-muted font-semibold">Số bàn đang phục vụ</span>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                <span className="text-xs text-emerald-300/90 font-semibold uppercase tracking-wider">
+                  Lợi Nhuận Thuần ({rangeLabel.toLowerCase()})
+                </span>
+              </div>
               <div className="flex items-baseline gap-1 mt-0.5">
+                <span className="text-2xl md:text-3xl font-black text-emerald-400 font-mono tracking-tight">
+                  {isLoading ? "…" : vnd(data?.profitRange ?? 0)}
+                </span>
+                <span className="text-xs font-bold text-emerald-300">VNĐ</span>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 mt-1">
+                <span className="text-[11px] font-bold text-emerald-300 bg-emerald-950/70 border border-emerald-700/60 px-2 py-0.5 rounded-full flex items-center gap-1">
+                  <Percent size={10} />
+                  <span>Biên LN: {(data?.profitMarginRange ?? 0).toFixed(1)}%</span>
+                </span>
+                {range === "today" && profitChange !== null && (
+                  <span
+                    className={`text-[11px] font-bold flex items-center gap-0.5 ${
+                      profitChange >= 0 ? "text-emerald-400" : "text-rose-400"
+                    }`}
+                  >
+                    {profitChange >= 0 ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
+                    <span>{profitChange >= 0 ? "+" : ""}{profitChange.toFixed(0)}% LN</span>
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="w-13 h-13 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-2xl shadow-inner group-hover:scale-110 transition-transform">
+              📈
+            </div>
+            <div className="absolute -bottom-6 -right-6 w-28 h-28 bg-emerald-500/15 rounded-full blur-xl pointer-events-none" />
+          </div>
+
+          {/* Card 3: Chi phí & Giá vốn */}
+          <div className="bg-warm-surface border border-warm-line rounded-2xl p-4 md:p-5 flex justify-between items-start shadow-lg relative overflow-hidden group hover:border-orange-500/50 transition-all">
+            <div className="flex flex-col gap-1 z-10">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-rose-400" />
+                <span className="text-xs text-warm-muted font-semibold uppercase tracking-wider">
+                  Giá Vốn & Chi Phí ({rangeLabel.toLowerCase()})
+                </span>
+              </div>
+              <div className="flex items-baseline gap-1 mt-0.5">
+                <span className="text-2xl md:text-3xl font-black text-ink font-mono tracking-tight">
+                  {isLoading ? "…" : vnd(data?.costRange ?? 0)}
+                </span>
+                <span className="text-xs font-bold text-rose-400">VNĐ</span>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 mt-1">
+                <span className="text-[11px] font-semibold text-rose-300 bg-rose-950/60 border border-rose-800/50 px-2 py-0.5 rounded-full">
+                  Chiếm {costRatio.toFixed(1)}% doanh thu
+                </span>
+                <span className="text-[11px] text-muted">NVL & vận hành</span>
+              </div>
+            </div>
+            <div className="w-13 h-13 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-2xl shadow-inner group-hover:scale-110 transition-transform">
+              🧾
+            </div>
+            <div className="absolute -bottom-6 -right-6 w-28 h-28 bg-rose-500/15 rounded-full blur-xl pointer-events-none" />
+          </div>
+
+          {/* Card 4: Hoạt động bàn & Đơn hàng */}
+          <div className="bg-warm-surface border border-warm-line rounded-2xl p-4 md:p-5 flex justify-between items-start shadow-lg relative overflow-hidden group hover:border-sky-500/50 transition-all">
+            <div className="flex flex-col gap-1 z-10">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-sky-400" />
+                <span className="text-xs text-warm-muted font-semibold uppercase tracking-wider">
+                  Vận Hành & Bàn Ăn
+                </span>
+              </div>
+              <div className="flex items-baseline gap-2 mt-0.5">
                 <span className="text-2xl md:text-3xl font-black text-ink font-mono tracking-tight">
                   {data?.tablesOccupied ?? 0}
-                  <span className="text-lg text-subtle">/{data?.tablesTotal ?? 0}</span>
+                  <span className="text-lg text-subtle">/{data?.tablesTotal ?? 0} bàn</span>
                 </span>
               </div>
-              <span className="text-xs font-semibold text-muted mt-1">
-                Còn trống:{" "}
-                <strong className="text-emerald-400">
-                  {Math.max((data?.tablesTotal ?? 0) - (data?.tablesOccupied ?? 0), 0)} bàn
-                </strong>
-              </span>
-            </div>
-            <div className="w-14 h-14 rounded-2xl bg-danger-soft border border-warm-line p-2 flex flex-col justify-between shadow-inner group-hover:scale-105 transition-transform">
-              <div className="grid grid-cols-3 gap-1">
-                {Array.from({ length: 9 }).map((_, i) => {
-                  const total = data?.tablesTotal ?? 0;
-                  const occ = data?.tablesOccupied ?? 0;
-                  const filled = total > 0 ? Math.round((occ / total) * 9) : 0;
-                  return (
-                    <span
-                      key={i}
-                      className={`w-2.5 h-2.5 rounded-sm ${i < filled ? "bg-amber-500" : "bg-warm-raised"}`}
-                    />
-                  );
-                })}
-              </div>
-            </div>
-            <div className="absolute -bottom-6 -right-6 w-28 h-28 bg-orange-600/10 rounded-full blur-xl pointer-events-none" />
-          </div>
 
-          <div className="bg-warm-surface border border-warm-line rounded-2xl p-4 md:p-5 flex justify-between items-start shadow-lg relative overflow-hidden group hover:border-warm-line transition-all">
-            <div className="flex flex-col gap-1 z-10">
-              <span className="text-xs text-warm-muted font-semibold">Số đơn hàng {rangeLabel.toLowerCase()}</span>
-              <div className="flex items-baseline gap-1 mt-0.5">
-                <span className="text-2xl md:text-3xl font-black text-ink font-mono tracking-tight">
-                  {isLoading ? "…" : (data?.orderCountRange ?? 0)}
+              <div className="flex flex-wrap items-center gap-2 mt-1">
+                <span className="text-[11px] text-sky-300 bg-sky-950/60 border border-sky-800/50 px-2 py-0.5 rounded-full font-bold">
+                  {data?.orderCountRange ?? 0} hóa đơn
                 </span>
-                <span className="text-xs text-muted">hóa đơn</span>
-              </div>
-              <span className="text-xs font-semibold text-amber-400 mt-1 flex items-center gap-1">
-                {(data?.waitingKitchenCount ?? 0) > 0 && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
-                )}
-                <span>{data?.waitingKitchenCount ?? 0} đơn đang chờ bếp</span>
-              </span>
-            </div>
-            <div className="w-14 h-14 rounded-2xl bg-danger-soft border border-warm-line flex items-center justify-center text-3xl shadow-inner group-hover:scale-105 transition-transform">
-              👨‍🍳
-            </div>
-            <div className="absolute -bottom-6 -right-6 w-28 h-28 bg-amber-600/10 rounded-full blur-xl pointer-events-none" />
-          </div>
-
-          <div className="bg-warm-surface border border-warm-line rounded-2xl p-4 md:p-5 flex justify-between items-start shadow-lg relative overflow-hidden group hover:border-warm-line transition-all">
-            <div className="flex flex-col gap-1 z-10 min-w-0">
-              <span className="text-xs text-warm-muted font-semibold">Món bán chạy nhất</span>
-              <div className="flex items-baseline gap-1 mt-0.5">
-                <span className="text-xl md:text-2xl font-black text-amber-300 font-heading tracking-tight truncate">
-                  {data?.topProducts?.[0]?.name ?? "—"}
+                <span className="text-[11px] font-semibold text-amber-400 flex items-center gap-1">
+                  {(data?.waitingKitchenCount ?? 0) > 0 && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
+                  )}
+                  <span>{data?.waitingKitchenCount ?? 0} đơn chờ bếp</span>
                 </span>
               </div>
-              <span className="text-xs text-muted mt-1">
-                {data?.topProducts?.[0] ? (
-                  <>
-                    Đã bán: <strong className="text-ink font-mono">{data.topProducts[0].quantity}</strong> phần
-                  </>
-                ) : (
-                  "Chưa có đơn trong khoảng này"
-                )}
-              </span>
             </div>
-            <div className="w-14 h-14 shrink-0 rounded-2xl bg-danger-soft border border-warm-line flex items-center justify-center text-3xl shadow-inner group-hover:scale-105 transition-transform">
-              🍽️
+            <div className="w-13 h-13 rounded-2xl bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-2xl shadow-inner group-hover:scale-110 transition-transform">
+              🪑
             </div>
-            <div className="absolute -bottom-6 -right-6 w-28 h-28 bg-yellow-600/10 rounded-full blur-xl pointer-events-none" />
+            <div className="absolute -bottom-6 -right-6 w-28 h-28 bg-sky-500/15 rounded-full blur-xl pointer-events-none" />
           </div>
         </section>
 
-        {/* ROW 2: revenue chart + recent orders */}
+        {/* Quick Financial Health Bar */}
+        <section className="bg-surface border border-line rounded-2xl p-3 sm:p-4 shadow-lg flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+              <Sparkles size={16} />
+            </div>
+            <div className="min-w-0">
+              <span className="text-xs font-bold text-ink flex items-center gap-2">
+                HIỆU SUẤT TÀI CHÍNH ({rangeLabel.toUpperCase()})
+              </span>
+              <p className="text-[11px] text-muted m-0 truncate">
+                Tỷ suất lợi nhuận đạt <strong className="text-emerald-400 font-mono">{profitRatio.toFixed(1)}%</strong> • Chi phí chiếm <strong className="text-rose-300 font-mono">{costRatio.toFixed(1)}%</strong> doanh thu
+              </p>
+            </div>
+          </div>
+
+          {/* Visual Ratio Progress Bar */}
+          <div className="w-full md:w-80 flex flex-col gap-1.5">
+            <div className="flex justify-between text-[10px] font-mono font-bold">
+              <span className="text-emerald-400">Lợi nhuận: {profitRatio.toFixed(0)}%</span>
+              <span className="text-rose-400">Chi phí: {costRatio.toFixed(0)}%</span>
+            </div>
+            <div className="w-full h-3 bg-surface-hover rounded-full overflow-hidden flex border border-line-strong p-0.5">
+              <div
+                className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-l-full transition-all duration-500"
+                style={{ width: `${Math.min(Math.max(profitRatio, 0), 100)}%` }}
+                title={`Lợi nhuận: ${profitRatio.toFixed(1)}%`}
+              />
+              <div
+                className="h-full bg-gradient-to-r from-rose-500 to-amber-500 rounded-r-full transition-all duration-500"
+                style={{ width: `${Math.min(Math.max(costRatio, 0), 100)}%` }}
+                title={`Chi phí: ${costRatio.toFixed(1)}%`}
+              />
+            </div>
+          </div>
+
+          {/* Monthly Preview Pills */}
+          <div className="flex items-center gap-2 text-xs">
+            <div className="bg-raised border border-line-strong px-3 py-1.5 rounded-xl flex items-center gap-1.5">
+              <span className="text-muted text-[11px]">Tháng này:</span>
+              <span className="font-mono font-bold text-amber-300">{compactMoney(data?.revenueMonth ?? 0)}</span>
+              <span className="text-muted text-[10px]">DT</span>
+              <span className="text-subtle">•</span>
+              <span className="font-mono font-bold text-emerald-400">{compactMoney(data?.profitMonth ?? 0)}</span>
+              <span className="text-muted text-[10px]">LN</span>
+            </div>
+          </div>
+        </section>
+
+        {/* ROW 2: revenue & profit interactive chart + recent orders */}
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-5">
           <div className="lg:col-span-7 bg-surface border border-line rounded-2xl p-5 shadow-lg flex flex-col justify-between">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
               <div>
                 <h2 className="text-sm md:text-base font-extrabold uppercase tracking-wide text-ink flex items-center gap-2">
-                  <span>DOANH THU THEO GIỜ HÔM NAY</span>
+                  <span>DOANH THU & LỢI NHUẬN THEO GIỜ HÔM NAY</span>
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 </h2>
-                <span className="text-xs text-muted">Đơn vị: VNĐ (đơn đã thanh toán)</span>
+                <span className="text-xs text-muted">Đơn vị: VNĐ • So sánh thực tế doanh thu và lợi nhuận gộp</span>
               </div>
-              {chart.peak && chart.peak.revenue > 0 && (
-                <span className="text-xs font-mono text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 px-2.5 py-1 rounded-md font-bold">
-                  Peak ({String(chart.peak.hour).padStart(2, "0")}:00): {compactMoney(chart.peak.revenue)}
-                </span>
+
+              {/* Metric View Switcher */}
+              <div className="flex items-center gap-1 bg-raised border border-line-strong p-1 rounded-xl text-[11px] font-bold">
+                <button
+                  type="button"
+                  onClick={() => setChartMetric("both")}
+                  className={`px-2.5 py-1 rounded-lg transition-colors ${
+                    chartMetric === "both"
+                      ? "bg-amber-500 text-black shadow-sm font-black"
+                      : "text-muted hover:text-ink"
+                  }`}
+                >
+                  Tất cả
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setChartMetric("revenue")}
+                  className={`px-2.5 py-1 rounded-lg transition-colors ${
+                    chartMetric === "revenue"
+                      ? "bg-amber-500 text-black shadow-sm font-black"
+                      : "text-muted hover:text-ink"
+                  }`}
+                >
+                  💵 Doanh thu
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setChartMetric("profit")}
+                  className={`px-2.5 py-1 rounded-lg transition-colors ${
+                    chartMetric === "profit"
+                      ? "bg-emerald-500 text-black shadow-sm font-black"
+                      : "text-muted hover:text-ink"
+                  }`}
+                >
+                  📈 Lợi nhuận
+                </button>
+              </div>
+            </div>
+
+            {/* Chart Legend & Peak Badges */}
+            <div className="flex flex-wrap items-center justify-between gap-2 text-xs mb-1 px-1">
+              <div className="flex items-center gap-4 text-xs font-semibold">
+                {(chartMetric === "both" || chartMetric === "revenue") && (
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded bg-amber-400 shadow-sm" />
+                    <span className="text-ink-secondary">Doanh thu</span>
+                    {chart.peakRev && chart.peakRev.revenue > 0 && (
+                      <span className="text-[10px] font-mono text-amber-300 font-bold bg-amber-950/60 border border-amber-800/50 px-1.5 py-0.2 rounded">
+                        Đỉnh {String(chart.peakRev.hour).padStart(2, "0")}h: {compactMoney(chart.peakRev.revenue)}
+                      </span>
+                    )}
+                  </div>
+                )}
+                {(chartMetric === "both" || chartMetric === "profit") && (
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded bg-emerald-400 shadow-sm" />
+                    <span className="text-ink-secondary">Lợi nhuận</span>
+                    {chart.peakProfit && chart.peakProfit.profit > 0 && (
+                      <span className="text-[10px] font-mono text-emerald-300 font-bold bg-emerald-950/60 border border-emerald-800/50 px-1.5 py-0.2 rounded">
+                        Đỉnh {String(chart.peakProfit.hour).padStart(2, "0")}h: {compactMoney(chart.peakProfit.profit)}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {hoveredPoint && (
+                <div className="text-[11px] font-mono bg-raised border border-line-strong px-2.5 py-1 rounded-lg text-ink flex items-center gap-2">
+                  <span className="font-bold text-amber-400">{String(hoveredPoint.hour).padStart(2, "0")}:00</span>
+                  <span>DT: <strong className="text-amber-300">{compactMoney(hoveredPoint.revenue)}</strong></span>
+                  <span>LN: <strong className="text-emerald-400">{compactMoney(hoveredPoint.profit)}</strong></span>
+                </div>
               )}
             </div>
 
             <div className="relative w-full h-[250px] my-2">
-              <svg viewBox="0 0 700 240" className="w-full h-full overflow-hidden">
+              <svg
+                viewBox="0 0 700 240"
+                className="w-full h-full overflow-hidden cursor-crosshair"
+                onMouseLeave={() => setHoveredPoint(null)}
+              >
                 <defs>
-                  <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#10b981" stopOpacity="0.45" />
-                    <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.25" />
+                  {/* Revenue Gradient */}
+                  <linearGradient id="revAreaGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.4" />
                     <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.0" />
                   </linearGradient>
-                  <linearGradient id="strokeGradient" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="#f59e0b" />
-                    <stop offset="55%" stopColor="#10b981" />
-                    <stop offset="100%" stopColor="#f59e0b" />
+                  {/* Profit Gradient */}
+                  <linearGradient id="profitAreaGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#10b981" stopOpacity="0.45" />
+                    <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
                   </linearGradient>
                 </defs>
 
+                {/* Y-axis grid lines */}
                 {[0, 0.25, 0.5, 0.75, 1].map((f) => {
                   const y = 210 - f * 180;
                   return (
                     <g key={f}>
-                      <line x1="30" y1={y} x2="680" y2={y} stroke="#2d3138" strokeDasharray={f === 0 ? undefined : "4 4"} />
+                      <line x1="35" y1={y} x2="675" y2={y} stroke="#2d3138" strokeDasharray={f === 0 ? undefined : "4 4"} />
                       <text x="2" y={y + 4} fill="#6b7280" fontSize="10" fontFamily="monospace">
-                        {compactMoney(chart.max * f)}
+                        {compactMoney(chart.maxVal * f)}
                       </text>
                     </g>
                   );
                 })}
 
+                {/* Render Areas & Lines based on metric toggle */}
                 {chart.coords.length > 1 && (
                   <>
-                    <path d={chart.area} fill="url(#chartGradient)" />
-                    <path d={chart.line} fill="none" stroke="url(#strokeGradient)" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+                    {(chartMetric === "both" || chartMetric === "revenue") && (
+                      <>
+                        <path d={chart.areaRev} fill="url(#revAreaGradient)" />
+                        <path
+                          d={chart.lineRev}
+                          fill="none"
+                          stroke="#f59e0b"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </>
+                    )}
+
+                    {(chartMetric === "both" || chartMetric === "profit") && (
+                      <>
+                        <path d={chart.areaProfit} fill="url(#profitAreaGradient)" />
+                        <path
+                          d={chart.lineProfit}
+                          fill="none"
+                          stroke="#10b981"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </>
+                    )}
                   </>
                 )}
-                {chart.peak && chart.peak.revenue > 0 && (
+
+                {/* Peak indicators */}
+                {chart.peakRev && chart.peakRev.revenue > 0 && (chartMetric === "both" || chartMetric === "revenue") && (
                   <>
-                    <circle cx={chart.peak.x} cy={chart.peak.y} r="6" fill="#10b981" />
-                    <circle cx={chart.peak.x} cy={chart.peak.y} r="12" fill="#10b981" opacity="0.3" className="animate-ping" />
+                    <circle cx={chart.peakRev.x} cy={chart.peakRev.yRev} r="5" fill="#f59e0b" />
+                    <circle cx={chart.peakRev.x} cy={chart.peakRev.yRev} r="10" fill="#f59e0b" opacity="0.3" className="animate-ping" />
                   </>
+                )}
+                {chart.peakProfit && chart.peakProfit.profit > 0 && (chartMetric === "both" || chartMetric === "profit") && (
+                  <>
+                    <circle cx={chart.peakProfit.x} cy={chart.peakProfit.yProfit} r="5" fill="#10b981" />
+                    <circle cx={chart.peakProfit.x} cy={chart.peakProfit.yProfit} r="10" fill="#10b981" opacity="0.3" className="animate-ping" />
+                  </>
+                )}
+
+                {/* Interactive hover trigger zones */}
+                {chart.coords.map((c) => (
+                  <rect
+                    key={c.hour}
+                    x={c.x - 12}
+                    y={25}
+                    width={24}
+                    height={190}
+                    fill="transparent"
+                    onMouseEnter={() =>
+                      setHoveredPoint({
+                        hour: c.hour,
+                        revenue: c.revenue,
+                        cost: c.cost,
+                        profit: c.profit,
+                        x: c.x,
+                        y: Math.min(c.yRev, c.yProfit),
+                      })
+                    }
+                  />
+                ))}
+
+                {/* Vertical hover guide line */}
+                {hoveredPoint && (
+                  <line
+                    x1={hoveredPoint.x}
+                    y1={30}
+                    x2={hoveredPoint.x}
+                    y2={210}
+                    stroke="#fbbf24"
+                    strokeWidth="1.5"
+                    strokeDasharray="3 3"
+                  />
                 )}
               </svg>
             </div>
@@ -381,9 +651,9 @@ export default function DashboardPage() {
                 ))}
             </div>
 
-            <div className="mt-4 pt-3 border-t border-line flex justify-center">
+            <div className="mt-4 pt-3 border-t border-line flex flex-wrap items-center justify-center gap-3">
               <div className="inline-flex items-center gap-2 bg-raised border border-line-strong px-4 py-1.5 rounded-full text-xs font-semibold text-ink-secondary">
-                <span>Tổng tháng này:</span>
+                <span>Doanh thu tháng này:</span>
                 <strong className="text-amber-400 font-mono text-sm">{vnd(data?.revenueMonth ?? 0)} VNĐ</strong>
                 {monthChange !== null && (
                   <span className={`font-bold ${monthChange >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
@@ -391,6 +661,22 @@ export default function DashboardPage() {
                     {monthChange.toFixed(1)}%)
                   </span>
                 )}
+              </div>
+
+              <div className="inline-flex items-center gap-2 bg-raised border border-line-strong px-4 py-1.5 rounded-full text-xs font-semibold text-ink-secondary">
+                <span>Lợi nhuận tháng này:</span>
+                <strong className="text-emerald-400 font-mono text-sm">{vnd(data?.profitMonth ?? 0)} VNĐ</strong>
+                {profitMonthChange !== null && (
+                  <span className={`font-bold ${profitMonthChange >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                    ({profitMonthChange >= 0 ? "+" : ""}
+                    {profitMonthChange.toFixed(1)}%)
+                  </span>
+                )}
+              </div>
+
+              <div className="inline-flex items-center gap-1.5 bg-raised border border-line-strong px-3 py-1.5 rounded-full text-xs font-semibold text-muted">
+                <span>Biên LN:</span>
+                <strong className="text-emerald-400 font-mono">{(data?.profitMarginMonth ?? 0).toFixed(1)}%</strong>
               </div>
             </div>
           </div>

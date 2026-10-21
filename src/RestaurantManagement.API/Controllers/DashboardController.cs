@@ -41,9 +41,36 @@ public sealed class DashboardController(RestaurantDbContext dbContext) : Control
             .Select(o => new { o.Id, o.OrderNumber, o.Status, o.TotalAmount, o.CreatedAt, o.DiningTableId })
             .ToListAsync(ct);
 
+        // Fetch warehouses, inventory items, inventory transactions (cogs) and expenses for this branch
+        var warehouseIds = await dbContext.Warehouses.AsNoTracking()
+            .Where(w => w.BranchId == branchId && w.IsActive)
+            .Select(w => w.Id)
+            .ToListAsync(ct);
+
+        var inventoryItemIds = await dbContext.InventoryItems.AsNoTracking()
+            .Where(i => warehouseIds.Contains(i.WarehouseId) && i.IsActive)
+            .Select(i => i.Id)
+            .ToListAsync(ct);
+
+        var transactions = await dbContext.InventoryTransactions.AsNoTracking()
+            .Where(t => inventoryItemIds.Contains(t.InventoryItemId)
+                        && t.TransactionType == InventoryTransactionType.Issue
+                        && t.CreatedAt >= earliest)
+            .Select(t => new { t.CreatedAt, Cost = Math.Abs(t.QuantityDelta) * t.UnitCost })
+            .ToListAsync(ct);
+
+        var expenses = await dbContext.Expenses.AsNoTracking()
+            .Where(e => e.BranchId == branchId && e.ExpenseDate >= earliest)
+            .Select(e => new { e.ExpenseDate, e.Amount })
+            .ToListAsync(ct);
+
         decimal Revenue(DateTimeOffset from, DateTimeOffset to) => orders
             .Where(o => o.Status == OrderStatus.Completed && o.CreatedAt >= from && o.CreatedAt < to)
             .Sum(o => o.TotalAmount);
+
+        decimal Cost(DateTimeOffset from, DateTimeOffset to) =>
+            transactions.Where(t => t.CreatedAt >= from && t.CreatedAt < to).Sum(t => t.Cost)
+            + expenses.Where(e => e.ExpenseDate >= from && e.ExpenseDate < to).Sum(e => e.Amount);
 
         var revenueToday = Revenue(todayStart, todayStart.AddDays(1));
         var revenueYesterday = Revenue(yesterdayStart, todayStart);
@@ -51,18 +78,49 @@ public sealed class DashboardController(RestaurantDbContext dbContext) : Control
         var revenueLastMonth = Revenue(lastMonthStart, monthStart);
         var revenueRange = Revenue(rangeStart, rangeEnd);
 
+        var costToday = Cost(todayStart, todayStart.AddDays(1));
+        var costYesterday = Cost(yesterdayStart, todayStart);
+        var costMonth = Cost(monthStart, monthStart.AddMonths(1));
+        var costLastMonth = Cost(lastMonthStart, monthStart);
+        var costRange = Cost(rangeStart, rangeEnd);
+
+        var profitToday = revenueToday - costToday;
+        var profitYesterday = revenueYesterday - costYesterday;
+        var profitMonth = revenueMonth - costMonth;
+        var profitLastMonth = revenueLastMonth - costLastMonth;
+        var profitRange = revenueRange - costRange;
+
+        static decimal Margin(decimal rev, decimal prof) => rev > 0 ? Math.Round((prof / rev) * 100m, 1) : 0m;
+        var profitMarginToday = Margin(revenueToday, profitToday);
+        var profitMarginRange = Margin(revenueRange, profitRange);
+        var profitMarginMonth = Margin(revenueMonth, profitMonth);
+
         var rangeOrders = orders.Where(o => o.CreatedAt >= rangeStart && o.CreatedAt < rangeEnd).ToList();
         var rangeOrderIds = rangeOrders.Select(o => o.Id).ToList();
 
-        // Hourly revenue (completed orders) for today
+        // Hourly revenue, cost, profit (completed orders) for today
         var hourly = Enumerable.Range(0, 24)
-            .Select(h => new
+            .Select(h =>
             {
-                hour = h,
-                revenue = orders
+                var rev = orders
                     .Where(o => o.Status == OrderStatus.Completed && o.CreatedAt >= todayStart && o.CreatedAt < todayStart.AddDays(1)
                                 && o.CreatedAt.ToOffset(VietnamOffset).Hour == h)
-                    .Sum(o => o.TotalAmount)
+                    .Sum(o => o.TotalAmount);
+                var c = transactions
+                    .Where(t => t.CreatedAt >= todayStart && t.CreatedAt < todayStart.AddDays(1)
+                                && t.CreatedAt.ToOffset(VietnamOffset).Hour == h)
+                    .Sum(t => t.Cost)
+                    + expenses
+                    .Where(e => e.ExpenseDate >= todayStart && e.ExpenseDate < todayStart.AddDays(1)
+                                && e.ExpenseDate.ToOffset(VietnamOffset).Hour == h)
+                    .Sum(e => e.Amount);
+                return new
+                {
+                    hour = h,
+                    revenue = rev,
+                    cost = c,
+                    profit = rev - c
+                };
             })
             .ToList();
 
@@ -129,6 +187,19 @@ public sealed class DashboardController(RestaurantDbContext dbContext) : Control
             revenueMonth,
             revenueLastMonth,
             revenueRange,
+            costToday,
+            costYesterday,
+            costMonth,
+            costLastMonth,
+            costRange,
+            profitToday,
+            profitYesterday,
+            profitMonth,
+            profitLastMonth,
+            profitRange,
+            profitMarginToday,
+            profitMarginRange,
+            profitMarginMonth,
             orderCountToday = orders.Count(o => o.CreatedAt >= todayStart && o.CreatedAt < todayStart.AddDays(1)),
             orderCountRange = rangeOrders.Count,
             waitingKitchenCount,

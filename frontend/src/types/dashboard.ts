@@ -3,6 +3,8 @@ export type DashboardOrderStatus = number;
 export interface DashboardHourly {
   hour: number;
   revenue: number;
+  cost: number;
+  profit: number;
 }
 
 export interface DashboardTopProduct {
@@ -36,6 +38,19 @@ export interface DashboardData {
   revenueMonth: number;
   revenueLastMonth: number;
   revenueRange: number;
+  costToday: number;
+  costYesterday: number;
+  costMonth: number;
+  costLastMonth: number;
+  costRange: number;
+  profitToday: number;
+  profitYesterday: number;
+  profitMonth: number;
+  profitLastMonth: number;
+  profitRange: number;
+  profitMarginToday: number;
+  profitMarginRange: number;
+  profitMarginMonth: number;
   orderCountToday: number;
   orderCountRange: number;
   waitingKitchenCount: number;
