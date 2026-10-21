@@ -35,6 +35,7 @@ type Props = {
   onUpdateItemQuantity: (itemId: string, currentQty: number, delta: number) => void;
   onRemoveItem: (itemId: string) => void;
   onBackToFloor: () => void;
+  onBackToMenu?: () => void;
 };
 
 export function OrderTicket({
@@ -50,6 +51,7 @@ export function OrderTicket({
   onUpdateItemQuantity,
   onRemoveItem,
   onBackToFloor,
+  onBackToMenu,
 }: Props) {
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
@@ -156,7 +158,7 @@ export function OrderTicket({
       <div className="p-4 bg-gradient-to-r from-raised via-raised to-surface border-b border-line-strong flex flex-col gap-3">
         <div className="flex items-center justify-between gap-2">
           {/* Back button & Table Identifier */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={onBackToFloor}
@@ -165,6 +167,18 @@ export function OrderTicket({
             >
               <ArrowLeft size={16} />
             </button>
+
+            {onBackToMenu && (
+              <button
+                type="button"
+                onClick={onBackToMenu}
+                className="lg:hidden px-2.5 py-1.5 rounded-lg bg-orange-500/15 hover:bg-orange-500/25 text-orange-400 border border-orange-500/30 transition-all cursor-pointer flex items-center gap-1 text-xs font-bold"
+                title="Quay lại thực đơn chọn món"
+              >
+                <UtensilsCrossed size={13} />
+                <span>+ Món</span>
+              </button>
+            )}
 
             <div>
               <div className="flex items-center gap-2">

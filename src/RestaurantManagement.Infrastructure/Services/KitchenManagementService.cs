@@ -138,7 +138,7 @@ public sealed class KitchenManagementService(
         {
             await EnsureBranchAccessAsync(order.BranchId, cancellationToken);
         }
-        if (order.Status != OrderStatus.Confirmed) throw new ApplicationException("Kitchen work can only be created for confirmed orders.");
+        if (order.Status is not (OrderStatus.Confirmed or OrderStatus.Preparing or OrderStatus.Ready)) throw new ApplicationException("Kitchen work can only be created for confirmed or active orders.");
         var items = await dbContext.OrderItems.AsNoTracking().Where(x => x.OrderId == orderId).ToListAsync(cancellationToken);
         if (items.Count == 0) return Array.Empty<KitchenOrderResponse>();
         var productIds = items.Select(x => x.ProductId).Distinct().ToArray();

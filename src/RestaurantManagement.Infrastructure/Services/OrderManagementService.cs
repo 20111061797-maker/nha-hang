@@ -60,17 +60,76 @@ public sealed class OrderManagementService(
 
     public async Task<OrderDetails?> AddItemAsync(Guid orderId, AddOrderItemRequest request, CancellationToken cancellationToken)
     {
-        var order = await LoadEditableOrderAsync(orderId, request.ExpectedVersion, cancellationToken); var item = await BuildOrderItemAsync(order, request.ProductId, request.ProductVariantId, request.ComboId, request.Quantity, request.ModifierIds, request.Notes, cancellationToken); dbContext.OrderItems.Add(item); order.Version++; await auditWriter.WriteAsync("OrderItemAdded", nameof(OrderItem), item.Id, currentUser.Username, null, cancellationToken); await SaveAsync(cancellationToken); await RecalculateAsync(order, cancellationToken); await SaveAsync(cancellationToken); return await BuildDetailsAsync(order.Id, cancellationToken);
+        var order = await LoadEditableOrderAsync(orderId, request.ExpectedVersion, cancellationToken);
+        var item = await BuildOrderItemAsync(order, request.ProductId, request.ProductVariantId, request.ComboId, request.Quantity, request.ModifierIds, request.Notes, cancellationToken);
+        dbContext.OrderItems.Add(item);
+        order.Version++;
+        await auditWriter.WriteAsync("OrderItemAdded", nameof(OrderItem), item.Id, currentUser.Username, null, cancellationToken);
+        await SaveAsync(cancellationToken);
+        await RecalculateAsync(order, cancellationToken);
+        await SaveAsync(cancellationToken);
+
+        if (order.Status is OrderStatus.Confirmed or OrderStatus.Preparing or OrderStatus.Ready && kitchenService is not null)
+        {
+            await kitchenService.CreateForConfirmedOrderAsync(order.Id, cancellationToken);
+        }
+
+        return await BuildDetailsAsync(order.Id, cancellationToken);
     }
 
     public async Task<OrderDetails?> UpdateItemAsync(Guid orderId, Guid itemId, UpdateOrderItemRequest request, CancellationToken cancellationToken)
     {
-        var order = await LoadEditableOrderAsync(orderId, request.ExpectedVersion, cancellationToken); var oldItem = await dbContext.OrderItems.FirstOrDefaultAsync(x => x.Id == itemId && x.OrderId == orderId, cancellationToken); if (oldItem is null) return null; dbContext.OrderItemModifiers.RemoveRange(await dbContext.OrderItemModifiers.Where(x => x.OrderItemId == itemId).ToListAsync(cancellationToken)); dbContext.OrderItems.Remove(oldItem); var item = await BuildOrderItemAsync(order, request.ProductId, request.ProductVariantId, request.ComboId, request.Quantity, request.ModifierIds, request.Notes, cancellationToken); dbContext.OrderItems.Add(item); order.Version++; await auditWriter.WriteAsync("OrderItemUpdated", nameof(OrderItem), itemId, currentUser.Username, null, cancellationToken); await SaveAsync(cancellationToken); await RecalculateAsync(order, cancellationToken); await SaveAsync(cancellationToken); return await BuildDetailsAsync(order.Id, cancellationToken);
+        var order = await LoadEditableOrderAsync(orderId, request.ExpectedVersion, cancellationToken);
+        var oldItem = await dbContext.OrderItems.FirstOrDefaultAsync(x => x.Id == itemId && x.OrderId == orderId, cancellationToken);
+        if (oldItem is null) return null;
+
+        dbContext.OrderItemModifiers.RemoveRange(await dbContext.OrderItemModifiers.Where(x => x.OrderItemId == itemId).ToListAsync(cancellationToken));
+        dbContext.OrderItems.Remove(oldItem);
+        var item = await BuildOrderItemAsync(order, request.ProductId, request.ProductVariantId, request.ComboId, request.Quantity, request.ModifierIds, request.Notes, cancellationToken);
+        dbContext.OrderItems.Add(item);
+        order.Version++;
+        await auditWriter.WriteAsync("OrderItemUpdated", nameof(OrderItem), itemId, currentUser.Username, null, cancellationToken);
+        await SaveAsync(cancellationToken);
+        await RecalculateAsync(order, cancellationToken);
+        await SaveAsync(cancellationToken);
+
+        if (order.Status is OrderStatus.Confirmed or OrderStatus.Preparing or OrderStatus.Ready)
+        {
+            var kItem = await dbContext.KitchenOrderItems.FirstOrDefaultAsync(x => x.OrderItemId == itemId, cancellationToken);
+            if (kItem != null)
+            {
+                kItem.OrderItemId = item.Id;
+                kItem.Quantity = item.Quantity;
+                await dbContext.SaveChangesAsync(cancellationToken);
+            }
+        }
+
+        return await BuildDetailsAsync(order.Id, cancellationToken);
     }
 
     public async Task<OrderDetails?> RemoveItemAsync(Guid orderId, Guid itemId, long? expectedVersion, CancellationToken cancellationToken)
     {
-        var order = await LoadEditableOrderAsync(orderId, expectedVersion, cancellationToken); if (order.Status is not (OrderStatus.Draft or OrderStatus.Open)) throw new ApplicationException("Items can only be removed from draft or open orders."); var item = await dbContext.OrderItems.FirstOrDefaultAsync(x => x.Id == itemId && x.OrderId == orderId, cancellationToken); if (item is null) return null; dbContext.OrderItemModifiers.RemoveRange(await dbContext.OrderItemModifiers.Where(x => x.OrderItemId == itemId).ToListAsync(cancellationToken)); dbContext.OrderItems.Remove(item); order.Version++; await auditWriter.WriteAsync("OrderItemRemoved", nameof(OrderItem), itemId, currentUser.Username, null, cancellationToken); await SaveAsync(cancellationToken); await RecalculateAsync(order, cancellationToken); await SaveAsync(cancellationToken); return await BuildDetailsAsync(order.Id, cancellationToken);
+        var order = await LoadEditableOrderAsync(orderId, expectedVersion, cancellationToken);
+        if (order.Status is OrderStatus.Completed or OrderStatus.Cancelled)
+            throw new ApplicationException("Không thể xóa món trong đơn hàng đã hoàn tất hoặc đã hủy.");
+
+        var item = await dbContext.OrderItems.FirstOrDefaultAsync(x => x.Id == itemId && x.OrderId == orderId, cancellationToken);
+        if (item is null) return null;
+
+        var kItems = await dbContext.KitchenOrderItems.Where(x => x.OrderItemId == itemId).ToListAsync(cancellationToken);
+        if (kItems.Count > 0)
+        {
+            dbContext.KitchenOrderItems.RemoveRange(kItems);
+        }
+
+        dbContext.OrderItemModifiers.RemoveRange(await dbContext.OrderItemModifiers.Where(x => x.OrderItemId == itemId).ToListAsync(cancellationToken));
+        dbContext.OrderItems.Remove(item);
+        order.Version++;
+        await auditWriter.WriteAsync("OrderItemRemoved", nameof(OrderItem), itemId, currentUser.Username, null, cancellationToken);
+        await SaveAsync(cancellationToken);
+        await RecalculateAsync(order, cancellationToken);
+        await SaveAsync(cancellationToken);
+        return await BuildDetailsAsync(order.Id, cancellationToken);
     }
 
     public async Task<OrderDetails?> ChangeStatusAsync(Guid orderId, ChangeOrderStatusRequest request, CancellationToken cancellationToken)
@@ -141,7 +200,17 @@ public sealed class OrderManagementService(
     }
 
     private void itemModifierAdd(OrderItem item, Guid id, string name, decimal price) => dbContext.OrderItemModifiers.Add(new OrderItemModifier { OrderItemId = item.Id, ModifierId = id, ModifierNameSnapshot = name, Quantity = 1, UnitPrice = price, TotalPrice = price });
-    private async Task<Order> LoadEditableOrderAsync(Guid id, long? expectedVersion, CancellationToken ct) { var order = await dbContext.Orders.FirstOrDefaultAsync(x => x.Id == id, ct) ?? throw new ApplicationException("Order does not exist."); await EnsureBranchAccessAsync(order.BranchId, ct); EnsureVersion(order, expectedVersion); if (order.Status is not (OrderStatus.Draft or OrderStatus.Open)) throw new ApplicationException("Order items can only be changed while the order is open."); return order; }
+
+    private async Task<Order> LoadEditableOrderAsync(Guid id, long? expectedVersion, CancellationToken ct)
+    {
+        var order = await dbContext.Orders.FirstOrDefaultAsync(x => x.Id == id, ct) ?? throw new ApplicationException("Order does not exist.");
+        await EnsureBranchAccessAsync(order.BranchId, ct);
+        EnsureVersion(order, expectedVersion);
+        if (order.Status is OrderStatus.Completed or OrderStatus.Cancelled)
+            throw new ApplicationException("Không thể chỉnh sửa đơn hàng đã thanh toán hoặc đã hủy.");
+        return order;
+    }
+
     private static void EnsureVersion(Order order, long? expected) { if (expected.HasValue && order.Version != expected.Value) throw new ConflictException("The order was changed by another user."); }
     private async Task RecalculateAsync(Order order, CancellationToken ct) { order.Subtotal = await dbContext.OrderItems.Where(x => x.OrderId == order.Id).SumAsync(x => x.LineTotal, ct); order.DiscountAmount = 0; order.TaxAmount = 0; order.TotalAmount = order.Subtotal; }
     private async Task ReleaseTableAsync(Order order, CancellationToken ct) 

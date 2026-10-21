@@ -53,6 +53,7 @@ export function PosView() {
   const [orderNotes, setOrderNotes] = useState("");
   const [guestCount, setGuestCount] = useState<number>(2);
   const [isSepayLoading, setIsSepayLoading] = useState(false);
+  const [mobileViewTab, setMobileViewTab] = useState<"menu" | "ticket">("menu");
 
   const [notification, setNotification] = useState<{
     type: "success" | "error";
@@ -579,70 +580,102 @@ export function PosView() {
       {activeOrderId && activeOrder ? (
         <div className="flex flex-col gap-4 text-ink">
           {/* Subheader bar when inside an order */}
-          <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-surface/90 backdrop-blur-md border border-line shadow-lg">
-            <div className="flex items-center gap-3.5 flex-wrap">
-              <button
-                type="button"
-                className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-ink-secondary hover:text-ink bg-raised hover:bg-surface-hover border border-line-strong transition-all cursor-pointer shadow-sm active:scale-95"
-                onClick={handleBackToFloor}
-              >
-                <ArrowLeft size={15} />
-                <span>Sơ đồ bàn</span>
-              </button>
+          <div className="flex flex-col gap-3 p-3.5 sm:p-4 rounded-2xl bg-surface/90 backdrop-blur-md border border-line shadow-lg">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-3 flex-wrap">
+                <button
+                  type="button"
+                  className="flex items-center gap-2 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs font-bold text-ink-secondary hover:text-ink bg-raised hover:bg-surface-hover border border-line-strong transition-all cursor-pointer shadow-sm active:scale-95"
+                  onClick={handleBackToFloor}
+                >
+                  <ArrowLeft size={15} />
+                  <span>Sơ đồ bàn</span>
+                </button>
 
-              <div className="flex items-center gap-2.5 flex-wrap">
-                <span className="text-lg font-black text-ink tracking-tight flex items-center gap-1.5">
-                  <Utensils size={18} className="text-orange-500" />
-                  {activeOrder.orderType === OrderType.DineIn
-                    ? selectedTable
-                      ? `Bàn ${selectedTable.tableNumber}`
-                      : "Bàn ăn"
-                    : "Đơn Mang về"}
-                </span>
-
-                <span className="text-subtle">•</span>
-
-                <span className="text-xs font-mono text-muted bg-well px-2.5 py-1 rounded-lg border border-line">
-                  Mã đơn: #{activeOrder.orderNumber.length > 14 ? activeOrder.orderNumber.slice(-8) : activeOrder.orderNumber}
-                </span>
-
-                {activeOrder.status === OrderStatus.Confirmed ||
-                activeOrder.status === OrderStatus.Preparing ? (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                    Đã chuyển bếp
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-base sm:text-lg font-black text-ink tracking-tight flex items-center gap-1.5">
+                    <Utensils size={18} className="text-orange-500" />
+                    {activeOrder.orderType === OrderType.DineIn
+                      ? selectedTable
+                        ? `Bàn ${selectedTable.tableNumber}`
+                        : "Bàn ăn"
+                      : "Đơn Mang về"}
                   </span>
-                ) : activeOrder.status === OrderStatus.Ready ? (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                    Món đã xong
+
+                  <span className="text-subtle">•</span>
+
+                  <span className="text-[11px] font-mono text-muted bg-well px-2 py-0.5 rounded-lg border border-line">
+                    #{activeOrder.orderNumber.length > 14 ? activeOrder.orderNumber.slice(-8) : activeOrder.orderNumber}
                   </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-500/15 text-sky-300 border border-sky-500/30">
-                    <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-ping" />
-                    Đang chọn món
-                  </span>
+
+                  {activeOrder.status === OrderStatus.Confirmed ||
+                  activeOrder.status === OrderStatus.Preparing ? (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                      Đã gửi bếp
+                    </span>
+                  ) : activeOrder.status === OrderStatus.Ready ? (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                      Món đã xong
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-500/15 text-sky-300 border border-sky-500/30">
+                      <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-ping" />
+                      Đang chọn món
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {activeOrder.status === OrderStatus.Open && (
+                  <button
+                    type="button"
+                    disabled={activeOrder.items.length === 0 || confirmOrderMutation.isPending}
+                    onClick={handleSendToKitchen}
+                    className="flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm text-white bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-400 hover:to-amber-500 shadow-md shadow-orange-500/25 active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
+                  >
+                    <span>{confirmOrderMutation.isPending ? "Đang gửi..." : "Gửi bếp ngay"}</span>
+                  </button>
                 )}
               </div>
             </div>
 
-            <div className="flex items-center gap-2.5">
-              {activeOrder.status === OrderStatus.Open && (
-                <button
-                  type="button"
-                  disabled={activeOrder.items.length === 0 || confirmOrderMutation.isPending}
-                  onClick={handleSendToKitchen}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-400 hover:to-amber-500 shadow-md shadow-orange-500/25 active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
-                >
-                  <span>{confirmOrderMutation.isPending ? "Đang gửi..." : "Gửi bếp ngay"}</span>
-                </button>
-              )}
+            {/* Mobile View Tab Switcher (<lg only) */}
+            <div className="lg:hidden flex items-center bg-raised p-1 rounded-xl border border-line w-full">
+              <button
+                type="button"
+                onClick={() => setMobileViewTab("menu")}
+                className={`flex-1 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                  mobileViewTab === "menu"
+                    ? "bg-orange-500 text-white shadow-md shadow-orange-500/25"
+                    : "text-muted hover:text-ink"
+                }`}
+              >
+                <Utensils size={14} />
+                <span>Thực đơn món</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setMobileViewTab("ticket")}
+                className={`flex-1 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                  mobileViewTab === "ticket"
+                    ? "bg-orange-500 text-white shadow-md shadow-orange-500/25"
+                    : "text-muted hover:text-ink"
+                }`}
+              >
+                <FileText size={14} />
+                <span>
+                  Đơn món ({activeOrder.items?.reduce((s, i) => s + (i.quantity || 1), 0) || 0}) • {(activeOrder.totalAmount || 0).toLocaleString("vi-VN")} ₫
+                </span>
+              </button>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start pb-24 lg:pb-0">
             {/* Left: Menu & Product Selection */}
-            <div className="lg:col-span-7 xl:col-span-8">
+            <div className={`lg:col-span-7 xl:col-span-8 ${mobileViewTab === "menu" ? "block" : "hidden lg:block"}`}>
               {menu ? (
                 <MenuSelector menu={menu} onAddItem={handleAddItem} />
               ) : (
@@ -654,7 +687,7 @@ export function PosView() {
             </div>
 
             {/* Right: Order Ticket / Cart */}
-            <div className="lg:col-span-5 xl:col-span-4">
+            <div className={`lg:col-span-5 xl:col-span-4 ${mobileViewTab === "ticket" ? "block" : "hidden lg:block"}`}>
               <OrderTicket
                 order={activeOrder}
                 tableName={selectedTable ? `Bàn ${selectedTable.tableNumber}` : undefined}
@@ -674,9 +707,34 @@ export function PosView() {
                 onUpdateItemQuantity={handleUpdateItemQuantity}
                 onRemoveItem={handleRemoveItem}
                 onBackToFloor={handleBackToFloor}
+                onBackToMenu={() => setMobileViewTab("menu")}
               />
             </div>
           </div>
+
+          {/* Floating Bottom Cart Bar on Mobile when in Menu mode */}
+          {mobileViewTab === "menu" && activeOrder.items && activeOrder.items.length > 0 && (
+            <div className="lg:hidden fixed bottom-4 left-3 right-3 z-40 bg-surface/95 backdrop-blur-xl border border-orange-500/50 rounded-2xl p-3 shadow-2xl shadow-black/70 flex items-center justify-between gap-3 animate-slide-in-from-bottom">
+              <div className="min-w-0 pl-1">
+                <div className="text-[11px] text-muted font-medium flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>{activeOrder.items.reduce((s, i) => s + (i.quantity || 1), 0)} món trong đơn</span>
+                </div>
+                <div className="text-base font-black text-amber-400 font-mono tracking-tight">
+                  {activeOrder.totalAmount.toLocaleString("vi-VN")} ₫
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setMobileViewTab("ticket")}
+                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 active:scale-95 text-white text-xs font-black shadow-lg shadow-orange-500/30 flex items-center gap-1.5 transition-all cursor-pointer shrink-0"
+              >
+                <span>Xem đơn ({activeOrder.status === OrderStatus.Open ? "Gửi bếp" : "Tính tiền"})</span>
+                <ArrowLeft size={14} className="rotate-180" />
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         <div className="pos-floor-container">

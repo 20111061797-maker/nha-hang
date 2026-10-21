@@ -139,7 +139,7 @@ export function MenuSelector({ menu, onAddItem }: Props) {
       </div>
 
       {/* Product List Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3.5 min-h-[380px] max-h-[calc(100vh-270px)] overflow-y-auto p-1">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 min-h-[300px] max-h-none sm:max-h-[calc(100vh-270px)] sm:overflow-y-auto p-1">
         {filteredProducts.length === 0 ? (
           <div className="col-span-full flex flex-col items-center justify-center py-16 text-center text-subtle">
             <Utensils size={32} className="opacity-40 mb-2" />
@@ -152,7 +152,7 @@ export function MenuSelector({ menu, onAddItem }: Props) {
             return (
               <div
                 key={product.id}
-                className="group relative flex flex-col justify-between p-4 rounded-2xl bg-surface hover:bg-raised border border-line hover:border-orange-500/50 shadow-md hover:shadow-xl hover:shadow-black/40 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer overflow-hidden"
+                className="group relative flex flex-col justify-between p-3.5 sm:p-4 rounded-2xl bg-surface hover:bg-raised border border-line hover:border-orange-500/50 shadow-md hover:shadow-xl hover:shadow-black/40 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer overflow-hidden"
                 onClick={() => handleProductClick(product)}
                 role="button"
                 tabIndex={0}
@@ -160,9 +160,9 @@ export function MenuSelector({ menu, onAddItem }: Props) {
                   if (e.key === "Enter" || e.key === " ") handleProductClick(product);
                 }}
               >
-                {/* Dish image banner */}
-                <div className="relative w-full h-28 mb-2.5 rounded-xl overflow-hidden bg-well border border-ink/5">
-                  {product.imageUrl ? (
+                {/* Dish image banner (only if product has image) */}
+                {product.imageUrl ? (
+                  <div className="relative w-full h-28 sm:h-32 mb-2.5 rounded-xl overflow-hidden bg-well border border-ink/5 shrink-0">
                     <img
                       src={product.imageUrl}
                       alt={product.name}
@@ -171,28 +171,36 @@ export function MenuSelector({ menu, onAddItem }: Props) {
                         (e.target as HTMLElement).style.display = "none";
                       }}
                     />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-raised to-well flex items-center justify-center text-faint">
-                      <Utensils size={24} className="opacity-40" />
-                    </div>
-                  )}
-
-                  {/* SKU badge overlay */}
-                  <span className="absolute top-2 left-2 text-[10px] font-mono text-ink-secondary bg-black/70 backdrop-blur-md px-2 py-0.5 rounded-md border border-ink/10 font-bold">
-                    {product.sku}
-                  </span>
-
-                  {/* Option indicator overlay */}
-                  {hasOptions && (
-                    <span className="absolute top-2 right-2 inline-flex items-center gap-1 text-[10px] font-bold text-sky-300 bg-black/75 backdrop-blur-md px-2 py-0.5 rounded-full border border-sky-400/40">
-                      <Sparkles size={10} className="text-sky-400" /> Tùy chọn
-                    </span>
-                  )}
-                </div>
+                    {product.sku && (
+                      <span className="absolute top-2 left-2 text-[10px] font-mono text-ink-secondary bg-black/70 backdrop-blur-md px-2 py-0.5 rounded-md border border-ink/10 font-bold">
+                        {product.sku}
+                      </span>
+                    )}
+                    {hasOptions && (
+                      <span className="absolute top-2 right-2 inline-flex items-center gap-1 text-[10px] font-bold text-sky-300 bg-black/75 backdrop-blur-md px-2 py-0.5 rounded-full border border-sky-400/40">
+                        <Sparkles size={10} className="text-sky-400" /> Tùy chọn
+                      </span>
+                    )}
+                  </div>
+                ) : (
+                  /* Compact Header without photo */
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    {product.sku ? (
+                      <span className="text-[10px] font-mono text-muted bg-well px-2 py-0.5 rounded-md border border-line">
+                        {product.sku}
+                      </span>
+                    ) : <span />}
+                    {hasOptions && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-sky-400 bg-sky-500/15 px-2 py-0.5 rounded-full border border-sky-500/30">
+                        <Sparkles size={10} /> Tùy chọn
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 {/* Body: Product Name & Description */}
                 <div className="flex-1 flex flex-col justify-start mb-3">
-                  <h4 className="font-bold text-ink text-sm group-hover:text-amber-300 transition-colors line-clamp-2 leading-snug">
+                  <h4 className="font-bold text-ink text-sm sm:text-base group-hover:text-amber-300 transition-colors line-clamp-2 leading-snug">
                     {product.name}
                   </h4>
                   {product.shortDescription && (
@@ -202,24 +210,25 @@ export function MenuSelector({ menu, onAddItem }: Props) {
                   )}
                 </div>
 
-                {/* Footer: Price & Quick Add Button */}
-                <div className="flex items-center justify-between gap-2 pt-2.5 border-t border-ink/5">
+                {/* Footer: Price & Quick Add Button (never cut off) */}
+                <div className="flex items-center justify-between gap-2 pt-2.5 border-t border-line/40 shrink-0">
                   <div>
-                    <span className="text-base font-black font-mono text-amber-400 tracking-tight">
+                    <span className="text-sm sm:text-base font-black font-mono text-amber-400 tracking-tight">
                       {product.price.toLocaleString("vi-VN")} ₫
                     </span>
                   </div>
 
                   <button
                     type="button"
-                    className="w-9 h-9 rounded-xl bg-orange-500/15 group-hover:bg-gradient-to-r group-hover:from-orange-500 group-hover:to-amber-500 text-orange-400 group-hover:text-white border border-orange-500/30 group-hover:border-transparent flex items-center justify-center transition-all active:scale-90 shadow-sm"
+                    className="min-w-[42px] h-9 px-3 rounded-xl bg-orange-500 hover:bg-orange-600 active:scale-90 text-white font-bold flex items-center justify-center gap-1 shadow-md shadow-orange-500/25 transition-all cursor-pointer shrink-0"
                     title="Thêm vào đơn"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleProductClick(product);
                     }}
                   >
-                    <Plus size={18} className="stroke-[2.5]" />
+                    <Plus size={16} className="stroke-[2.5]" />
+                    <span className="text-xs font-bold sm:hidden">Thêm</span>
                   </button>
                 </div>
               </div>
