@@ -15,8 +15,8 @@ public sealed class AuditWriter(RestaurantDbContext dbContext, ICurrentUserServi
             Action = action,
             EntityType = entityType,
             EntityId = entityId,
-            ActorNameSnapshot = actorName,
-            IpAddress = ipAddress,
+            ActorNameSnapshot = actorName ?? currentUserService.Username,
+            IpAddress = ipAddress ?? currentUserService.IpAddress,
             MetadataJson = JsonSerializer.Serialize(new { source = "api" })
         });
         return Task.CompletedTask;

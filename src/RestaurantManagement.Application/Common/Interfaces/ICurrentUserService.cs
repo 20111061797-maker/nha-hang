@@ -8,4 +8,5 @@ public interface ICurrentUserService
     IReadOnlyCollection<string> Permissions { get; }
     Guid? BranchId { get; }
     bool IsAdministrator { get; }
+    string? IpAddress => null;
 }

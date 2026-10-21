@@ -631,8 +631,14 @@ export function AuditLogsView() {
 
             {/* IP Address */}
             <div className="p-3 rounded-xl bg-well border border-line flex items-center justify-between text-xs">
-              <span className="text-muted font-bold">Địa chỉ IP truy cập:</span>
-              <span className="font-mono font-bold text-ink">{activeDetailItem.ipAddress || "127.0.0.1 (Local)"}</span>
+              <span className="text-muted font-bold">Địa chỉ IP thiết bị:</span>
+              <span className="font-mono font-bold text-ink">
+                {activeDetailItem.ipAddress
+                  ? activeDetailItem.ipAddress === "127.0.0.1" || activeDetailItem.ipAddress === "::1"
+                    ? `${activeDetailItem.ipAddress} (Localhost / Cùng máy)`
+                    : activeDetailItem.ipAddress
+                  : "127.0.0.1 (Localhost / Cùng máy)"}
+              </span>
             </div>
 
             {/* Metadata JSON */}

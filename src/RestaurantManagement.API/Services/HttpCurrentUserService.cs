@@ -20,4 +20,26 @@ public sealed class HttpCurrentUserService(IHttpContextAccessor httpContextAcces
     public Guid? BranchId => Guid.TryParse(User?.FindFirstValue("branch_id"), out var branchId) ? branchId : null;
 
     public bool IsAdministrator => User?.IsInRole("Admin") == true;
+
+    public string? IpAddress
+    {
+        get
+        {
+            var ctx = httpContextAccessor.HttpContext;
+            if (ctx is null) return null;
+
+            if (ctx.Request.Headers.TryGetValue("X-Forwarded-For", out var forwarded) && !string.IsNullOrWhiteSpace(forwarded))
+            {
+                var first = forwarded.ToString().Split(',')[0].Trim();
+                if (!string.IsNullOrWhiteSpace(first)) return first;
+            }
+
+            if (ctx.Request.Headers.TryGetValue("X-Real-IP", out var realIp) && !string.IsNullOrWhiteSpace(realIp))
+            {
+                return realIp.ToString().Trim();
+            }
+
+            return ctx.Connection.RemoteIpAddress?.ToString();
+        }
+    }
 }
